@@ -108,6 +108,10 @@ When **looking for food**, they take 20% of the available stock of up to 3 diffe
 
 When you ask for a specific wood, such as fine wood or core wood, they only chop the trees that drop it. For any wood, they first finish the log of the tree they just felled, then go to whatever is closest: a standing tree, a log, or a stump.
 
+When mining, they skip the parts of a rock they could only reach by swimming, and rocks that have no other parts, since they can't mine while swimming. This happens often with copper and tin near lakes and rivers.
+
+If they are attacked while holding a pickaxe, hammer, or fishing rod, they switch to a weapon, or fight with their fists if they have none.
+
 ## Autonomous Mode
 
 By default, companions only act when asked. In **autonomous mode**, they also take the initiative: sharing thoughts, proposing plans, asking questions, and performing helpful tasks on their own. Toggle it with `/autonomy` (`/autonomia`) for all companions.
