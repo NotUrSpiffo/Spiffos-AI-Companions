@@ -1,0 +1,32 @@
+using HarmonyLib;
+
+namespace Companions;
+
+[HarmonyPatch(typeof(Hud), "InRadial")]
+internal static class InRadial_BlockForStarterPanel
+{
+	private static void Postfix(ref bool __result)
+	{
+		if (__result)
+		{
+			return;
+		}
+		StarterCompanionPanel instance = StarterCompanionPanel.Instance;
+		if (instance != null && instance.IsVisible)
+		{
+			__result = true;
+			return;
+		}
+		ConfigPanel instance2 = ConfigPanel.Instance;
+		if (instance2 != null && instance2.IsVisible)
+		{
+			__result = true;
+			return;
+		}
+		HomeZonePanel instance3 = HomeZonePanel.Instance;
+		if (instance3 != null && instance3.IsVisible)
+		{
+			__result = true;
+		}
+	}
+}

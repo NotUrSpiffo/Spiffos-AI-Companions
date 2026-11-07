@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net472</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <ValheimDir Condition="'$(ValheimDir)' == ''">C:\Program Files (x86)\Steam\steamapps\common\Valheim</ValheimDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="Program.cs" />
+    <Compile Include="..\..\src\ModLang.cs" />
+    <Compile Include="..\..\src\LlmProtocol.cs" />
+    <Compile Include="..\..\src\CharacterProfile.cs" />
+    <Compile Include="..\..\src\CompanionActions.cs" />
+    <Compile Include="..\..\src\ReactionPolicy.cs" />
+    <Compile Include="..\..\src\CompanionMemory.cs" />
+    <Compile Include="..\..\src\OrderPlanning.cs" />
+    <Compile Include="..\..\src\VoiceProtocol.cs" />
+    <Compile Include="..\..\src\BubbleLayout.cs" />
+    <Compile Include="..\..\src\EmoteCatalog.cs" />
+    <Compile Include="..\..\src\Autonomy.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+    <Reference Include="System.Net.Http" />
+    <!-- La copia de Valheim no pasa la validación de nombre seguro fuera del juego. -->
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+
+</Project>

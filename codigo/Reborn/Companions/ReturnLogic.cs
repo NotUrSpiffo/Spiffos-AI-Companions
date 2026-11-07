@@ -1,0 +1,791 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Reflection;
+using UnityEngine;
+
+namespace Companions;
+
+internal static class ReturnLogic
+{
+	private const float CloseRange = 4f;
+
+	private const float ReturnDistance = 18f;
+
+	private const float MaxChaseDistance = 60f;
+
+	private const float TeleportGraceSeconds = 87f;
+
+	private const float TeleportRadius = 30f;
+
+	private const float PinHideSeconds = 4f;
+
+	private const float PartyFollowRadius = 40f;
+
+	private static readonly Hashtable _active = new Hashtable();
+
+	private static readonly Hashtable _prevFollow = new Hashtable();
+
+	private static readonly Hashtable _pendingSince = new Hashtable();
+
+	private static readonly Hashtable _partyFollowActive = new Hashtable();
+
+	internal static bool OwnerDead;
+
+	private static MethodInfo _getFollowM;
+
+	private static MethodInfo _setFollowM;
+
+	private static MethodInfo _setFollowTargetM;
+
+	private static MethodInfo _isEngagedM;
+
+	private static MethodInfo _disengageM;
+
+	private static PropertyInfo _targetCreatureProp;
+
+	private static int _logs;
+
+	private static Type _setupType;
+
+	private static MethodInfo _allCompanionsM;
+
+	private static Type _interactType;
+
+	private static MethodInfo _isOwnedM;
+
+	private static FieldInfo _nviewField;
+
+	private static FieldInfo _actionModeHashField;
+
+	private static MethodInfo _getZdoM;
+
+	private static MethodInfo _zdoGetIntM;
+
+	private static MethodInfo _isOwnerM;
+
+	private static Type _managerType;
+
+	private static MethodInfo _findSpawnPosM;
+
+	private static MethodInfo _hidePinM;
+
+	private static FieldInfo _talkField;
+
+	private static MethodInfo _sayM;
+
+	private static readonly string[] _greetings = new string[3] { "hc_speech_found_1", "hc_speech_found_2", "hc_speech_found_3" };
+
+	private static readonly System.Random _rng = new System.Random();
+
+	internal static void OnPlayerRespawn()
+	{
+		OnPlayerRespawnFrom("OnSpawned");
+	}
+
+	internal static void OnPlayerDeath(Player instance)
+	{
+		try
+		{
+			if (!(instance == null) && !(instance != Player.m_localPlayer))
+			{
+				OwnerDead = true;
+				if (CompanionsPlugin.LogDetailed)
+				{
+					Log("[Return] owner died - Follow-mode companions may fall in with a nearby ally until respawn");
+				}
+			}
+		}
+		catch (Exception)
+		{
+		}
+	}
+
+	internal static void Tick(Component setupComp)
+	{
+		try
+		{
+			if (setupComp == null)
+			{
+				return;
+			}
+			int instanceID = setupComp.GetInstanceID();
+			object obj = _active[instanceID];
+			bool flag = obj != null && (bool)obj;
+			if (OwnerDead && !flag && IsInFollowMode(setupComp))
+			{
+				TickPartyFollow(setupComp, instanceID);
+			}
+			else
+			{
+				object obj2 = _partyFollowActive[instanceID];
+				if (obj2 != null && (bool)obj2)
+				{
+					_partyFollowActive[instanceID] = false;
+				}
+			}
+			object obj3 = _active[instanceID];
+			if (obj3 == null || !(bool)obj3)
+			{
+				return;
+			}
+			Player localPlayer = Player.m_localPlayer;
+			if (localPlayer == null)
+			{
+				return;
+			}
+			float num = Vector3.Distance(setupComp.transform.position, localPlayer.transform.position);
+			if (num <= 18f)
+			{
+				_active[instanceID] = false;
+				_pendingSince.Remove(instanceID);
+				bool flag2 = false;
+				object obj4 = _prevFollow[instanceID];
+				if (obj4 != null)
+				{
+					flag2 = (bool)obj4;
+				}
+				if (_setFollowM == null)
+				{
+					_setFollowM = setupComp.GetType().GetMethod("SetFollow", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+				}
+				try
+				{
+					if (_setFollowM != null)
+					{
+						_setFollowM.Invoke(setupComp, new object[1] { flag2 });
+					}
+				}
+				catch (Exception)
+				{
+				}
+				CompanionSetup companionSetup = setupComp as CompanionSetup;
+				ZDO zDO = ((!(companionSetup != null)) ? null : companionSetup.GetComponent<ZNetView>()?.GetZDO());
+				if (companionSetup != null && zDO != null)
+				{
+					companionSetup.ApplyFollowMode(zDO.GetInt(CompanionSetup.ActionModeHash), force: true);
+				}
+				if (CompanionsPlugin.LogDetailed)
+				{
+					Log("[Return] back in range (" + num.ToString("F1") + "m) for \"" + setupComp.name + "\" - resuming normal behavior.");
+				}
+				return;
+			}
+			if (num <= 60f)
+			{
+				_pendingSince.Remove(instanceID);
+				Component component = setupComp.GetComponent("CompanionAI");
+				if (!(component != null))
+				{
+					return;
+				}
+				if (_setFollowTargetM == null)
+				{
+					_setFollowTargetM = component.GetType().GetMethod("SetFollowTarget", BindingFlags.Instance | BindingFlags.Public);
+				}
+				try
+				{
+					if (_setFollowTargetM != null)
+					{
+						_setFollowTargetM.Invoke(component, new object[1] { localPlayer.gameObject });
+					}
+					return;
+				}
+				catch (Exception)
+				{
+					return;
+				}
+			}
+			object obj5 = _pendingSince[instanceID];
+			if (obj5 == null)
+			{
+				_pendingSince[instanceID] = Time.time;
+				return;
+			}
+			float num2 = (float)obj5;
+			if (!(Time.time - num2 < 87f))
+			{
+				DoTeleportRecall(setupComp, localPlayer, instanceID);
+			}
+		}
+		catch (Exception)
+		{
+		}
+	}
+
+	internal static void Trigger(Component setupComp, GameObject playerGO)
+	{
+		try
+		{
+			if (setupComp == null || playerGO == null)
+			{
+				return;
+			}
+			if (!IsInFollowMode(setupComp))
+			{
+				if (CompanionsPlugin.LogDetailed)
+				{
+					Log("[Return] skipped for \"" + setupComp.name + "\" - not currently set to Follow, left alone");
+				}
+				return;
+			}
+			CompanionSetup companionSetup = setupComp as CompanionSetup;
+			if (companionSetup != null && !companionSetup.GetFollow())
+			{
+				if (CompanionsPlugin.LogDetailed)
+				{
+					Log("[Return] skipped for \"" + setupComp.name + "\" - Follow is off, left alone");
+				}
+				return;
+			}
+			int instanceID = setupComp.GetInstanceID();
+			_partyFollowActive[instanceID] = false;
+			Type type = setupComp.GetType();
+			if (_getFollowM == null)
+			{
+				_getFollowM = type.GetMethod("GetFollow", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+			}
+			if (_setFollowM == null)
+			{
+				_setFollowM = type.GetMethod("SetFollow", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+			}
+			object obj = _active[instanceID];
+			if (obj == null || !(bool)obj)
+			{
+				bool flag = false;
+				try
+				{
+					if (_getFollowM != null)
+					{
+						flag = (bool)_getFollowM.Invoke(setupComp, null);
+					}
+				}
+				catch (Exception)
+				{
+				}
+				_prevFollow[instanceID] = flag;
+			}
+			_active[instanceID] = true;
+			try
+			{
+				if (_setFollowM != null)
+				{
+					_setFollowM.Invoke(setupComp, new object[1] { true });
+				}
+			}
+			catch (Exception)
+			{
+			}
+			float num = float.MaxValue;
+			try
+			{
+				Player localPlayer = Player.m_localPlayer;
+				if (localPlayer != null)
+				{
+					num = Vector3.Distance(setupComp.transform.position, localPlayer.transform.position);
+				}
+			}
+			catch (Exception)
+			{
+			}
+			if (num > 60f)
+			{
+				if (_pendingSince[instanceID] == null)
+				{
+					_pendingSince[instanceID] = Time.time;
+				}
+				if (CompanionsPlugin.LogDetailed)
+				{
+					Log("[Return] \"" + setupComp.name + "\" is " + num.ToString("F0") + "m away - beyond safe chase range, waiting to walk in or be recalled.");
+				}
+				return;
+			}
+			_pendingSince.Remove(instanceID);
+			Component component = setupComp.GetComponent("CompanionAI");
+			if (component != null)
+			{
+				if (_setFollowTargetM == null)
+				{
+					_setFollowTargetM = component.GetType().GetMethod("SetFollowTarget", BindingFlags.Instance | BindingFlags.Public);
+				}
+				try
+				{
+					if (_setFollowTargetM != null)
+					{
+						_setFollowTargetM.Invoke(component, new object[1] { playerGO });
+					}
+				}
+				catch (Exception)
+				{
+				}
+			}
+			Component component2 = setupComp.GetComponent("CompanionCombatAI");
+			bool flag2 = false;
+			if (component2 != null)
+			{
+				Type type2 = component2.GetType();
+				if (_isEngagedM == null)
+				{
+					_isEngagedM = type2.GetMethod("get_IsEngaged", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+				}
+				bool flag3 = false;
+				try
+				{
+					if (_isEngagedM != null)
+					{
+						flag3 = (bool)_isEngagedM.Invoke(component2, null);
+					}
+				}
+				catch (Exception)
+				{
+				}
+				if (flag3)
+				{
+					if (_targetCreatureProp == null)
+					{
+						_targetCreatureProp = type2.GetProperty("TargetCreature", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+					}
+					Character character = null;
+					try
+					{
+						if (_targetCreatureProp != null)
+						{
+							character = _targetCreatureProp.GetValue(component2, null) as Character;
+						}
+					}
+					catch (Exception)
+					{
+					}
+					bool flag4 = true;
+					if (character != null)
+					{
+						flag4 = Vector3.Distance(setupComp.transform.position, character.transform.position) > 4f;
+					}
+					if (flag4)
+					{
+						if (_disengageM == null)
+						{
+							_disengageM = type2.GetMethod("Disengage", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+						}
+						try
+						{
+							if (_disengageM != null)
+							{
+								_disengageM.Invoke(component2, null);
+								flag2 = true;
+							}
+						}
+						catch (Exception)
+						{
+						}
+					}
+				}
+			}
+			if (CompanionsPlugin.LogDetailed)
+			{
+				Log("[Return] triggered for \"" + setupComp.name + "\"" + ((!flag2) ? "" : " - disengaged current fight (safe)"));
+			}
+		}
+		catch (Exception ex8)
+		{
+			if (CompanionsPlugin.LogDetailed)
+			{
+				Log("[Return] Trigger failed: " + ex8.Message);
+			}
+		}
+	}
+
+	private static bool IsInFollowMode(Component setupComp)
+	{
+		try
+		{
+			Type type = setupComp.GetType();
+			if (_nviewField == null)
+			{
+				_nviewField = type.GetField("_nview", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+			}
+			if (_actionModeHashField == null)
+			{
+				_actionModeHashField = type.GetField("ActionModeHash", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+			}
+			if (_nviewField == null || _actionModeHashField == null)
+			{
+				return true;
+			}
+			object value = _nviewField.GetValue(setupComp);
+			if (value == null)
+			{
+				return true;
+			}
+			if (_getZdoM == null)
+			{
+				_getZdoM = value.GetType().GetMethod("GetZDO", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+			}
+			if (_getZdoM == null)
+			{
+				return true;
+			}
+			object obj = _getZdoM.Invoke(value, null);
+			if (obj == null)
+			{
+				return true;
+			}
+			int num = (int)_actionModeHashField.GetValue(null);
+			if (_zdoGetIntM == null)
+			{
+				_zdoGetIntM = obj.GetType().GetMethod("GetInt", new Type[2]
+				{
+					typeof(int),
+					typeof(int)
+				});
+			}
+			if (_zdoGetIntM == null)
+			{
+				return true;
+			}
+			return (int)_zdoGetIntM.Invoke(obj, new object[2] { num, 0 }) == 0;
+		}
+		catch (Exception)
+		{
+			return true;
+		}
+	}
+
+	private static void Log(string s)
+	{
+		if (_logs < 60)
+		{
+			_logs++;
+			if (CompanionsPlugin.LogDetailed)
+			{
+				CompanionsPlugin.Log?.LogInfo(s);
+			}
+		}
+	}
+
+	internal static void OnPlayerRespawnFrom(string source)
+	{
+		try
+		{
+			OwnerDead = false;
+			if (CompanionsPlugin.LogDetailed)
+			{
+				Log("[Return] " + source + ": respawn hook fired");
+			}
+			Player localPlayer = Player.m_localPlayer;
+			if (localPlayer == null)
+			{
+				if (CompanionsPlugin.LogDetailed)
+				{
+					Log("[Return] " + source + ": skipped - Player.m_localPlayer is null");
+				}
+				return;
+			}
+			GameObject gameObject = localPlayer.gameObject;
+			string text = localPlayer.GetPlayerID().ToString();
+			if (_setupType == null)
+			{
+				_setupType = Type.GetType("Companions.CompanionSetup");
+			}
+			if (_setupType == null)
+			{
+				if (CompanionsPlugin.LogDetailed)
+				{
+					Log("[Return] " + source + ": skipped - CompanionSetup type not found");
+				}
+				return;
+			}
+			if (_allCompanionsM == null)
+			{
+				_allCompanionsM = _setupType.GetMethod("get_AllCompanions", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+			}
+			if (_allCompanionsM == null)
+			{
+				if (CompanionsPlugin.LogDetailed)
+				{
+					Log("[Return] " + source + ": skipped - get_AllCompanions not found");
+				}
+				return;
+			}
+			if (!(_allCompanionsM.Invoke(null, null) is IEnumerable enumerable))
+			{
+				if (CompanionsPlugin.LogDetailed)
+				{
+					Log("[Return] " + source + ": skipped - AllCompanions returned null");
+				}
+				return;
+			}
+			if (_interactType == null)
+			{
+				_interactType = Type.GetType("Companions.CompanionInteract");
+			}
+			if (_interactType != null && _isOwnedM == null)
+			{
+				_isOwnedM = _interactType.GetMethod("IsOwned", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+			}
+			int num = 0;
+			int num2 = 0;
+			foreach (object item in enumerable)
+			{
+				num++;
+				Component component = item as Component;
+				if (component == null)
+				{
+					continue;
+				}
+				bool flag = true;
+				try
+				{
+					if (_isOwnedM != null)
+					{
+						flag = (bool)_isOwnedM.Invoke(null, new object[2] { component, text });
+					}
+				}
+				catch (Exception)
+				{
+				}
+				if (flag)
+				{
+					num2++;
+					Trigger(component, gameObject);
+				}
+			}
+			if (num == 0)
+			{
+				if (CompanionsPlugin.LogDetailed)
+				{
+					Log("[Return] " + source + ": AllCompanions was empty (0 found)");
+				}
+			}
+			else if (num2 == 0 && CompanionsPlugin.LogDetailed)
+			{
+				Log("[Return] " + source + ": found " + num + " companion(s), none owned by this player (ownerId=" + text + ")");
+			}
+		}
+		catch (Exception ex2)
+		{
+			if (CompanionsPlugin.LogDetailed)
+			{
+				Log("[Return] " + source + " failed: " + ex2.Message);
+			}
+		}
+	}
+
+	private static void TickPartyFollow(Component setupComp, int id)
+	{
+		try
+		{
+			object obj = _partyFollowActive[id];
+			if (obj != null && (bool)obj)
+			{
+				return;
+			}
+			Vector3 position = setupComp.transform.position;
+			List<Player> allPlayers = Player.GetAllPlayers();
+			if (allPlayers == null)
+			{
+				return;
+			}
+			Player player = null;
+			float num = 40f;
+			for (int i = 0; i < allPlayers.Count; i++)
+			{
+				Player player2 = allPlayers[i];
+				if (!(player2 == null) && !(player2 == Player.m_localPlayer))
+				{
+					float num2 = Vector3.Distance(position, player2.transform.position);
+					if (num2 <= num)
+					{
+						num = num2;
+						player = player2;
+					}
+				}
+			}
+			if (player == null)
+			{
+				return;
+			}
+			_partyFollowActive[id] = true;
+			Component component = setupComp.GetComponent("CompanionAI");
+			if (component != null)
+			{
+				if (_setFollowTargetM == null)
+				{
+					_setFollowTargetM = component.GetType().GetMethod("SetFollowTarget", BindingFlags.Instance | BindingFlags.Public);
+				}
+				try
+				{
+					if (_setFollowTargetM != null)
+					{
+						_setFollowTargetM.Invoke(component, new object[1] { player.gameObject });
+					}
+				}
+				catch (Exception)
+				{
+				}
+			}
+			if (CompanionsPlugin.LogDetailed)
+			{
+				Log("[Return] \"" + setupComp.name + "\" - owner is dead, tagging along with \"" + player.name + "\" until they respawn.");
+			}
+		}
+		catch (Exception)
+		{
+		}
+	}
+
+	private static void DoTeleportRecall(Component setupComp, Player p, int id)
+	{
+		try
+		{
+			_pendingSince.Remove(id);
+			Type type = setupComp.GetType();
+			if (_nviewField == null)
+			{
+				_nviewField = type.GetField("_nview", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+			}
+			object obj = ((!(_nviewField != null)) ? null : _nviewField.GetValue(setupComp));
+			bool flag = true;
+			if (obj != null)
+			{
+				if (_isOwnerM == null)
+				{
+					_isOwnerM = obj.GetType().GetMethod("IsOwner", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+				}
+				try
+				{
+					if (_isOwnerM != null)
+					{
+						flag = (bool)_isOwnerM.Invoke(obj, null);
+					}
+				}
+				catch (Exception)
+				{
+				}
+			}
+			if (!flag)
+			{
+				return;
+			}
+			if (_managerType == null)
+			{
+				_managerType = Type.GetType("Companions.CompanionManager");
+			}
+			Vector3 vector = p.transform.position;
+			if (_managerType != null)
+			{
+				if (_findSpawnPosM == null)
+				{
+					_findSpawnPosM = _managerType.GetMethod("FindSpawnPosition", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+				}
+				try
+				{
+					if (_findSpawnPosM != null)
+					{
+						vector = (Vector3)_findSpawnPosM.Invoke(null, new object[2]
+						{
+							p.transform.position,
+							30f
+						});
+					}
+				}
+				catch (Exception)
+				{
+				}
+			}
+			setupComp.transform.position = vector;
+			if (obj != null)
+			{
+				if (_getZdoM == null)
+				{
+					_getZdoM = obj.GetType().GetMethod("GetZDO", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+				}
+				try
+				{
+					object obj2 = ((!(_getZdoM != null)) ? null : _getZdoM.Invoke(obj, null));
+					if (obj2 != null)
+					{
+						MethodInfo method = obj2.GetType().GetMethod("SetPosition", new Type[1] { typeof(Vector3) });
+						if (method != null)
+						{
+							method.Invoke(obj2, new object[1] { vector });
+						}
+					}
+				}
+				catch (Exception)
+				{
+				}
+			}
+			if (_hidePinM == null)
+			{
+				_hidePinM = type.GetMethod("HidePinFor", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+			}
+			try
+			{
+				if (_hidePinM != null)
+				{
+					_hidePinM.Invoke(setupComp, new object[1] { 4f });
+				}
+			}
+			catch (Exception)
+			{
+			}
+			Component component = setupComp.GetComponent("CompanionAI");
+			if (component != null)
+			{
+				if (_setFollowTargetM == null)
+				{
+					_setFollowTargetM = component.GetType().GetMethod("SetFollowTarget", BindingFlags.Instance | BindingFlags.Public);
+				}
+				try
+				{
+					if (_setFollowTargetM != null)
+					{
+						_setFollowTargetM.Invoke(component, new object[1] { p.gameObject });
+					}
+				}
+				catch (Exception)
+				{
+				}
+				if (_talkField == null)
+				{
+					_talkField = component.GetType().GetField("_talk", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+				}
+				object obj3 = ((!(_talkField != null)) ? null : _talkField.GetValue(component));
+				if (obj3 != null)
+				{
+					if (_sayM == null)
+					{
+						_sayM = obj3.GetType().GetMethod("Say", new Type[2]
+						{
+							typeof(string),
+							typeof(bool)
+						});
+					}
+					string text = ModLocalization.Loc(_greetings[_rng.Next(_greetings.Length)]);
+					try
+					{
+						if (_sayM != null)
+						{
+							_sayM.Invoke(obj3, new object[2] { text, false });
+						}
+					}
+					catch (Exception)
+					{
+					}
+				}
+			}
+			if (CompanionsPlugin.LogDetailed)
+			{
+				Log("[Return] \"" + setupComp.name + "\" was unreachable too long (" + 87f.ToString("F0") + "s) - recalled to near the player and walking in.");
+			}
+		}
+		catch (Exception ex7)
+		{
+			if (CompanionsPlugin.LogDetailed)
+			{
+				Log("[Return] teleport recall failed: " + ex7.Message);
+			}
+		}
+	}
+}
