@@ -1,0 +1,79 @@
+using System;
+using System.Collections;
+using UnityEngine;
+
+namespace Companions;
+
+internal static class AIGateDiag
+{
+	private static readonly Hashtable _lastGate = new Hashtable();
+
+	private static readonly Hashtable _lastHeartbeat = new Hashtable();
+
+	private static int _logs;
+
+	internal static void Report(Component aiComp, string gateOrNull)
+	{
+		if (!CompanionsPlugin.LogDetailed)
+		{
+			return;
+		}
+		try
+		{
+			if (aiComp == null)
+			{
+				return;
+			}
+			int instanceID = aiComp.GetInstanceID();
+			string text = _lastGate[instanceID] as string;
+			if (gateOrNull == null)
+			{
+				if (text != null)
+				{
+					if (CompanionsPlugin.LogDetailed)
+					{
+						Log("[AIGate] \"" + aiComp.name + "\" resumed normal AI (was blocked by " + text + ")");
+					}
+					_lastGate.Remove(instanceID);
+					_lastHeartbeat.Remove(instanceID);
+				}
+				return;
+			}
+			if (text == null || text != gateOrNull)
+			{
+				if (CompanionsPlugin.LogDetailed)
+				{
+					Log("[AIGate] \"" + aiComp.name + "\" blocked by " + gateOrNull);
+				}
+				_lastGate[instanceID] = gateOrNull;
+				_lastHeartbeat[instanceID] = Time.time;
+				return;
+			}
+			object obj = _lastHeartbeat[instanceID];
+			float num = ((obj == null) ? 0f : ((float)obj));
+			if (Time.time - num >= 15f)
+			{
+				if (CompanionsPlugin.LogDetailed)
+				{
+					Log("[AIGate] \"" + aiComp.name + "\" still blocked by " + gateOrNull + " (" + (Time.time - num).ToString("F0") + "s+)");
+				}
+				_lastHeartbeat[instanceID] = Time.time;
+			}
+		}
+		catch (Exception)
+		{
+		}
+	}
+
+	private static void Log(string s)
+	{
+		if (_logs < 200)
+		{
+			_logs++;
+			if (CompanionsPlugin.LogDetailed)
+			{
+				CompanionsPlugin.Log?.LogInfo(s);
+			}
+		}
+	}
+}

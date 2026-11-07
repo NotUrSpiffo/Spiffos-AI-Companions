@@ -1,0 +1,81 @@
+{
+    "Version": 3,
+    "Action": [
+        "¡A tu palabra!", "Así será.", "¡Sí, considéralo hecho!", "Atiendo tu llamada.", "Como ordenes.", "¡Voy a ello!", "Ahora mismo.", "Se hará.",
+        "No digas más.", "Déjamelo a mí."
+    ],
+    "Wood": [
+        "Aquí hay buena madera.", "¡Otro árbol que cae!", "Mis brazos se fortalecen con cada golpe.", "¡Árbol va!", "Esta madera arderá bien.",
+        "[blackforest] Aquí los pinos crecen muy juntos.", "[meadows] Hayas y abedules, buenos y rectos.", "[swamp] Corteza antigua... cuesta lo suyo."
+    ],
+    "Stone": [
+        "Por aquí hay buena piedra.", "Piedra para los muros.", "Golpe a golpe.", "Esta roca no se va a mover sola.", "Qué piedra tan sólida."
+    ],
+    "Ore": [
+        "Este mineral promete.", "Las vetas son profundas en esta roca.", "La tierra entrega sus tesoros.", "Mineral para la fundición.",
+        "[blackforest] Cobre y estaño, nuestro primer metal de verdad.", "[swamp] Hierro, enterrado con los muertos.", "[mountain] Plata, fría como las cumbres."
+    ],
+    "Gather": [
+        "La tierra provee, si sabes dónde buscar.", "Buena cosecha hasta ahora."
+    ],
+    "Forage": [
+        "La naturaleza provee a quien busca.", "Listo para recoger.", "La naturaleza esconde bien sus riquezas.", "Con esto saldrá un buen guiso.",
+        "[meadows] Los prados ofrecen sus regalos.", "[blackforest] Buena recolección bajo estos árboles.", "[night] Con esta oscuridad cuesta ver algo."
+    ],
+    "Combat": [
+        "¡Por Odín!", "¡Prueba mi acero!", "¡Da la cara y pelea!", "¡No pasarán!", "¡Por el martillo de Thor!", "¡Te has equivocado de pelea!", "¡Te enviaré a Hel!",
+        "¡Vamos! ¡Aquí te espero!", "¡Las valquirias nos observan!"
+    ],
+    "Follow": [
+        "[away] Tú guías, yo te cubro.", "[away] Allá donde lleve el camino, te sigo.", "Justo detrás de ti.", "Yo te cubro las espaldas.", "[away] ¿Qué nos esperará más adelante?",
+        "[away] ¿Por dónde ahora?", "[away] Mantén los ojos abiertos.", "[away] Buen terreno para una emboscada.", "[home] ¿Hay algo que hacer por aquí?", "[home] Tú solo dilo.",
+        "[day,!rain] Buen día para recorrer estas tierras.", "[night] Quédate cerca, la noche oculta muchas cosas.", "[rain] Otra vez con las botas mojadas.", "[cold] Se me congela la barba.",
+        "[blackforest] Cuidado con los enanos grises en este bosque.", "[swamp] Este pantano apesta a muerte.", "[mountain] Cuidado con la caída.", "[plains] Atención a los campamentos fuling.",
+        "[mistlands] Apenas me veo la mano.", "[ashlands] Aquí hasta el aire quema.", "[deepnorth] Hace frío como para congelar a un trol.", "[ocean] Solo agua y cielo."
+    ],
+    "Hungry": [
+        "Me ruge la barriga como un trol...", "Ahora mismo cambiaría mi hacha por una pata de jabalí.", "¿Tienes algo de comer?", "Un guerrero pelea con hidromiel y carne, no con las tripas vacías.",
+        "Ahora mismo me comería un neck entero."
+    ],
+    "Repair": [
+        "Esta hoja ha conocido tiempos mejores.", "Mi equipo está muy gastado.", "Debería buscar pronto un banco de trabajo.", "Unos golpes más y esto se rompe."
+    ],
+    "Overweight": [
+        "¡Se me parte la espalda con todo esto!", "¡Apenas puedo moverme con tanto peso!", "¡La mochila está a punto de reventar!", "Tengo que soltar parte de esto."
+    ],
+    "Smelt": [
+        "Alimentando el horno.", "Buen mineral, buen metal.", "Manteniendo vivos los fuegos.", "Otro lingote para el tesoro.", "Los fuelles cantan su canción.", "Qué trabajo más caluroso.",
+        "[cold] Al menos el horno da calor."
+    ],
+    "Idle": [
+        "¡Skål!", "No me vendría mal un cuerno de hidromiel.", "Un momento de paz... algo raro en estas tierras.", "De momento, el mundo está en calma.", "Esperando tus órdenes.",
+        "[home] Qué buen sitio tenemos aquí.", "[home] Has construido un gran salón.", "[home] Podría acostumbrarme a esto.", "[home,night] Qué bien estar en casa esta noche.",
+        "[away] Qué sitio más raro para pararse.", "[away,night] Prefiero no quedarme aquí fuera de noche.", "[rain] Al menos la lluvia asienta el polvo.",
+        "[day,!rain,!indoors] Solo disfruto de las vistas.", "[indoors] Qué acogedor es esto."
+    ],
+    "Hunt": [
+        "Silencio...", "¡Empieza la caza!", "Carne fresca para la olla.", "Siguiendo el rastro entre la maleza.", "Con calma... despacio...", "Contra el viento, siempre contra el viento.",
+        "[night] Cuesta seguir el rastro a oscuras.", "[rain] La lluvia oculta nuestros pasos."
+    ],
+    "Farm": [
+        "Trabajando la tierra.", "Semillas en la tierra, esperanza en el corazón.", "El trabajo del campo es trabajo honrado.", "Otra hilera terminada.", "[rain] Buen tiempo para los cultivos."
+    ],
+    "Fish": [
+        "Lanzando el sedal...", "La paciencia es la mayor virtud del pescador.", "Vamos, muerde el cebo...", "Pescar es un trabajo tranquilo.", "Nada todavía... pero esperaré.",
+        "[rain] Con lluvia pican mejor.", "[night] Esta noche el agua está tranquila.", "[ocean] Ahí abajo hay algo grande."
+    ],
+    "Cook": [
+        "Una buena comida levanta el ánimo a cualquier guerrero.", "Removiendo la olla...", "Una pizca de esto, un toque de aquello.", "¡Comida para los cansados!", "Mmm, qué bien huele."
+    ],
+    "Upkeep": [
+        "Manteniendo este sitio en buen estado.", "Un techo firme y un fuego cálido.", "Cada cosa en su lugar.", "Un hogar necesita cuidados.", "¿Quién ha dejado esto aquí?",
+        "[rain] Esperemos que el techo aguante.", "[night] Hay que mantener los fuegos encendidos."
+    ],
+    "NoBed": [
+        "No tengo una cama que pueda llamar mía.", "Ojalá hubiera una cama por aquí.", "Supongo que volveré a dormir en el suelo.", "No estaría mal tener dónde apoyar la cabeza."
+    ],
+    "Chat": [
+        "¿Necesitas algo?", "¿Hay algo que hacer?", "Esto está muy tranquilo.", "[day,!rain] Buen día para esto.", "[rain] Huele a lluvia. Ah, espera.", "[night] Es tarde, ¿no?",
+        "[home] Qué bien tener un techo sobre la cabeza.", "[away] ¿Volvemos pronto a casa?"
+    ]
+}

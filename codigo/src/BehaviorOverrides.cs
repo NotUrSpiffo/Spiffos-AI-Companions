@@ -1,0 +1,924 @@
+using System.Collections.Generic;
+using System.Reflection;
+using HarmonyLib;
+using UnityEngine;
+
+namespace OfflineCompanionsAI
+{
+    /// <summary>
+    /// Cambios temporales en lo que deciden los trabajos de Offline Companions, sin tocar la configuración del jugador.
+    /// Solo actúan mientras hay un encargo activo.
+    /// </summary>
+    public static class BehaviorOverrides
+    {
+        /// <summary>La comida que se está encargando, o null si no hay encargo de cocina.</summary>
+        public static string CookFood;
+        public static int CookTarget;
+
+        /// <summary>El material que se está encargando fundir, o null si no hay encargo.</summary>
+        public static string SmeltItem;
+
+        /// <summary>Compañeros cuyo trabajo de mantenimiento se limita a una tarea, y cuál (el nombre de su método Plan).</summary>
+        public static readonly Dictionary<GameObject, string> UpkeepFocus = new Dictionary<GameObject, string>();
+
+        private const float SpacingPatienceSeconds = 3f;
+        private const float SpacingDipSeconds = 2f;
+        private const float CookDropRadius = 4f;
+        private const float RockStrikeReach = 3f;
+        private const float SectionAboveGround = 0.1f;
+        private const float SectionSampleSpread = 0.5f;
+        private const float SectionCheckSeconds = 5f;
+        private const int MaxSectionsRemembered = 2000;
+        private const int MaxBuriedReports = 5;
+        private static readonly Vector2[] SectionSamples = { Vector2.zero, Vector2.right, Vector2.left, Vector2.up, Vector2.down };
+        private static readonly Dictionary<Collider, KeyValuePair<float, bool>> _sectionVisible = new Dictionary<Collider, KeyValuePair<float, bool>>();
+        private static int _buriedReports;
+
+        // Estado de cada hueco de una estación de cocina en sus datos de red.
+        private const int SlotCooking = 0;
+        private const int SlotDone = 1;
+        private const int SlotBurnt = 2;
+
+        private static bool _inRefill;
+        private static MethodInfo _unclaimSmelter;
+        private static int _cookingNow;
+
+        private static MethodInfo _pickTask;
+        private static MethodInfo _finishTask;
+        private static MethodInfo _pickUpDrops;
+        private static MethodInfo _dropPoint;
+        private static FieldInfo _cookTask;
+        private static FieldInfo _cookTimer;
+        private static FieldInfo _cookers;
+        private static FieldInfo _taskKind;
+        private static FieldInfo _taskCooker;
+
+        private static MethodInfo _wouldSwim;
+        private static MethodInfo _applyRockDamage;
+        private static MethodInfo _sectionExposed;
+        private static FieldInfo _harvestTarget;
+        private static FieldInfo _noDamageSwings;
+        private static FieldInfo _lastHitAt;
+        private static FieldInfo _hitCheckFor;
+        private static FieldInfo _harvestBlacklist;
+        private static readonly HashSet<Component> _rockReported = new HashSet<Component>();
+
+        private static int _stanceHash;
+        private static int _pickupHash;
+        private static int _recoveringHash;
+        private static int _savedStanceHash;
+        private static int _savedPickupHash;
+
+        private static FieldInfo _spacingHold;
+        private static FieldInfo _dipping;
+        private static FieldInfo _dipUntil;
+        private static FieldInfo _fightTarget;
+        private static readonly Dictionary<Component, float> _holdingSince = new Dictionary<Component, float>();
+
+        public static bool CookAvailable { get; private set; }
+        public static bool UpkeepAvailable { get; private set; }
+        public static bool SmeltAvailable { get; private set; }
+
+        public static void Apply(Harmony harmony)
+        {
+            ApplyCooking(harmony);
+            ApplyCookSpread(harmony);
+            ApplySpacingPatience(harmony);
+            ApplyUpkeep(harmony);
+            ApplySmelting(harmony);
+            ApplySpeechFilter(harmony);
+            ApplyRockStrikes(harmony);
+            ApplyStoreFilter(harmony);
+            ApplyGroundItems(harmony);
+            ApplyChopping(harmony);
+            ApplyDeathWhileRecovering(harmony);
+            ApplyStayDry(harmony);
+            ApplyNameTyping(harmony);
+            ApplyTendArea(harmony);
+            ApplySimpleWheel(harmony);
+        }
+
+        private static FieldInfo _wheelSegments;
+        private static FieldInfo _wheelSegmentAction;
+
+        /// <summary>La rueda calcula sus huecos según cuántas opciones haya, así que basta con quitarlas de la lista al crearla.</summary>
+        private static void ApplySimpleWheel(Harmony harmony)
+        {
+            System.Type wheel = AccessTools.TypeByName("Companions.CompanionRadialMenu");
+            MethodInfo build = wheel == null ? null : AccessTools.Method(wheel, "BuildSegments");
+            _wheelSegments = wheel == null ? null : AccessTools.Field(wheel, "_segments");
+            System.Type segment = wheel?.GetNestedType("Segment", BindingFlags.Public | BindingFlags.NonPublic);
+            _wheelSegmentAction = segment == null ? null : AccessTools.Field(segment, "ActionId");
+            if (build == null || _wheelSegments == null || _wheelSegmentAction == null)
+            {
+                Plugin.Log.LogWarning("Reducir la rueda de órdenes no está disponible en esta versión de Offline Companions Reborn: se verá completa.");
+                return;
+            }
+            harmony.Patch(build, postfix: Hook(nameof(SimpleWheelPostfix)));
+        }
+
+        private static void SimpleWheelPostfix(Component __instance)
+        {
+            if (!(_wheelSegments.GetValue(__instance) is System.Collections.IList segments)) return;
+            for (int i = segments.Count - 1; i >= 0; i--)
+            {
+                if (!WheelOptions.Keeps((int)_wheelSegmentAction.GetValue(segments[i]))) segments.RemoveAt(i);
+            }
+        }
+
+        /// <summary>Quienes se encargan de un sitio, y dónde está: solo van a por recursos alrededor de ese punto.</summary>
+        public static readonly Dictionary<GameObject, Vector3> TendArea = new Dictionary<GameObject, Vector3>();
+
+        public static bool TendAreaAvailable { get; private set; }
+
+        public static bool TendHuntAvailable { get; private set; }
+
+        /// <summary>
+        /// El alcance de recolección de Reborn es el mismo para todos, y puede ser de 80 m o más; además, cerca del hogar mide
+        /// desde el hogar. Esto lo acorta solo para quien se encarga de un sitio, sin tocar el ajuste del jugador.
+        /// </summary>
+        private static void ApplyTendArea(Harmony harmony)
+        {
+            System.Type harvest = AccessTools.TypeByName("Companions.HarvestController");
+            MethodInfo inArea = harvest == null ? null : AccessTools.Method(harvest, "InWorkArea");
+            MethodInfo center = harvest == null ? null : AccessTools.Method(harvest, "ScanCenter");
+            MethodInfo radius = harvest == null ? null : AccessTools.Method(harvest, "ScanRad");
+            if (inArea == null || center == null || radius == null)
+            {
+                Plugin.Log.LogWarning("Limitar la recolección alrededor de un sitio no está disponible en esta versión de Offline Companions Reborn: al encargarse de un sitio solo hará mantenimiento.");
+                return;
+            }
+            harmony.Patch(inArea, postfix: Hook(nameof(TendInAreaPostfix)));
+            harmony.Patch(center, postfix: Hook(nameof(TendCenterPostfix)));
+            harmony.Patch(radius, postfix: Hook(nameof(TendRadiusPostfix)));
+            TendAreaAvailable = true;
+
+            System.Type hunt = AccessTools.TypeByName("Companions.HuntController");
+            MethodInfo huntCenter = hunt == null ? null : AccessTools.Method(hunt, "Center");
+            MethodInfo huntRange = hunt == null ? null : AccessTools.Method(hunt, "Range");
+            if (huntCenter == null || huntRange == null)
+            {
+                Plugin.Log.LogWarning("Limitar la caza alrededor de un sitio no está disponible en esta versión de Offline Companions Reborn: al encargarse de un sitio no cazará.");
+                return;
+            }
+            harmony.Patch(huntCenter, postfix: Hook(nameof(TendCenterPostfix)));
+            harmony.Patch(huntRange, postfix: Hook(nameof(TendRadiusLimitPostfix)));
+            TendHuntAvailable = true;
+        }
+
+        private static void TendInAreaPostfix(Component __instance, Vector3 p, ref bool __result)
+        {
+            if (TendArea.Count == 0 || !TendArea.TryGetValue(__instance.gameObject, out Vector3 point)) return;
+            p.y = point.y;
+            __result = Vector3.Distance(p, point) <= TendPlan.AreaMeters;
+        }
+
+        private static void TendCenterPostfix(Component __instance, ref Vector3 __result)
+        {
+            if (TendArea.Count > 0 && TendArea.TryGetValue(__instance.gameObject, out Vector3 point)) __result = point;
+        }
+
+        // Sin esto buscaría solo en lo que diga "GatheringSearchRadius", que suele ser menos que el sitio entero.
+        private static void TendRadiusPostfix(Component __instance, ref float __result)
+        {
+            if (TendArea.Count > 0 && TendArea.ContainsKey(__instance.gameObject)) __result = TendPlan.AreaMeters;
+        }
+
+        private static void TendRadiusLimitPostfix(Component __instance, ref float __result)
+        {
+            if (TendArea.Count > 0 && TendArea.ContainsKey(__instance.gameObject)) __result = Mathf.Min(__result, TendPlan.AreaMeters);
+        }
+
+        private static MethodInfo _panelInstance;
+        private static MethodInfo _nameFocused;
+
+        /// <summary>
+        /// Con el inventario abierto, el juego lo cierra al pulsar Usar o Inventario aunque se esté escribiendo. Offline Companions
+        /// solo bloquea el control del personaje, así que una E en el nombre cerraba la ventana y al soltarla la volvía a abrir.
+        /// </summary>
+        private static void ApplyNameTyping(Harmony harmony)
+        {
+            System.Type panel = AccessTools.TypeByName("Companions.CompanionInteractPanel");
+            _panelInstance = panel == null ? null : AccessTools.PropertyGetter(panel, "Instance");
+            _nameFocused = panel == null ? null : AccessTools.PropertyGetter(panel, "IsNameInputFocused");
+            MethodInfo update = AccessTools.Method(typeof(InventoryGui), "Update");
+            if (_panelInstance == null || _nameFocused == null || update == null)
+            {
+                Plugin.Log.LogWarning("Escribir el nombre sin que se cierre la ventana no está disponible en esta versión de Offline Companions Reborn.");
+                return;
+            }
+            harmony.Patch(update, prefix: Hook(nameof(IgnoreKeysWhileNaming)));
+        }
+
+        private static void IgnoreKeysWhileNaming()
+        {
+            if (!InventoryGui.IsVisible()) return;
+            Component panel = _panelInstance.Invoke(null, null) as Component;
+            if (panel == null || !(bool)_nameFocused.Invoke(panel, null)) return;
+            ZInput.ResetButtonStatus("Use");
+            ZInput.ResetButtonStatus("Inventory");
+        }
+
+        /// <summary>Compañeros que no deben meterse a nadar por su cuenta hasta recuperar aguante.</summary>
+        public static readonly HashSet<GameObject> KeepDry = new HashSet<GameObject>();
+
+        // Volver a la orilla, huir o subir al barco del jugador no pueden esperar a que descanse.
+        private static readonly HashSet<string> TiredMoves = new HashSet<string> { "Shore", "Flee", "Board" };
+        private const float WaterLookAhead = 20f;
+        private static MethodInfo _swimOnLine;
+
+        /// <summary>
+        /// Todos sus desplazamientos pasan por el mismo método, así que aquí se corta solo lo que le llevaría al agua: puede
+        /// seguir peleando o andando por tierra mientras descansa.
+        /// </summary>
+        private static void ApplyStayDry(Harmony harmony)
+        {
+            System.Type mover = AccessTools.TypeByName("Companions.MHR_Mover");
+            MethodInfo go = mover == null ? null : AccessTools.GetDeclaredMethods(mover).Find(method => method.Name == "Go" && method.GetParameters().Length == 7);
+            _swimOnLine = AccessTools.Method("Companions.MHR_Water:SwimOnLine");
+            if (go == null || _swimOnLine == null)
+            {
+                Plugin.Log.LogWarning("Descansar en la orilla antes de volver a nadar no está disponible en esta versión de Offline Companions Reborn.");
+                return;
+            }
+            harmony.Patch(go, prefix: Hook(nameof(HoldAshore)));
+        }
+
+        private static bool HoldAshore(BaseAI ai, Vector3 goal, string tag, ref bool __result)
+        {
+            if (KeepDry.Count == 0 || ai == null || !KeepDry.Contains(ai.gameObject) || (tag != null && TiredMoves.Contains(tag))) return true;
+            Character character = ai.GetComponent<Character>();
+            if (character == null || character.IsSwimming()) return true;
+            if (!(bool)_swimOnLine.Invoke(null, new object[] { character, ai.transform.position, goal, WaterLookAhead })) return true;
+            ai.StopMoving();
+            __result = false;
+            return false;
+        }
+
+        /// <summary>
+        /// Al revivir, Offline Companions lo deja en postura pasiva hasta recuperar sus cosas y guarda la postura de antes.
+        /// Si muere en ese rato, toma la pasiva por la suya y se queda sin pelear para siempre; igual con recoger por su cuenta.
+        /// </summary>
+        private static void ApplyDeathWhileRecovering(Harmony harmony)
+        {
+            System.Type setup = AccessTools.TypeByName("Companions.CompanionSetup");
+            System.Type recover = AccessTools.TypeByName("Companions.MHR_Recover");
+            MethodInfo death = setup == null ? null : AccessTools.Method(setup, "OnCompanionDeath");
+            FieldInfo stance = setup == null ? null : AccessTools.Field(setup, "CombatStanceHash");
+            FieldInfo pickup = setup == null ? null : AccessTools.Field(setup, "AutoPickupHash");
+            FieldInfo recovering = recover == null ? null : AccessTools.Field(recover, "RecoveringHash");
+            FieldInfo savedStance = recover == null ? null : AccessTools.Field(recover, "RecoverStanceHash");
+            FieldInfo savedPickup = recover == null ? null : AccessTools.Field(recover, "RecoverPickupHash");
+            if (death == null || stance == null || pickup == null || recovering == null || savedStance == null || savedPickup == null)
+            {
+                Plugin.Log.LogWarning("Conservar la postura al morir recién revivido no está disponible en esta versión de Offline Companions Reborn: podría quedarse en postura pasiva.");
+                return;
+            }
+            _stanceHash = (int)stance.GetValue(null);
+            _pickupHash = (int)pickup.GetValue(null);
+            _recoveringHash = (int)recovering.GetValue(null);
+            _savedStanceHash = (int)savedStance.GetValue(null);
+            _savedPickupHash = (int)savedPickup.GetValue(null);
+            harmony.Patch(death, prefix: Hook(nameof(RestoreBeforeDeath)));
+        }
+
+        private static void RestoreBeforeDeath(Component __instance)
+        {
+            ZNetView view = __instance.GetComponent<ZNetView>();
+            if (view == null || !view.IsValid() || !view.IsOwner()) return;
+            ZDO zdo = view.GetZDO();
+            if (zdo == null || !zdo.GetBool(_recoveringHash)) return;
+            int stance = zdo.GetInt(_savedStanceHash);
+            zdo.Set(_stanceHash, stance);
+            zdo.Set(_pickupHash, zdo.GetBool(_savedPickupHash, true));
+            Plugin.Log.LogInfo("[Postura] " + CompanionBridge.Name(__instance) + " ha muerto recién revivido: conserva la postura " + CompanionActions.StanceName(stance) + ".");
+        }
+
+        /// <summary>Si en ese punto tendría que nadar. Sin el dato de Offline Companions, se da por hecho que no.</summary>
+        public static bool WouldSwimAt(Component companion, Vector3 point)
+        {
+            return _wouldSwim != null && (bool)_wouldSwim.Invoke(null, new object[] { companion.GetComponent<Character>(), point });
+        }
+
+        /// <summary>Lo único que puede dejar en el cofre al que va ahora. Lo demás es para otro cofre.</summary>
+        public static readonly Dictionary<GameObject, HashSet<string>> StoreOnly = new Dictionary<GameObject, HashSet<string>>();
+
+        /// <summary>El objeto que un compañero debe buscar solo por el suelo, o null si no tiene ese encargo.</summary>
+        public static System.Func<GameObject, string> GroundItemFor;
+
+        private static void ApplyStoreFilter(Harmony harmony)
+        {
+            MethodInfo keep = AccessTools.Method(AccessTools.TypeByName("Companions.CompanionInteract"), "ShouldKeep", new[] { typeof(ItemDrop.ItemData), typeof(Humanoid) });
+            if (keep == null)
+            {
+                Plugin.Log.LogWarning("Repartir lo guardado según lo que hay en cada cofre no está disponible en esta versión de Offline Companions Reborn.");
+                return;
+            }
+            harmony.Patch(keep, postfix: Hook(nameof(KeepPostfix)));
+        }
+
+        private static void KeepPostfix(ItemDrop.ItemData item, Humanoid humanoid, ref bool __result)
+        {
+            if (__result || humanoid == null || !StoreOnly.TryGetValue(humanoid.gameObject, out HashSet<string> items)) return;
+            __result = item.m_dropPrefab == null || !items.Contains(item.m_dropPrefab.name);
+        }
+
+        /// <summary>
+        /// Con pico, Offline Companions va a lo que tenga más cerca, roca o no, y las rocas no dan sílex: nunca terminaría.
+        /// Sin herramienta solo recoge lo suelto, que es justo lo que hace falta.
+        /// </summary>
+        private static void ApplyGroundItems(Harmony harmony)
+        {
+            MethodInfo looseOn = AccessTools.Method(AccessTools.TypeByName("Companions.HarvestController"), "LooseOn");
+            MethodInfo allowLoose = AccessTools.Method("Companions.MHR_GatherRules:AllowLoose");
+            if (looseOn == null || allowLoose == null)
+            {
+                Plugin.Log.LogWarning("Buscar sílex solo por el suelo no está disponible en esta versión de Offline Companions Reborn: con pico se pondrá a picar rocas.");
+                return;
+            }
+            _wouldSwim = AccessTools.Method("Companions.MHR_Water:WouldSwim");
+            if (_wouldSwim == null) Plugin.Log.LogWarning("Evitar el sílex en aguas hondas no está disponible en esta versión de Offline Companions Reborn: puede ponerse a nadar para buscarlo.");
+            harmony.Patch(looseOn, postfix: Hook(nameof(LooseOnPostfix)));
+            harmony.Patch(allowLoose, postfix: Hook(nameof(AllowLoosePostfix)));
+        }
+
+        private static void LooseOnPostfix(Component __instance, ref bool noTool, ref bool __result)
+        {
+            if (GroundItemFor?.Invoke(__instance.gameObject) == null) return;
+            noTool = true;
+            __result = true;
+        }
+
+        // Tampoco piedras sueltas, ni lo limitan las listas y cantidades de la configuración: lo ha pedido el jugador.
+        // Lo que está donde no hace pie se deja: nadar hasta allí le agota, y hay más por la orilla.
+        private static void AllowLoosePostfix(Component h, Pickable pick, int mode, ref bool __result)
+        {
+            string item = h == null ? null : GroundItemFor?.Invoke(h.gameObject);
+            if (item == null)
+            {
+                // Las ramas sueltas solo dan madera normal.
+                string wood = h == null || mode != WoodMode ? null : ChopItemFor?.Invoke(h.gameObject);
+                if (wood != null && __result) __result = pick != null && pick.m_itemPrefab != null && pick.m_itemPrefab.name == wood;
+                return;
+            }
+            __result = pick != null && pick.m_itemPrefab != null && pick.m_itemPrefab.name == item && !NeedsSwimming(h, pick);
+        }
+
+        private static bool NeedsSwimming(Component h, Pickable pick)
+        {
+            return _wouldSwim != null && (bool)_wouldSwim.Invoke(null, new object[] { h.GetComponent<Character>(), pick.transform.position });
+        }
+
+        /// <summary>La madera que un compañero debe sacar solo de los árboles que la dan, o null si vale cualquiera.</summary>
+        public static System.Func<GameObject, string> ChopItemFor;
+
+        private const int WoodMode = 1;
+        private static MethodInfo _dropsOf;
+        private static MethodInfo _isOwnPiece;
+        private static FieldInfo _bestTree;
+
+        /// <summary>
+        /// Offline Companions tala lo que tenga a mano sin mirar qué madera suelta, y va antes a cualquier tronco o tocón
+        /// del suelo, aunque esté lejos, que a un árbol en pie cercano.
+        /// </summary>
+        private static void ApplyChopping(Harmony harmony)
+        {
+            System.Type harvest = AccessTools.TypeByName("Companions.HarvestController");
+            MethodInfo allow = AccessTools.Method("Companions.MHR_GatherRules:AllowTarget");
+            MethodInfo scan = AccessTools.Method(harvest, "ScanForTarget");
+            _dropsOf = AccessTools.Method("Companions.MHR_GatherRules:DropsOf");
+            _isOwnPiece = AccessTools.Method(harvest, "IsOwnPiece");
+            _bestTree = AccessTools.Field(harvest, "_bestTree");
+            if (allow == null || scan == null || _dropsOf == null || _isOwnPiece == null || _bestTree == null)
+            {
+                Plugin.Log.LogWarning("Elegir los árboles según la madera pedida no está disponible en esta versión de Offline Companions Reborn: talará cualquiera.");
+                return;
+            }
+            harmony.Patch(allow, postfix: Hook(nameof(ChopOnlyForItem)));
+            harmony.Patch(scan, postfix: Hook(nameof(NearestWood)));
+        }
+
+        // Según lo que el juego dice que suelta el árbol, sus troncos o el tocón: así sirve para cualquier madera.
+        private static void ChopOnlyForItem(Component h, GameObject go, int mode, ref bool __result)
+        {
+            if (!__result || mode != WoodMode || h == null || go == null) return;
+            string item = ChopItemFor?.Invoke(h.gameObject);
+            if (item == null) return;
+            var drops = _dropsOf.Invoke(null, new object[] { go }) as List<string>;
+            __result = drops != null && drops.Contains(item);
+        }
+
+        // Rematar el tronco del árbol que acaba de tirar sigue yendo primero. Lo demás, lo que esté más cerca.
+        private static void NearestWood(Component __instance, int mode, ref GameObject __result)
+        {
+            if (mode != WoodMode || __result == null || __result.GetComponent<TreeBase>() != null) return;
+            var tree = _bestTree.GetValue(__instance) as GameObject;
+            if (tree == null) return;
+            string type = __result.GetComponent<TreeLog>() != null ? "TreeLog" : "Stump";
+            if ((bool)_isOwnPiece.Invoke(__instance, new object[] { __result, type })) return;
+            Vector3 from = __instance.transform.position;
+            if (Vector3.Distance(from, tree.transform.position) < Vector3.Distance(from, __result.transform.position)) __result = tree;
+        }
+
+        /// <summary>
+        /// Offline Companions abandona una roca grande si dos golpes seguidos no la tocan físicamente, cosa fácil en vetas
+        /// medio enterradas como las de cobre, donde el pico se queda en el suelo. Y no olvida esos fallos al repetir la
+        /// orden, así que después se rinde al primer golpe.
+        /// </summary>
+        private static void ApplyRockStrikes(Harmony harmony)
+        {
+            System.Type harvest = AccessTools.TypeByName("Companions.HarvestController");
+            MethodInfo swings = harvest == null ? null : AccessTools.Method(harvest, "SwingsNotLanding");
+            MethodInfo directed = harvest == null ? null : AccessTools.Method(harvest, "SetDirectedTarget", new[] { typeof(GameObject) });
+            _applyRockDamage = harvest == null ? null : AccessTools.Method(harvest, "ApplyDirectRock5Damage");
+            _sectionExposed = harvest == null ? null : AccessTools.Method(harvest, "IsSegmentExposed", new[] { typeof(Collider) });
+            _harvestTarget = harvest == null ? null : AccessTools.Field(harvest, "_target");
+            _noDamageSwings = harvest == null ? null : AccessTools.Field(harvest, "_noDamageSwings");
+            _lastHitAt = harvest == null ? null : AccessTools.Field(harvest, "_lastHitAt");
+            _hitCheckFor = harvest == null ? null : AccessTools.Field(harvest, "_hitCheckFor");
+            _harvestBlacklist = harvest == null ? null : AccessTools.Field(harvest, "_blacklist");
+            if (swings == null || directed == null || _applyRockDamage == null || _sectionExposed == null || _harvestTarget == null
+                || _noDamageSwings == null || _lastHitAt == null || _hitCheckFor == null || _harvestBlacklist == null)
+            {
+                Plugin.Log.LogWarning("Picar vetas medio enterradas puede fallar: esta versión de Offline Companions Reborn no tiene lo necesario para ayudarle.");
+                return;
+            }
+            harmony.Patch(swings, postfix: Hook(nameof(SwingsPostfix)));
+            harmony.Patch(directed, prefix: Hook(nameof(DirectedPrefix)));
+            harmony.Patch(_sectionExposed, postfix: Hook(nameof(SectionExposedPostfix)));
+        }
+
+        /// <summary>
+        /// Offline Companions da por expuesta una sección con el centro hasta 1 m bajo tierra, y va a la más cercana de
+        /// esas. Una veta sigue bajo el suelo mucho más allá de lo que se ve, así que acababa picando la tierra de encima.
+        /// Se pide mucho (por sección y por fotograma), de ahí que se recuerde un rato.
+        /// </summary>
+        private static void SectionExposedPostfix(Collider __0, ref bool __result)
+        {
+            if (!__result || __0 == null) return;
+            try
+            {
+                float now = Time.time;
+                if (_sectionVisible.TryGetValue(__0, out KeyValuePair<float, bool> known) && now - known.Key < SectionCheckSeconds)
+                {
+                    __result = known.Value;
+                    return;
+                }
+                bool visible = SectionShowsAboveGround(__0);
+                if (_sectionVisible.Count > MaxSectionsRemembered) _sectionVisible.Clear();
+                _sectionVisible[__0] = new KeyValuePair<float, bool>(now, visible);
+                __result = visible;
+            }
+            catch (System.Exception ex)
+            {
+                // Dentro de cada fotograma de Offline Companions: ante la duda, se queda con lo que él decidió.
+                Plugin.Log.LogError("[Picar] " + ex);
+            }
+        }
+
+        // Se mira desde arriba dónde queda su superficie frente al suelo. Si los rayos no la encuentran, no se sabe, y no se descarta.
+        private static bool SectionShowsAboveGround(Collider section)
+        {
+            if (ZoneSystem.instance == null) return true;
+            Bounds bounds = section.bounds;
+            float top = bounds.max.y + 1f;
+            float length = bounds.size.y + 2f;
+            Vector3 spread = bounds.extents * SectionSampleSpread;
+            bool found = false;
+            float highest = float.NegativeInfinity;
+            foreach (Vector2 offset in SectionSamples)
+            {
+                var ray = new Ray(new Vector3(bounds.center.x + offset.x * spread.x, top, bounds.center.z + offset.y * spread.z), Vector3.down);
+                if (!section.Raycast(ray, out RaycastHit hit, length)) continue;
+                found = true;
+                highest = Mathf.Max(highest, hit.point.y - ZoneSystem.instance.GetGroundHeight(hit.point));
+            }
+            if (!found || highest >= SectionAboveGround) return true;
+            if (_buriedReports < MaxBuriedReports)
+            {
+                _buriedReports++;
+                Plugin.Log.LogInfo("[Picar] Sección enterrada descartada en " + bounds.center.ToString("F1") + ": asoma " + highest.ToString("F1") + " m sobre el suelo.");
+            }
+            return false;
+        }
+
+        /// <summary>Una orden nueva empieza de cero, aunque antes no pudiera con esa misma roca.</summary>
+        private static void DirectedPrefix(Component __instance, GameObject __0)
+        {
+            if (__0 == null) return;
+            _hitCheckFor.SetValue(__instance, null);
+            (_harvestBlacklist.GetValue(__instance) as System.Collections.IDictionary)?.Remove(__0.GetInstanceID());
+            _rockReported.Remove(__instance);
+        }
+
+        /// <summary>Si el golpe no ha tocado la roca pero tiene una sección a su alcance, cuenta como si la hubiera tocado.</summary>
+        private static void SwingsPostfix(Component __instance, ref bool __result)
+        {
+            try
+            {
+                if ((int)_noDamageSwings.GetValue(__instance) < 1) return;
+                GameObject target = _harvestTarget.GetValue(__instance) as GameObject;
+                if (target == null || target.GetComponent<MineRock5>() == null) return;
+
+                float distance = NearestRockSection(__instance.transform.position, target);
+                string name = CompanionBridge.Name(__instance);
+                if (distance > RockStrikeReach)
+                {
+                    if (!__result) return;
+                    Plugin.Log.LogInfo("[Picar] " + name + ": no llega a golpear " + target.name + "; la sección más cercana está a " + (float.IsInfinity(distance) ? "ninguna parte" : distance.ToString("F1") + " m"));
+                    MessageHud.instance?.ShowMessage(MessageHud.MessageType.TopLeft, name + ModLang.Pick(" no consigue golpear esa roca desde donde está.", " cannot hit that rock from there."));
+                    return;
+                }
+
+                _applyRockDamage.Invoke(__instance, null);
+                _noDamageSwings.SetValue(__instance, 0);
+                // Así el golpe siguiente vuelve a contar si tampoco toca: si no, solo haría daño uno de cada dos.
+                _lastHitAt.SetValue(__instance, float.NegativeInfinity);
+                __result = false;
+                if (_rockReported.Add(__instance)) Plugin.Log.LogInfo("[Picar] " + name + ": sus golpes no tocan " + target.name + "; se aplican a la sección a " + distance.ToString("F1") + " m.");
+            }
+            catch (System.Exception ex)
+            {
+                // Se ejecuta en cada golpe, dentro de Offline Companions: mejor que siga con su propia decisión.
+                Plugin.Log.LogError("[Picar] " + ex);
+            }
+        }
+
+        // Solo las secciones que no están bajo tierra: las mismas que Offline Companions acepta golpear.
+        private static float NearestRockSection(Vector3 from, GameObject rock)
+        {
+            float nearest = float.PositiveInfinity;
+            foreach (Transform section in rock.transform)
+            {
+                if (!section.gameObject.activeSelf) continue;
+                Collider collider = section.GetComponent<Collider>();
+                if (collider == null || !(bool)_sectionExposed.Invoke(null, new object[] { collider })) continue;
+                nearest = Mathf.Min(nearest, Vector3.Distance(from, collider.bounds.ClosestPoint(from)));
+            }
+            return nearest;
+        }
+
+        /// <summary>Qué frases fijas se dejan ver. Lo decide el ajuste, que se puede cambiar en la partida.</summary>
+        public static System.Func<RebornSpeechMode> SpeechMode;
+
+        /// <summary>Las demás formas de hablar de CompanionTalk acaban aquí, y la pausa entre frases no cambia porque esta no se llega a decir.</summary>
+        private static void ApplySpeechFilter(Harmony harmony)
+        {
+            System.Type talk = AccessTools.TypeByName("Companions.CompanionTalk");
+            System.Type priority = talk == null ? null : AccessTools.Inner(talk, "Priority");
+            MethodInfo speak = priority == null ? null : AccessTools.Method(talk, "Speak", new[] { typeof(string), priority, typeof(string), typeof(float) });
+            if (speak == null)
+            {
+                Plugin.Log.LogWarning("Las frases fijas no se pueden filtrar en esta versión de Offline Companions Reborn.");
+                return;
+            }
+            harmony.Patch(speak, prefix: Hook(nameof(SpeakPrefix)));
+        }
+
+        private static bool SpeakPrefix(object[] __args)
+        {
+            return SpeechMode == null || RebornSpeech.Allows(SpeechMode(), System.Convert.ToInt32(__args[1]));
+        }
+
+        /// <summary>Con un encargo de cocina no espera junto a una sola estación si puede ir llenando las demás.</summary>
+        private static void ApplyCookSpread(Harmony harmony)
+        {
+            System.Type cook = AccessTools.TypeByName("Companions.CookController");
+            System.Type task = cook == null ? null : AccessTools.Inner(cook, "Task");
+            MethodInfo updateCooking = AccessTools.Method(cook, "UpdateCooking");
+            MethodInfo foodTask = AccessTools.Method(cook, "FoodTask");
+            MethodInfo restoreFollow = AccessTools.Method(cook, "RestoreFollow");
+            _pickTask = AccessTools.Method(cook, "PickTask");
+            _finishTask = AccessTools.Method(cook, "Finish");
+            _pickUpDrops = AccessTools.Method(cook, "PickUpDrops");
+            _dropPoint = AccessTools.Method(cook, "DropPoint");
+            _cookTask = AccessTools.Field(cook, "_task");
+            _cookTimer = AccessTools.Field(cook, "_timer");
+            _cookers = AccessTools.Field(cook, "_cookers");
+            _taskKind = task == null ? null : AccessTools.Field(task, "Kind");
+            _taskCooker = task == null ? null : AccessTools.Field(task, "Cooker");
+            if (!CookAvailable || updateCooking == null || foodTask == null || restoreFollow == null || _pickTask == null || _finishTask == null || _pickUpDrops == null
+                || _dropPoint == null || _cookTask == null || _cookTimer == null || _cookers == null || _taskKind == null || _taskCooker == null)
+            {
+                Plugin.Log.LogWarning("Cocinar en varias estaciones a la vez no está disponible en esta versión de Offline Companions Reborn.");
+                return;
+            }
+            harmony.Patch(updateCooking, prefix: Hook(nameof(SpreadCooking)));
+            harmony.Patch(foodTask, prefix: Hook(nameof(CountCookingNow)), finalizer: Hook(nameof(ForgetCookingNow)));
+            harmony.Patch(restoreFollow, prefix: Hook(nameof(StayWhileCooking)));
+        }
+
+        /// <summary>
+        /// Al pelear uno contra uno, Offline Companions espera a que el enemigo ataque para entrar. Si el enemigo no llega
+        /// por el desnivel, ninguno de los dos hace nada: la espera tiene que acabarse.
+        /// </summary>
+        private static void ApplySpacingPatience(Harmony harmony)
+        {
+            System.Type fight = AccessTools.TypeByName("Companions.CompanionCombatAI");
+            MethodInfo spacing = AccessTools.Method(fight, "Spacing");
+            _spacingHold = AccessTools.Field(fight, "_spacingHold");
+            _dipping = AccessTools.Field(fight, "_dipping");
+            _dipUntil = AccessTools.Field(fight, "_dipUntil");
+            _fightTarget = AccessTools.Field(fight, "_targetCreature");
+            if (spacing == null || _spacingHold == null || _dipping == null || _dipUntil == null || _fightTarget == null)
+            {
+                Plugin.Log.LogWarning("El límite de espera en combate no está disponible en esta versión de Offline Companions Reborn.");
+                return;
+            }
+            harmony.Patch(spacing, postfix: Hook(nameof(SpacingPostfix)));
+        }
+
+        private static void ApplyCooking(Harmony harmony)
+        {
+            MethodInfo allowed = AccessTools.Method("Companions.CookCatalog:Allowed");
+            MethodInfo target = AccessTools.Method("Companions.CookCatalog:Target");
+            MethodInfo focus = AccessTools.Method("Companions.CookCatalog:Focus");
+            // Se intercepta Usable y no la propiedad Reserve, que es tan pequeña que el motor puede incrustarla en quien la llama.
+            MethodInfo usable = AccessTools.Method(AccessTools.TypeByName("Companions.CookController"), "Usable", new[] { typeof(string) });
+            if (allowed == null || target == null || focus == null || usable == null)
+            {
+                Plugin.Log.LogWarning("Cocinar una comida concreta no está disponible en esta versión de Offline Companions Reborn.");
+                return;
+            }
+            harmony.Patch(allowed, postfix: Hook(nameof(AllowedPostfix)));
+            harmony.Patch(target, postfix: Hook(nameof(TargetPostfix)));
+            harmony.Patch(focus, postfix: Hook(nameof(FocusPostfix)));
+            harmony.Patch(usable, postfix: Hook(nameof(UsablePostfix)));
+            CookAvailable = true;
+        }
+
+        private static void ApplyUpkeep(Harmony harmony)
+        {
+            System.Type upkeep = AccessTools.TypeByName("Companions.UpkeepController");
+            MethodInfo[] plans =
+            {
+                AccessTools.Method(upkeep, "PlanRepair"),
+                AccessTools.Method(upkeep, "PlanFuel"),
+                AccessTools.Method(upkeep, "PlanHoney"),
+                AccessTools.Method(upkeep, "PlanPiles"),
+                AccessTools.Method(upkeep, "PlanSort")
+            };
+            if (!System.Array.TrueForAll(plans, m => m != null))
+            {
+                Plugin.Log.LogWarning("Las tareas sueltas de mantenimiento no están disponibles en esta versión de Offline Companions Reborn.");
+                return;
+            }
+            foreach (MethodInfo plan in plans) harmony.Patch(plan, prefix: Hook(nameof(OnlyFocusedPlan)));
+            UpkeepAvailable = true;
+        }
+
+        private static void ApplySmelting(Harmony harmony)
+        {
+            System.Type smelt = AccessTools.TypeByName("Companions.SmeltController");
+            MethodInfo refill = AccessTools.Method(smelt, "TryPlanRefill");
+            MethodInfo count = AccessTools.Method(smelt, "CountItemByPrefab");
+            MethodInfo pile = AccessTools.Method(smelt, "TryStartPile");
+            MethodInfo scan = AccessTools.Method(smelt, "UpdateScanning");
+            _unclaimSmelter = AccessTools.Method(smelt, "UnclaimSmelter");
+            if (refill == null || count == null || pile == null || scan == null || _unclaimSmelter == null)
+            {
+                Plugin.Log.LogWarning("Fundir un material concreto no está disponible en esta versión de Offline Companions Reborn.");
+                return;
+            }
+            harmony.Patch(scan, prefix: Hook(nameof(FreeOwnSmelter)));
+            harmony.Patch(refill, prefix: Hook(nameof(RefillStart)), finalizer: Hook(nameof(RefillEnd)));
+            harmony.Patch(count, postfix: Hook(nameof(CountPostfix)));
+            harmony.Patch(pile, prefix: Hook(nameof(PileOnlyForItem)));
+            SmeltAvailable = true;
+
+            MethodInfo output = AccessTools.Method(smelt, "FindChestWithSpace");
+            _smeltChests = AccessTools.Field(smelt, "_nearbyChests");
+            _smeltSkipChest = AccessTools.Method(smelt, "SkipChest");
+            _smeltTarget = AccessTools.Field(smelt, "_targetSmelter");
+            if (output == null || _smeltChests == null || _smeltSkipChest == null || _smeltTarget == null)
+            {
+                Plugin.Log.LogWarning("Guardar lo fundido junto a lo mismo no está disponible en esta versión de Offline Companions Reborn: irá al cofre más cercano con sitio.");
+                return;
+            }
+            harmony.Patch(output, postfix: Hook(nameof(OutputWithSame)));
+        }
+
+        private static FieldInfo _smeltChests;
+        private static MethodInfo _smeltSkipChest;
+        private static FieldInfo _smeltTarget;
+
+        // Offline Companions lo deja en el cofre más cercano con un hueco libre, aunque haya otro con lo mismo.
+        private static void OutputWithSame(Component __instance, ref Container __result)
+        {
+            Inventory pack = __instance.GetComponent<Humanoid>()?.GetInventory();
+            var chests = _smeltChests.GetValue(__instance) as List<Container>;
+            if (pack == null || chests == null) return;
+            HashSet<string> outputs = SmelterOutputs(_smeltTarget.GetValue(__instance) as Smelter);
+
+            Container best = null;
+            float bestDistance = float.MaxValue;
+            foreach (Container chest in chests)
+            {
+                if (chest == null || (bool)_smeltSkipChest.Invoke(__instance, new object[] { chest })) continue;
+                Inventory inventory = chest.GetInventory();
+                if (inventory == null || !HoldsCarriedOutput(pack, inventory, outputs)) continue;
+                float distance = Vector3.Distance(__instance.transform.position, chest.transform.position);
+                if (distance < bestDistance)
+                {
+                    best = chest;
+                    bestDistance = distance;
+                }
+            }
+            if (best != null) __result = best;
+        }
+
+        private static HashSet<string> SmelterOutputs(Smelter smelter)
+        {
+            var outputs = new HashSet<string>();
+            if (smelter == null || smelter.m_conversion == null) return outputs;
+            foreach (Smelter.ItemConversion conversion in smelter.m_conversion)
+            {
+                if (conversion?.m_to != null) outputs.Add(conversion.m_to.gameObject.name);
+            }
+            return outputs;
+        }
+
+        private static bool HoldsCarriedOutput(Inventory pack, Inventory chest, HashSet<string> outputs)
+        {
+            foreach (ItemDrop.ItemData item in pack.GetAllItems())
+            {
+                if (item?.m_dropPrefab == null || item.m_shared == null || !outputs.Contains(item.m_dropPrefab.name)) continue;
+                if (chest.HaveItem(item.m_shared.m_name) && chest.CanAddItem(item, item.m_stack)) return true;
+            }
+            return false;
+        }
+
+        private static HarmonyMethod Hook(string name)
+        {
+            return new HarmonyMethod(typeof(BehaviorOverrides), name);
+        }
+
+        private static void AllowedPostfix(string item, ref bool __result)
+        {
+            if (CookFood != null) __result = item == CookFood;
+        }
+
+        private static void TargetPostfix(string item, ref int __result)
+        {
+            // Lo que ya está al fuego cuenta, o llenaría cada estación y cocinaría de más.
+            if (CookFood != null && item == CookFood) __result = CookTarget - _cookingNow;
+        }
+
+        private static void CountCookingNow(Component __instance)
+        {
+            _cookingNow = CookFood == null ? 0 : CookingNow(__instance);
+        }
+
+        private static void ForgetCookingNow()
+        {
+            _cookingNow = 0;
+        }
+
+        private static int CookingNow(Component cook)
+        {
+            int count = 0;
+            foreach (CookingStation station in (List<CookingStation>)_cookers.GetValue(cook))
+            {
+                ZDO zdo = station == null ? null : station.GetComponent<ZNetView>()?.GetZDO();
+                if (zdo == null || station.m_slots == null) continue;
+                for (int i = 0; i < station.m_slots.Length; i++)
+                {
+                    string item = zdo.GetString("slot" + i);
+                    if (item.Length == 0) continue;
+                    int status = zdo.GetInt("slotstatus" + i);
+                    if (status == SlotCooking ? CooksInto(station, item, CookFood) : status == SlotDone && item == CookFood) count++;
+                }
+            }
+            return count;
+        }
+
+        private static bool CooksInto(CookingStation station, string from, string to)
+        {
+            foreach (CookingStation.ItemConversion conversion in station.m_conversion)
+            {
+                if (conversion?.m_from != null && conversion.m_to != null && conversion.m_from.gameObject.name == from && conversion.m_to.gameObject.name == to) return true;
+            }
+            return false;
+        }
+
+        private static int SlotsWith(CookingStation station, int status)
+        {
+            ZDO zdo = station.GetComponent<ZNetView>()?.GetZDO();
+            if (zdo == null || station.m_slots == null) return 0;
+            int count = 0;
+            for (int i = 0; i < station.m_slots.Length; i++)
+            {
+                if (zdo.GetString("slot" + i).Length > 0 && zdo.GetInt("slotstatus" + i) == status) count++;
+            }
+            return count;
+        }
+
+        /// <summary>
+        /// Mientras espera a que algo se haga, deja de esperar si Offline Companions ve otra cosa que hacer con las estaciones:
+        /// sacar lo que ya está hecho en otra o poner más en alguna libre.
+        /// </summary>
+        private static bool SpreadCooking(Component __instance)
+        {
+            if (CookFood == null || (float)_cookTimer.GetValue(__instance) > Time.deltaTime) return true;
+
+            object task = _cookTask.GetValue(__instance);
+            if (task == null || _taskKind.GetValue(task).ToString() != "Grill") return true;
+            var station = _taskCooker.GetValue(task) as CookingStation;
+            // Lo terminado en esta, y acabar cuando no quede nada, lo sigue llevando Offline Companions.
+            if (station == null || SlotsWith(station, SlotDone) + SlotsWith(station, SlotBurnt) > 0 || SlotsWith(station, SlotCooking) == 0) return true;
+
+            object next = _pickTask.Invoke(__instance, null);
+            if (next == null) return true;
+            string kind = _taskKind.GetValue(next).ToString();
+            bool sameStation = (_taskCooker.GetValue(next) as CookingStation) == station;
+            if (kind != "Grill" && (kind != "Rescue" || sameStation)) return true;
+
+            object point = _dropPoint.Invoke(null, new object[] { station });
+            _pickUpDrops.Invoke(__instance, new object[] { point, CookDropRadius, true });
+            _finishTask.Invoke(__instance, null);
+            return false;
+        }
+
+        // Si cree que no hay nada que hacer pero hay comida al fuego, seguir al jugador lo alejaría de ella justo antes de que se haga.
+        private static bool StayWhileCooking(Component __instance)
+        {
+            return CookFood == null || CookingNow(__instance) == 0;
+        }
+
+        private static void SpacingPostfix(Component __instance, ref int __result)
+        {
+            if (__result != 2 || !(bool)_spacingHold.GetValue(__instance))
+            {
+                _holdingSince.Remove(__instance);
+                return;
+            }
+            if (!_holdingSince.TryGetValue(__instance, out float since))
+            {
+                _holdingSince[__instance] = Time.time;
+                return;
+            }
+            if (Time.time - since < SpacingPatienceSeconds) return;
+
+            var target = _fightTarget.GetValue(__instance) as Character;
+            if (target == null || target.InAttack()) return;
+
+            _holdingSince.Remove(__instance);
+            _spacingHold.SetValue(__instance, false);
+            _dipping.SetValue(__instance, true);
+            _dipUntil.SetValue(__instance, Time.time + SpacingDipSeconds);
+            __result = 0;
+
+            Vector3 gap = target.transform.position - __instance.transform.position;
+            Plugin.Log.LogInfo("[Combate] " + CompanionBridge.Name(__instance) + ": deja de esperar a " + target.m_name + " y entra a atacar (a " + gap.magnitude.ToString("F1") + " m, desnivel " + gap.y.ToString("+0.0;-0.0") + " m)");
+        }
+
+        // Mientras cocina un encargo no se pone a preparar hidromiel.
+        private static void FocusPostfix(ref List<string> __result)
+        {
+            if (CookFood != null) __result = new List<string>();
+        }
+
+        // El jugador ha pedido esa comida expresamente: puede usar los ingredientes que normalmente deja de reserva.
+        private static void UsablePostfix(Component __instance, string item, ref int __result)
+        {
+            if (CookFood != null) __result = CompanionBridge.CookStock(__instance, item);
+        }
+
+        private static bool OnlyFocusedPlan(Component __instance, MethodBase __originalMethod, ref bool __result)
+        {
+            if (!UpkeepFocus.TryGetValue(__instance.gameObject, out string plan) || plan == __originalMethod.Name) return true;
+            __result = false;
+            return false;
+        }
+
+        // Offline Companions reserva el horno al trabajar con él y solo lo libera si se interrumpe. Al revisar de nuevo,
+        // descartaría el suyo por estar reservado y, con un solo horno, creería que no hay nada que hacer.
+        private static void FreeOwnSmelter(Component __instance)
+        {
+            _unclaimSmelter.Invoke(__instance, null);
+        }
+
+        // Solo durante esta decisión: el combustible se cuenta con la misma función fuera de ella y no debe verse afectado.
+        private static void RefillStart()
+        {
+            _inRefill = true;
+        }
+
+        private static void RefillEnd()
+        {
+            _inRefill = false;
+        }
+
+        private static void CountPostfix(string __1, ref int __result)
+        {
+            if (_inRefill && SmeltItem != null && __1 != SmeltItem) __result = 0;
+        }
+
+        private static bool PileOnlyForItem(string __0, ref bool __result)
+        {
+            if (!_inRefill || SmeltItem == null || __0 == SmeltItem) return true;
+            __result = false;
+            return false;
+        }
+    }
+}

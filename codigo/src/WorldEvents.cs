@@ -1,0 +1,312 @@
+using System;
+using System.Collections.Generic;
+using UnityEngine;
+
+namespace OfflineCompanionsAI
+{
+    /// <summary>Observa la partida una vez por segundo y avisa de los sucesos que merecen un comentario.</summary>
+    public sealed class WorldEvents
+    {
+        private const float BiomeSettleSeconds = 10f;
+        private const float LowHealthFraction = 0.25f;
+        private const float LowHealthRecovered = 0.5f;
+        // Hasta donde puede estar trabajando. Solo es la condición para buscar su tumba, que es lo que confirma la muerte.
+        private const float NearForDeathCheck = 100f;
+        private const float FirstNeedDelay = 60f;
+        private const float NeedCheckInterval = 20f;
+        private const float NeedCooldown = 600f;
+
+        private sealed class Tracked
+        {
+            public Component Companion;
+            public float LastDistance;
+            public bool LowHealthSaid;
+            public bool MissingAfterNearby;
+            public bool DeathChecked;
+            public string LastPlace;
+            public string ScarePlace;
+
+            // No nada más entrar en el mundo: el compañero acaba de cargarse y quizá aún no ha comido.
+            public float NextNeedCheckAt = Time.time + FirstNeedDelay;
+            public readonly Dictionary<string, float> NeedSaidAt = new Dictionary<string, float>();
+        }
+
+        private readonly ModSettings _settings;
+        private readonly Action<Reaction> _emit;
+        private readonly Action<Component, int, string, bool> _remember;
+        private readonly Dictionary<string, Tracked> _companions = new Dictionary<string, Tracked>();
+        private readonly Func<Vector3, string> _placeAt;
+        private bool _playerScared;
+        private string _playerScarePlace;
+        private readonly HashSet<string> _knownBossKeys = new HashSet<string>();
+        private readonly HashSet<string> _visitedBiomes = new HashSet<string>();
+        private ZoneSystem _world;
+        private bool _bossBaselineDone;
+        private Heightmap.Biome _candidateBiome;
+        private float _candidateSince;
+        private bool _playerWasDead;
+        private string _raid;
+
+        /// <summary>
+        /// remember anota un suceso en la memoria, aunque los comentarios estén desactivados: el compañero concreto
+        /// o, si es null, los que estén cerca; su importancia; el texto; y si solo cuenta la primera vez.
+        /// placeAt dice en qué lugar de expedición cae una posición, o null, para que el recuerdo diga dónde pasó.
+        /// </summary>
+        public WorldEvents(ModSettings settings, Action<Reaction> emit, Action<Component, int, string, bool> remember, Func<Vector3, string> placeAt)
+        {
+            _settings = settings;
+            _emit = emit;
+            _remember = remember;
+            _placeAt = placeAt;
+        }
+
+        public void Tick(Player player)
+        {
+            if (_world != ZoneSystem.instance) ResetForNewWorld();
+            if (_world == null || player == null) return;
+
+            CheckPlayerDeath(player);
+            if (player.IsDead()) return;
+
+            CheckPlayerScare(player);
+            CheckBosses();
+            CheckRaid();
+            CheckBiome(player);
+            CheckCompanions(player);
+        }
+
+        private void ResetForNewWorld()
+        {
+            _world = ZoneSystem.instance;
+            _companions.Clear();
+            _knownBossKeys.Clear();
+            _visitedBiomes.Clear();
+            _bossBaselineDone = false;
+            _candidateBiome = Heightmap.Biome.None;
+            _playerWasDead = false;
+            _playerScared = false;
+            _raid = null;
+        }
+
+        private void CheckPlayerDeath(Player player)
+        {
+            bool dead = player.IsDead();
+            if (_playerWasDead && !dead)
+            {
+                // Reaparece lejos de donde estaban: se enteran todos, no solo los que queden cerca.
+                foreach (Component companion in CompanionBridge.MyCompanions())
+                {
+                    _remember(companion, MemoryWeight.Death, player.GetPlayerName() + ModLang.Pick(" murió y volvió a aparecer.", " died and respawned."), false);
+                }
+                if (_settings.ReactPlayerDeath.Value)
+                {
+                    _emit(new Reaction
+                    {
+                        Kind = ReactionKind.PlayerDied,
+                        Description = ModLang.Pick("El jugador acaba de morir y ha reaparecido.", "The player just died and respawned.")
+                    });
+                }
+            }
+            if (dead) _playerScared = false;
+            _playerWasDead = dead;
+        }
+
+        private void CheckPlayerScare(Player player)
+        {
+            float share = player.GetHealthPercentage();
+            if (share <= LowHealthFraction)
+            {
+                if (!_playerScared) _playerScarePlace = _placeAt(player.transform.position);
+                _playerScared = true;
+            }
+            else if (share >= LowHealthRecovered && _playerScared)
+            {
+                _playerScared = false;
+                _remember(null, MemoryWeight.Notable, ExpeditionText.PlayerNearDeath(player.GetPlayerName(), _playerScarePlace), false);
+            }
+        }
+
+        private void CheckBosses()
+        {
+            foreach (string key in _world.GetGlobalKeys())
+            {
+                string boss = ReactionPolicy.BossName(key);
+                if (boss == null || !_knownBossKeys.Add(key)) continue;
+                // Los jefes ya derrotados al cargar el mundo no son noticia.
+                if (_bossBaselineDone)
+                {
+                    _remember(null, MemoryWeight.Boss, ModLang.Pick("Derrotamos a " + boss + ".", "We defeated " + boss + "."), true);
+                    if (_settings.ReactBoss.Value)
+                    {
+                        _emit(new Reaction
+                        {
+                            Kind = ReactionKind.BossDefeated,
+                            Description = ModLang.Pick("Acaban de derrotar a " + boss + ".", "You just defeated " + boss + ".")
+                        });
+                    }
+                }
+            }
+            _bossBaselineDone = true;
+        }
+
+        private void CheckRaid()
+        {
+            string raid = CompanionBridge.ActiveRaid();
+            if (raid == _raid) return;
+            bool ended = raid == null;
+            string previous = _raid;
+            _raid = raid;
+            if (ended && previous != null)
+            {
+                Player player = Player.m_localPlayer;
+                _remember(null, MemoryWeight.Notable, ExpeditionText.Raid(player != null ? _placeAt(player.transform.position) : null), false);
+            }
+            if (!_settings.ReactRaid.Value) return;
+            if (!ended)
+            {
+                _emit(new Reaction
+                {
+                    Kind = ReactionKind.RaidStarted,
+                    Description = ModLang.Pick("Empieza una incursión de enemigos: ", "An enemy raid has started: ") + raid
+                });
+            }
+            else if (previous != null)
+            {
+                _emit(new Reaction
+                {
+                    Kind = ReactionKind.RaidEnded,
+                    Description = ModLang.Pick("La incursión de enemigos ha terminado.", "The enemy raid has ended.")
+                });
+            }
+        }
+
+        private void CheckBiome(Player player)
+        {
+            Heightmap.Biome biome = player.GetCurrentBiome();
+            if (biome != _candidateBiome)
+            {
+                _candidateBiome = biome;
+                _candidateSince = Time.time;
+                return;
+            }
+            // Evita comentar los cruces breves por la frontera entre biomas.
+            if (Time.time - _candidateSince < BiomeSettleSeconds) return;
+
+            string key = biome.ToString();
+            string name = ReactionPolicy.BiomeName(key);
+            if (name == null) return;
+            bool firstOfSession = _visitedBiomes.Count == 0;
+            if (_visitedBiomes.Add(key) && !firstOfSession)
+            {
+                string visitedLine = ModLang.IsSpanish
+                    ? ("Llegamos a " + name + ".").Replace(" a el ", " al ")
+                    : "We arrived at " + name + ".";
+                _remember(null, MemoryWeight.Notable, visitedLine, true);
+                if (_settings.ReactBiome.Value)
+                {
+                    _emit(new Reaction
+                    {
+                        Kind = ReactionKind.NewBiome,
+                        Description = ModLang.Pick(
+                            "Acabáis de entrar en " + name + " por primera vez en esta sesión.",
+                            "You have just entered " + name + " for the first time this session.")
+                    });
+                }
+            }
+        }
+
+        private void CheckCompanions(Player player)
+        {
+            var seen = new HashSet<string>();
+            foreach (Component companion in CompanionBridge.MyCompanions())
+            {
+                string id = CompanionBridge.PermanentId(companion);
+                if (string.IsNullOrEmpty(id)) continue;
+                seen.Add(id);
+
+                float distance = Vector3.Distance(player.transform.position, companion.transform.position);
+                if (!_companions.TryGetValue(id, out Tracked tracked))
+                {
+                    tracked = new Tracked();
+                    _companions[id] = tracked;
+                }
+                else if (tracked.MissingAfterNearby)
+                {
+                    // Si no, al volver con salud contaría que escapó por poco de la misma muerte.
+                    tracked.LowHealthSaid = false;
+                    _remember(companion, MemoryWeight.Death, ExpeditionText.Death(tracked.LastPlace), false);
+                    if (_settings.ReactCompanionReturn.Value)
+                    {
+                        _emit(new Reaction
+                        {
+                            Kind = ReactionKind.CompanionReturned,
+                            Speaker = companion,
+                            Description = ModLang.Pick("Acabas de volver a la vida tras morir.", "You just came back to life after dying.")
+                        });
+                    }
+                }
+                tracked.MissingAfterNearby = false;
+                tracked.Companion = companion;
+                tracked.LastDistance = distance;
+                tracked.LastPlace = _placeAt(companion.transform.position);
+                CheckLowHealth(companion, tracked);
+                CheckNeeds(companion, tracked);
+            }
+
+            foreach (KeyValuePair<string, Tracked> entry in _companions)
+            {
+                Tracked tracked = entry.Value;
+                if (seen.Contains(entry.Key))
+                {
+                    tracked.DeathChecked = false;
+                    continue;
+                }
+                if (tracked.DeathChecked) continue;
+                tracked.DeathChecked = true;
+                // También desaparece al descargarse la zona o al cruzar un portal: solo una tumba suya confirma la muerte.
+                tracked.MissingAfterNearby = tracked.LastDistance <= NearForDeathCheck && CompanionBridge.HasTombstone(entry.Key);
+            }
+        }
+
+        private void CheckNeeds(Component companion, Tracked tracked)
+        {
+            if (!_settings.ReactNeeds.Value || CompanionBridge.InCombat(companion) || Time.time < tracked.NextNeedCheckAt) return;
+            tracked.NextNeedCheckAt = Time.time + NeedCheckInterval;
+
+            foreach (KeyValuePair<string, string> need in CompanionBridge.UnmetNeeds(companion))
+            {
+                if (tracked.NeedSaidAt.TryGetValue(need.Key, out float said) && Time.time - said < NeedCooldown) continue;
+                tracked.NeedSaidAt[need.Key] = Time.time;
+                _emit(new Reaction { Kind = ReactionKind.CompanionNeed, Speaker = companion, CanResolve = true, Description = need.Value });
+                return;
+            }
+        }
+
+        private void CheckLowHealth(Component companion, Tracked tracked)
+        {
+            Character character = companion.GetComponent<Character>();
+            if (character == null || character.GetMaxHealth() <= 0f) return;
+
+            float fraction = character.GetHealth() / character.GetMaxHealth();
+            if (fraction >= LowHealthRecovered)
+            {
+                if (tracked.LowHealthSaid) _remember(companion, MemoryWeight.Notable, ExpeditionText.NearDeath(tracked.ScarePlace), false);
+                tracked.LowHealthSaid = false;
+            }
+            else if (fraction <= LowHealthFraction && !tracked.LowHealthSaid)
+            {
+                tracked.LowHealthSaid = true;
+                tracked.ScarePlace = tracked.LastPlace;
+                if (_settings.ReactLowHealth.Value)
+                {
+                    _emit(new Reaction
+                    {
+                        Kind = ReactionKind.CompanionLowHealth,
+                        Speaker = companion,
+                        Description = ModLang.Pick("Te queda muy poca salud.", "You are very low on health.")
+                    });
+                }
+            }
+        }
+    }
+}

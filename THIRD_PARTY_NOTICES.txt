@@ -1,0 +1,22 @@
+THIRD-PARTY NOTICES
+Spiffo's Valheim AI Companions 0.25.5
+
+Offline Companions Reborn 1.5.8 (modified and integrated)
+By Maddhattr; based on Offline Companions by ProfMags.
+Project: https://github.com/MaddhattrRocks/Offline-Companions-Reborn
+License: MIT. See licenses/Offline-Companions-Reborn-MIT.txt for the
+complete copyright and permission notice, which must be retained.
+The integrated Reborn UI textures originate from that project.
+
+BepInEx, Harmony, Valheim/Unity runtime libraries, Newtonsoft.Json and
+system assemblies are external runtime requirements, not separately
+redistributed binaries in this package. Obtain them from their providers
+under their respective terms.
+
+Spanish interface and speech translation files were authored by ROMAN,
+according to the author's declaration. This notice does not grant a new
+license for those translations or for Spiffo's own source or binary.
+The Reborn MIT license applies to the third-party component identified
+above, not automatically to the entire package.
+
+This mod is not affiliated with Maddhattr, ProfMags, or Player2.
