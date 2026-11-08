@@ -89,6 +89,8 @@ namespace OfflineCompanionsAI
             ApplySmelting(harmony);
             ApplySpeechFilter(harmony);
             ApplyRockStrikes(harmony);
+            ApplyStuckGather(harmony);
+            ApplyCompanionLimit(harmony);
             ApplyStoreFilter(harmony);
             ApplyGroundItems(harmony);
             ApplyChopping(harmony);
@@ -652,6 +654,178 @@ namespace OfflineCompanionsAI
                 nearest = Mathf.Min(nearest, Vector3.Distance(from, collider.bounds.ClosestPoint(from)));
             }
             return nearest;
+        }
+
+        private const float StuckGatherSeconds = 20f;
+        private const float StuckCheckSeconds = 1f;
+        private const float StuckMoveDistance = 1.5f;
+        private static FieldInfo _swingCount;
+        private static FieldInfo _catchingBreath;
+
+        private sealed class GatherWatch
+        {
+            public GameObject Target;
+            public float Since;
+            public float NextCheck;
+            public Vector3 Anchor;
+            public int Swings;
+            public float LastHit;
+        }
+
+        private static readonly Dictionary<Companions.HarvestController, GatherWatch> _gatherWatch = new Dictionary<Companions.HarvestController, GatherWatch>();
+
+        /// <summary>
+        /// Offline Companions puede quedarse parado con un objetivo sin dar ningún golpe ni moverse, sin escribir nada en el
+        /// registro: pasa al romperse una veta de cobre entera mientras está subido encima, y se queda sin el pico y quieto.
+        /// Si pasa un rato así (también talando), se anota cómo estaba y se le hace dejar ese objetivo para que busque otro.
+        /// </summary>
+        private static void ApplyStuckGather(Harmony harmony)
+        {
+            MethodInfo update = AccessTools.Method(typeof(Companions.HarvestController), "Update");
+            _swingCount = AccessTools.Field(typeof(Companions.HarvestController), "_swingCount");
+            _catchingBreath = AccessTools.Field(typeof(Companions.HarvestController), "_catchingBreath");
+            if (update == null || _swingCount == null || _catchingBreath == null || _lastHitAt == null)
+            {
+                Plugin.Log.LogWarning("Sacarle de un trabajo atascado no está disponible en esta versión de Offline Companions Reborn: puede quedarse quieto junto a una roca.");
+                return;
+            }
+            harmony.Patch(update, postfix: Hook(nameof(StuckGatherPostfix)));
+        }
+
+        private static void StuckGatherPostfix(Companions.HarvestController __instance)
+        {
+            try
+            {
+                float now = Time.time;
+                if (!_gatherWatch.TryGetValue(__instance, out GatherWatch watch))
+                {
+                    if (_gatherWatch.Count > 50) _gatherWatch.Clear();
+                    watch = new GatherWatch();
+                    _gatherWatch[__instance] = watch;
+                }
+                if (now < watch.NextCheck) return;
+                watch.NextCheck = now + StuckCheckSeconds;
+
+                GameObject target = __instance._target;
+                var ai = __instance.GetComponent<Companions.CompanionAI>();
+                bool working = (__instance.IsMoving || __instance.IsAttacking) && target != null;
+                bool waiting = (ai != null && ai.IsInCombat) || Companions.CompanionRest.MHR_ShouldPauseWork(__instance)
+                    || (bool)_catchingBreath.GetValue(__instance);
+                int swings = (int)_swingCount.GetValue(__instance);
+                float lastHit = (float)_lastHitAt.GetValue(__instance);
+                Vector3 position = __instance.transform.position;
+                bool progress = target != watch.Target || swings != watch.Swings || lastHit != watch.LastHit
+                    || Vector3.Distance(position, watch.Anchor) > StuckMoveDistance;
+                if (!working || waiting || progress)
+                {
+                    watch.Target = working ? target : null;
+                    watch.Since = now;
+                    watch.Anchor = position;
+                    watch.Swings = swings;
+                    watch.LastHit = lastHit;
+                    return;
+                }
+                if (now - watch.Since < StuckGatherSeconds) return;
+
+                watch.Target = null;
+                watch.Since = now;
+                var humanoid = __instance.GetComponent<Humanoid>();
+                ItemDrop.ItemData hand = humanoid == null ? null : Companions.ReflectionHelper.GetRightItem(humanoid);
+                bool seated = ai != null && Companions.MHR_Follow.IdleSeated(ai);
+                float aboveGround = ZoneSystem.instance == null ? 0f : position.y - ZoneSystem.instance.GetGroundHeight(position);
+                Plugin.Log.LogInfo("[Recoger] " + CompanionBridge.Name(__instance) + " lleva " + StuckGatherSeconds.ToString("F0")
+                    + " s sin golpear ni moverse con " + target.name + " (" + __instance._targetType + ", " + __instance.CurrentStateName
+                    + "): en la mano " + (hand?.m_shared?.m_name ?? "nada") + ", atacando " + (humanoid != null && humanoid.InAttack())
+                    + ", en el suelo " + (humanoid != null && humanoid.IsOnGround()) + ", nadando " + (humanoid != null && humanoid.IsSwimming())
+                    + ", sentado " + seated + ", a " + aboveGround.ToString("F1") + " m sobre el terreno en " + position.ToString("F1")
+                    + ". Lo deja un rato y busca otro.");
+                if (seated) Companions.MHR_Follow.IdleStand(ai, "stuck at work");
+                __instance._blacklist[target.GetInstanceID()] = now;
+                __instance.ResetToIdle();
+            }
+            catch (System.Exception ex)
+            {
+                // Se ejecuta en cada fotograma de Offline Companions: mejor que siga con su propia decisión.
+                Plugin.Log.LogError("[Recoger] " + ex);
+            }
+        }
+
+        /// <summary>Cuántos compañeros puede haber en un mundo, contando los muertos que van a revivir.</summary>
+        public const int MaxCompanionsPerWorld = 5;
+        private static FieldInfo _zdosById;
+
+        /// <summary>
+        /// Todo compañero nuevo (el inicial, el que invoca Odín por monedas y el que se compra al comerciante) sale de
+        /// SpawnCompanion. Los que reviven no pasan por ahí, así que nunca se pierde uno que ya se tenía.
+        /// </summary>
+        private static void ApplyCompanionLimit(Harmony harmony)
+        {
+            MethodInfo spawn = AccessTools.Method(typeof(Companions.CompanionManager), "SpawnCompanion");
+            _zdosById = AccessTools.Field(typeof(ZDOMan), "m_objectsByID");
+            if (spawn == null)
+            {
+                Plugin.Log.LogWarning("El límite de " + MaxCompanionsPerWorld + " compañeros por mundo no está disponible en esta versión de Offline Companions Reborn.");
+                return;
+            }
+            harmony.Patch(spawn, prefix: Hook(nameof(CompanionLimitPrefix)));
+        }
+
+        private static bool CompanionLimitPrefix(ref bool __result)
+        {
+            try
+            {
+                int count = CompanionsInWorld();
+                if (count < MaxCompanionsPerWorld) return true;
+                Plugin.Log.LogInfo("[Compañeros] No se crea otro: ya hay " + count + " en este mundo (máximo " + MaxCompanionsPerWorld + ").");
+                MessageHud.instance?.ShowMessage(MessageHud.MessageType.Center, ModLang.Pick("Ya tienes " + MaxCompanionsPerWorld + " compañeros en este mundo, el máximo.", "You already have " + MaxCompanionsPerWorld + " companions in this world, the maximum."));
+                __result = false;
+                return false;
+            }
+            catch (System.Exception ex)
+            {
+                // Ante la duda, se deja a Offline Companions hacer lo suyo.
+                Plugin.Log.LogError("[Compañeros] " + ex);
+                return true;
+            }
+        }
+
+        // Quien tiene el mundo (la partida en solitario, o el anfitrión) ve todos sus objetos: también los compañeros
+        // lejanos y las tumbas de los que van a revivir. Un invitado solo puede contar los que tiene cerca.
+        private static int CompanionsInWorld()
+        {
+            var zdos = ZNet.instance != null && ZNet.instance.IsServer() && ZDOMan.instance != null
+                ? _zdosById?.GetValue(ZDOMan.instance) as System.Collections.IDictionary : null;
+            if (zdos == null) return Companions.CompanionSetup.AllCompanions.Count;
+
+            int human = "HC_Companion".GetStableHashCode();
+            int living = 0;
+            var alive = new HashSet<string>();
+            var waiting = new HashSet<string>();
+            foreach (object value in zdos.Values)
+            {
+                if (!(value is ZDO zdo)) continue;
+                int prefab = zdo.GetPrefab();
+                if (prefab == human || Companions.CompanionTierData.IsDvergerVariant(prefab))
+                {
+                    living++;
+                    string id = zdo.GetString(Companions.CompanionSetup.MHR_CompanionIdHash);
+                    if (id.Length > 0) alive.Add(id);
+                    continue;
+                }
+                string tomb = zdo.GetString(Companions.CompanionSetup.MHR_TombCompanionIdHash);
+                if (tomb.Length > 0 && zdo.GetString(Companions.CompanionTombstoneResurrect.RespawnOwnerHash).Length > 0) waiting.Add(tomb);
+            }
+            waiting.ExceptWith(alive);
+            return living + waiting.Count + Unsummoned();
+        }
+
+        // Los que se han despedido siguen en la lista y se pueden volver a llamar sin pasar por SpawnCompanion.
+        private static int Unsummoned()
+        {
+            int count = 0;
+            foreach (var entry in Companions.MHR_Roster.GetRoster())
+                if (entry.Value == Companions.MHR_Roster.Status.Unsummoned) count++;
+            return count;
         }
 
         /// <summary>Qué frases fijas se dejan ver. Lo decide el ajuste, que se puede cambiar en la partida.</summary>
