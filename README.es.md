@@ -1,0 +1,307 @@
+# Spiffo's Valheim AI Companions
+
+[English](README.md) · [Release v0.25.5](https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/tag/v0.25.5) · Plugin `0.25.5`
+
+<p>
+  <img src="docs/assets/cover.jpg" width="640" height="360" alt="Arte de portada con cuatro compañeros ilustrados en un bosque nevado y el título Spiffo's AI Companions. Es arte promocional, no una captura de partida, ni un respaldo de Valheim o de Player2.">
+</p>
+
+Habla con los compañeros de Valheim en **español o inglés**, por texto o con el micrófono, y dales encargos en lenguaje normal. El servicio de IA previsto es la aplicación de escritorio **Player2**. Offline Companions Reborn **1.5.8** ya va dentro de `SpiffoAiCompanions.dll`: no instales ese mod otra vez.
+
+Esta página describe ajustes y límites de este repositorio. No es un informe de pruebas en partida. Hay una [ficha en Player2](https://player2.game/games/jorge-roman/game-f3f99636) enviada y comunicada como en revisión. Esa ficha no es una aprobación.
+
+<a id="contents"></a>
+
+## Contenido
+
+- [Características](#features)
+- [Cuatro compañeros, tareas distintas](#companions)
+- [Inicio rápido](#quick-start)
+- [Requisitos](#requirements)
+- [Instalación](#install)
+- [Configuración de Player2](#player2)
+- [Voz](#voice)
+- [Comprobar la conexión](#check)
+- [Otros proveedores de IA](#other-providers)
+- [Idioma](#language)
+- [Controles](#controls)
+- [Configuración del mod](#config)
+- [Solución de problemas](#troubleshooting)
+- [Release](#release)
+- [Créditos](#credits)
+
+<a id="features"></a>
+
+## ✨ Características
+
+| Qué incluye | Dónde está definido |
+| --- | --- |
+| Chat con quien miras, o con el más cercano | `TalkKey` por defecto `Y`; chat del juego si `TalkInGameChat` está activo |
+| Pulsar para hablar, mediante la app de Player2 | `[Voz]`: mantener `H`, máximo 15 segundos |
+| Encargos en lenguaje normal, distintos para cada compañero | `AllowActions` activo por defecto; ver [compañeros](#companions) |
+| Interfaz, indicaciones y respuestas en español e inglés | `[Personaje] Language` por defecto `Auto` |
+| Memoria entre sesiones | `[Memoria] Enabled` activo; se guarda sin cifrar en la carpeta de config del mod |
+| Comentarios breves ante jefes, biomas, muertes, asaltos y hechos parecidos | `[Reacciones]` activo; cada comentario es una petición a la IA |
+| Modo autónomo opcional para todos los compañeros | `/autonomia`; el modo por defecto es `Normal` (solo hacen lo que pides) |
+| Movimiento, combate y trabajos de Reborn dentro de esta DLL | Versión del plugin Reborn `1.5.8`; no instales una segunda copia |
+| Unas frases exactas siguen funcionando sin IA | `ven` / `sigueme`, `para`, `quedate`, más los comandos con barra de abajo |
+
+En el editor de personaje hay seis personalidades: **Vieja guardia**, **Aprendiz**, **Exploración**, **Caza**, **Oficio** y **Bromas**. Si `[Personaje] Personality` está vacío, cada compañero sin instrucciones propias recibe uno de esos perfiles. Las inclinaciones del editor son **Automática**, **Ninguna**, **Oficio**, **Exploración**, **Caza** y **Recolección**. Automática sigue el perfil y no anula una orden tuya.
+
+<a id="companions"></a>
+
+## 👥 Cuatro compañeros, tareas distintas
+
+Puedes tener varios compañeros a la vez y darles **tareas diferentes**.
+
+Una misma orden hablada puede nombrar como máximo a **4** compañeros. El tope es `Recipients.MaxPerOrder` en `codigo/src/OrderPlanning.cs`.
+
+- **Una persona:** `Bjorn, tala madera` es para Bjorn. Sin nombre, la orden es solo para quien estás hablando (a quien miras, o el más cercano dentro del alcance).
+- **Una lista:** nombres separados por comas, como máximo 4 en esa orden. Los nombres de más en la misma orden no se añaden.
+- **El grupo:** `everyone`, `all`, `team`, `guys` o `everybody` (y `todos`, `todas`, `equipo`, `chicos`) elige hasta 4 compañeros cercanos, incluido quien responde.
+- **Tareas distintas:** usa otro mensaje. `Bjorn, tala madera` y después `Astrid, pesca` son dos órdenes: cada uno puede estar en otra cosa.
+- **Cola:** cada compañero guarda como máximo **5** tareas pendientes (`OrderSequence.MaxQueued`). Otra más responde `Tiene demasiadas tareas pendientes.`
+- **Un mensaje:** se aplican como máximo **6** acciones (`MaxActionsPerMessage`). El resto de esa misma respuesta dice `No aplicada: demasiadas órdenes a la vez.`
+
+Este código **no** fija una plantilla de 4 compañeros. La imagen de arriba es arte de portada con cuatro figuras, no un límite medido en partida. Reborn ofrece un compañero inicial gratis la primera vez que un personaje entra en un mundo (`SpawnStarterCompanion`, activo por defecto) y puede invocar otro en el santuario de Odín por `CompanionPrice` monedas (por defecto **1000**, de tu inventario). Quien está en una zona no cargada no te oye. `/llamar` lo dice por nombre y pide que te acerques. Ese comando no gasta saldo de IA.
+
+`/autonomia` cambia **a todos** entre el modo normal y el autónomo. El modo autónomo puede gastar saldo hasta `MaxPerHour` iniciativas por hora (por defecto 30).
+
+<a id="quick-start"></a>
+
+## ⚡ Inicio rápido
+
+1. Valheim ya tiene [BepInEx](https://thunderstore.io/c/valheim/p/denikson/BepInExPack_Valheim/). Si ya está, no lo reinstales encima.
+2. Copia solo `SpiffoAiCompanions.dll` en `BepInEx/plugins/`. No añadas otro plugin de Offline Companions Reborn.
+3. Instala y abre la app de [Player2](https://player2.game). Deja `[IA] Provider` en `Player2` y `ApiKey` vacío.
+4. Arranca Valheim. En el chat, `/saldo` debe responder con los joules de Player2.
+
+La DLL empaquetada y la suma están en el [release v0.25.5](https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/tag/v0.25.5). La misma DLL también está en [`instalar/BepInEx/plugins/SpiffoAiCompanions.dll`](instalar/BepInEx/plugins/SpiffoAiCompanions.dll) en esta etiqueta.
+
+<a id="requirements"></a>
+
+## Requisitos
+
+- Valheim con BepInEx. El pack del enlace es el que indica esta guía. Si BepInEx ya está instalado, no sustituyas sus archivos.
+- Para el uso previsto: la app de escritorio Player2, en marcha en el mismo PC, antes de abrir el juego.
+- La voz siempre necesita esa app, aunque el chat use otro proveedor.
+- Ollama, LM Studio u otra API compatible con OpenAI pueden sustituir **solo el chat**. Ver [Otros proveedores](#other-providers).
+
+<a id="install"></a>
+
+## 📦 Instalación
+
+Hazlo con Valheim cerrado.
+
+1. **BepInEx, una vez.** Si no hay carpeta `BepInEx` en Valheim, instala [BepInExPack para Valheim](https://thunderstore.io/c/valheim/p/denikson/BepInExPack_Valheim/) siguiendo las instrucciones de ese pack. Si ya está, no copies el pack encima de `winhttp.dll`, de los archivos doorstop ni de la carpeta `BepInEx` existente.
+2. **Solo este mod.** Desde el zip del release, o desde [`instalar/BepInEx/plugins/`](instalar/BepInEx/plugins/), copia `SpiffoAiCompanions.dll` a `Valheim/BepInEx/plugins/`. Si actualizas este mismo mod, sustituye **solo ese archivo**.
+3. **No instales Reborn al lado.** El movimiento y los trabajos salen de Reborn 1.5.8 dentro de esta DLL. No instales también `Offline Companions Reborn`, `Companions.dll` ni un `OfflineCompanionsAI.dll` antiguo. Si hay otra copia cargada, el mod se detiene y escribe: `Mod desactivado: hay otra copia de Offline Companions Reborn en <ruta>. Este mod ya la lleva dentro: borra ese archivo con Valheim cerrado.`
+4. **Menús de Reborn en español, opcional.** Copia la carpeta `Translations` de [`instalar/BepInEx/plugins/OfflineCompanionsReborn/Translations/`](instalar/BepInEx/plugins/OfflineCompanionsReborn/Translations/) a `BepInEx/plugins/OfflineCompanionsReborn/`. Ahí solo están los `Spanish.json`. No sustituye la DLL. El idioma del propio mod no necesita esta copia.
+5. **Configuración.** En el primer arranque BepInEx crea `BepInEx/config/SpiffoAiCompanions.cfg` (el proyecto se compila con `NEW_INSTALL`, GUID `SpiffoAiCompanions`). Un archivo de referencia con los mismos valores por defecto es [`configuracion/SpiffoAiCompanions.cfg`](configuracion/SpiffoAiCompanions.cfg). Si ya editaste tu config, no la machaques con la muestra.
+
+El archivo de Reborn, `BepInEx/config/Maddhattr.OfflineCompanionsReborn.cfg`, es otro. Hay una copia de referencia en [`configuracion/Maddhattr.OfflineCompanionsReborn.cfg`](configuracion/Maddhattr.OfflineCompanionsReborn.cfg). No hace falta tocarlo para Player2. No lo reemplaces si ya cambiaste el precio del santuario, las teclas o los trabajos.
+
+<a id="player2"></a>
+
+## 🎮 Configuración de Player2
+
+Player2 es el proveedor para el que está escrito este mod. El chat va a la app de Player2 en tu equipo. En esa configuración no pones nombre de modelo ni clave de API.
+
+Páginas oficiales de Player2 usadas para los pasos **ajenos** a este mod:
+
+- Descarga la app en [player2.game](https://player2.game).
+- Los textos del propio Player2 dicen dejar abierta la app de escritorio, que ese uso local no pide pegar una clave de API, y que la documentación de la API está en `http://localhost:4315/docs` con la app en marcha: [crear PNJ con IA](https://blog.player2.game/p/building-ai-npcs-with-player2-api), [presentación de la app](https://blog.player2.game/p/we-are-sharing-2m-revenue-with-1000).
+
+Este repositorio no nombra la pantalla de inicio de sesión ni la del micrófono de Player2. Si la app pide iniciar sesión, hazlo en la app antes de arrancar Valheim.
+
+### Ajustes que corresponden a Player2
+
+En `BepInEx/config/SpiffoAiCompanions.cfg` los valores por defecto ya son la configuración de Player2. El `ApiKey` del archivo de muestra está vacío a propósito. No es una clave que debas rellenar desde este README, y este repositorio no incluye un secreto de Player2.
+
+```ini
+[IA]
+Provider = Player2
+BaseUrl =
+Model =
+ApiKey =
+
+[Voz]
+Enabled = true
+VoiceKey = H
+MaxSeconds = 15
+BaseUrl = http://localhost:4315/v1
+```
+
+Qué hace el código con esos campos:
+
+| Ajuste | Comportamiento con Player2 |
+| --- | --- |
+| `[IA] Provider = Player2` | El chat es `POST http://localhost:4315/v1/chat/completions`. |
+| `[IA] BaseUrl` | Se ignora con Player2. Solo se usa si `Provider = Custom`. |
+| `[IA] Model` | Se ignora. La petición no envía `model`. El texto del config dice que Player2 elige el modelo. |
+| `[IA] ApiKey` | Déjalo vacío. Si no lo está, el mod también envía `Authorization: Bearer` con ese valor. El archivo lo guarda en texto plano. No compartas el archivo después de poner una clave. |
+| `[Voz] BaseUrl` | Micrófono y `/saldo`. Por defecto `http://localhost:4315/v1`. |
+| Comprobación | Con el proveedor Player2, `GET http://localhost:4315/v1/health` cada **60** segundos. |
+
+El puerto **4315** es el de la app local de Player2 que llama este mod. El chat con `Provider = Player2` sigue en `http://localhost:4315/v1` aunque cambies `[Voz] BaseUrl`. Cambia la URL de voz solo si la app escucha de verdad en otra dirección. Los puertos de Ollama y LM Studio de más abajo son de esos proveedores, no de Player2.
+
+El mod envía su propia cabecera `player2-game-key`. No copies ese valor en `ApiKey`.
+
+<a id="voice"></a>
+
+## 🎙️ Voz
+
+La voz solo está apagada si `[Voz] Enabled = false`. Si no:
+
+1. Player2 está abierto. El texto del config dice que el micrófono y el idioma del reconocimiento se eligen en esa app.
+2. En Valheim, **mantén** `VoiceKey` (por defecto `H`), habla y **suelta**.
+3. El mod llama a `POST {Voice BaseUrl}/stt/start` con un tiempo de `MaxSeconds` (por defecto **15**, permitido **3–60**) y a `POST .../stt/stop` al soltar. Corta un poco antes del plazo de la app (`StopMargin` 0,5 s).
+4. La voz usa la app de Player2 aunque `[IA] Provider` sea `Ollama`, `LMStudio` o `Custom`.
+
+Cada mensaje de voz puede gastar saldo de Player2. `/saldo` no lo gasta.
+
+<a id="check"></a>
+
+## ✅ Comprobar la conexión
+
+Estos son los mensajes que escribe el mod. No son una prueba de partida guionizada.
+
+1. Abre Player2 y después arranca Valheim.
+2. En `BepInEx/LogOutput.log`, una carga correcta incluye `Conectado con Offline Companions Reborn. Proveedor: Player2`.
+3. En el chat del juego, escribe `/saldo` o `/balance`. El mod lee `{Voice BaseUrl}/joules`. Si va bien: `Saldo de Player2: <número> joules`. Si la app no contesta: `No se pudo consultar el saldo de Player2.`
+4. Pulsa `Y`, o escribe en el chat del juego con `Enter`. El compañero al que te diriges muestra `<nombre> está pensando...` mientras dura la petición. La distancia por defecto es **80** m (`TalkRange`, de 2 a 100).
+5. Mantén `H` y suelta. Si la app está cerrada, la voz dice: `No se pudo conectar con Player2 para reconocer tu voz. Comprueba que la app esté abierta.`
+
+<a id="other-providers"></a>
+
+## Otros proveedores de IA
+
+`[IA] Provider` acepta `Player2`, `Ollama`, `LMStudio` y `Custom`.
+
+| Proveedor | URL de chat que usa el mod | Campo Model |
+| --- | --- | --- |
+| `Player2` | `http://localhost:4315/v1` | no se envía |
+| `Ollama` | `http://localhost:11434/v1` | obligatorio; el ejemplo del config es `llama3.2` |
+| `LMStudio` | `http://localhost:1234/v1` | obligatorio en la mayoría de casos |
+| `Custom` | `[IA] BaseUrl`, incluido `/v1` | obligatorio en la mayoría de servicios |
+
+```ini
+[IA]
+Provider = Ollama
+Model = llama3.2
+```
+
+Las órdenes se envían como `tools` al estilo OpenAI, con `tool_choice` `auto`. Un modelo que no devuelve llamadas a herramientas no cumplirá encargos libres. Unas frases exactas sí se ejecutan aunque el modelo no conteste: `follow me`, `come here`, `stop`, `stay`, y las líneas en español de `OrderIntent` (`ven`, `para`, `quedate` y el resto de esa lista), con `todos` o el nombre de un compañero delante. La voz sigue necesitando Player2.
+
+`TimeoutSeconds` por defecto **30** (5–180). `Temperature` por defecto **0.8** (0–2). `MaxTokens` por defecto **0** significa sin límite. Un límite bajo puede dejar la respuesta vacía; el juego pide subirlo o ponerlo en 0.
+
+<a id="language"></a>
+
+## 🌐 Idioma
+
+`[Personaje] Language` por defecto **`Auto`**. El comentario del código dice que Auto sigue el inglés de Valheim, Español (Latinoamérica) o Español (España). En el código, cualquier idioma de juego en español elige el único modo español del mod; no hay una tercera interfaz. Puedes poner `English` o `Spanish` sin reiniciar.
+
+- Chat: `/idioma es`, `/idioma en`, `/idioma auto` (`/language`, `/lang`). Sin argumento alterna entre inglés y español.
+- Editor de personaje: mantén `LeftShift` y pulsa `Y`, o escribe `/personaje` (`/character`) con un compañero como destino. Los botones son `English`, `Español` y `Auto (Game)` (en la interfaz en español, el tercero es `Automático`).
+- Los comandos en inglés y en español valen en los dos idiomas.
+
+`ReplyLanguage` por defecto `auto` sigue ese ajuste. Los nombres de objetos se comparan en inglés y en los dos vocabularios de español. Un grupo de sinónimos en `ItemNames` es `seta` / `hongo` / `mushroom`.
+
+<a id="controls"></a>
+
+## 🕹️ Controles
+
+Valores por defecto. Cambia las teclas si chocan con otro mod. `TalkKey` no puede ser `T`: el texto del config dice que Valheim usa `T` para los gestos.
+
+| Acción | Por defecto |
+| --- | --- |
+| Hablar con quien miras, o con el más cercano | `Y`, o el chat de Valheim (`Enter`) si `TalkInGameChat` es true |
+| Gritar más lejos | `/s` y el mensaje, hasta `ShoutRange` (por defecto **120** m, de 20 a 300) |
+| Voz | Mantén `H` y suelta para enviar |
+| Ficha del personaje | `LeftShift` + `Y`, o `/personaje` |
+| Ayuda, estado, llamar a todos, saldo | `/ayuda`, `/estado`, `/llamar` o `/recall` / `/call`, `/saldo` |
+| Modo autónomo para todos | `/autonomia` |
+| Lugares con nombre | `/marcar <nombre>`, `/lugares`, `/olvidar <nombre>` |
+| Idioma del mod | `/idioma es` · `en` · `auto` |
+| Reborn: señalar algo | Pulsa `Z` (`DirectTargetKey`). Mantén `Z` para llamarlos |
+| Reborn: rueda de órdenes de uno | Mantén `E` mientras lo miras (`RadialMenuKey`) |
+| Reborn: editor de zona de cultivo | Mantén `LeftAlt` y pulsa `Z` |
+
+También valen `/help`, `/status`, `/recall`, `/balance`, `/character`, `/autonomy`, `/places`, `/mark`, `/forget` y `/language`.
+
+`/ayuda`, `/estado`, `/llamar`, `/saldo`, `/autonomia`, `/lugares`, `/marcar`, `/olvidar` y `/idioma` no pasan por la IA (`RunCommand`). `/personaje` necesita un compañero como destino; si no, el juego dice que no hay ninguno tuyo cerca.
+
+Con otros jugadores en la partida, el chat del juego solo se envía a la IA si el mensaje nombra a un compañero, para no reenviar la conversación entre personas. `TalkInGameChat = false` apaga esa escucha. El hueco mínimo entre mensajes es `Cooldown` (por defecto **2** segundos).
+
+`/ayuda` dentro del juego lista ejemplos de órdenes. Esa lista incluye líneas como `sígueme`, `consigue 10 piedras`, `Bjorn, tala madera` y `todos, síganme`. Los gestos no se hacen si hay un enemigo a **25** m, si el compañero trabaja, descansa, nada o no está en condiciones, ni durante **10** segundos después del gesto anterior. `AllowEmotes = false` lo apaga. `AllowActions = false` impide que la conversación aplique trabajos.
+
+La rueda de Reborn en este código es la rueda completa (seguir, trabajos, fijar hogar, despedir, posturas y el resto de entradas de `CompanionRadialMenu`). No está reducida a cuatro botones. En los textos en inglés la acción de despedir se llama `Despawn`.
+
+<a id="config"></a>
+
+## ⚙️ Configuración del mod
+
+`BepInEx/config/SpiffoAiCompanions.cfg`
+
+| Sección | Qué controla |
+| --- | --- |
+| `IA` | Proveedor, y modelo / clave / URL solo cuando no usas Player2 |
+| `Voz` | Micrófono, tecla, segundos máximos, URL de voz de Player2 |
+| `Conversacion` | Teclas de hablar y editar, alcances de 80 m y 120 m, eco en el chat, si se permiten órdenes y gestos |
+| `Personaje` | `Language`, `ReplyLanguage`, personalidad compartida, `RebornSpeech`, largo de la respuesta |
+| `Memoria` | Guardar el chat, y resumir el chat antiguo con otra petición a la IA |
+| `Reacciones` | Comentarios de eventos. Espera por defecto **180** s (30–3600). `MaxPerHour` por defecto **10** (1–60) |
+| `Autonomia` | `Normal` o `Autonomo`. `IntervalSeconds` por defecto **75** (20–3600). `MaxPerHour` por defecto **30** (1–120) |
+
+`RebornSpeech` por defecto `Avisos`: las frases propias de Reborn se limitan a avisos, como no tener hacha. `Todas` es la charla original de Reborn. `Ninguna` calla esas frases fijas. Las respuestas de la IA van aparte.
+
+Las órdenes de explorar usan `ExploreGoal.TimeLimitSeconds` (**240** s) y se quedan dentro de `ReachShare` (**0,85**) de la zona cargada a tu alrededor. Este código no les pone un tope fijo de «85 m». Los hallazgos de esa salida tienen tope **8** y se buscan a **50** m (`ExploreFindMeters`).
+
+<a id="troubleshooting"></a>
+
+## 🛠️ Solución de problemas
+
+El texto de la derecha es lo que muestra el mod, o la comprobación que indica su propio registro.
+
+| Qué ves | Qué dice el código que revises |
+| --- | --- |
+| `No se pudo conectar con la IA. Comprueba que el servicio esté abierto.` | Player2, u otro proveedor, no contesta. Abre la app y prueba de nuevo. |
+| `No se pudo consultar el saldo de Player2.` | `/saldo` no pudo leer `/joules`. La misma app y `[Voz] BaseUrl`. |
+| `La IA rechazó la autenticación. Revisa la clave o la sesión.` | HTTP 401 o 403. Con Player2, inicia sesión en la app si te lo pide, y deja `ApiKey` vacío salvo que quieras enviar un token bearer. |
+| `Tu cuenta de IA no tiene saldo suficiente.` | El cuerpo de la respuesta contenía `insufficient_credits`. |
+| `Demasiadas peticiones a la IA. Espera un momento.` | HTTP 429. |
+| `No se pudo conectar con Player2 para reconocer tu voz. Comprueba que la app esté abierta.` | Voz con estado HTTP 0. |
+| `Player2 ya está escuchando. Inténtalo de nuevo en un momento.` | Voz HTTP 409. |
+| `El reconocimiento de voz de Player2 no está disponible. Revisa el micrófono en la app.` | Voz HTTP 503. El mod no nombra el control del micrófono. |
+| `Se agotó el tiempo de escucha. Inténtalo de nuevo.` | Voz HTTP 404. |
+| `La IA no devolvió texto...` | Sube `MaxTokens` o ponlo en `0`. |
+| Responden y no actúan | `AllowActions` tiene que ser `true`. Con `ShowOrdersInChat` activo, las órdenes aplicadas empiezan por `Orden para <nombre>:`. |
+| `Tiene demasiadas tareas pendientes.` | Ese compañero ya tiene 5 tareas en cola. |
+| `No aplicada: demasiadas órdenes a la vez.` | Esa respuesta intentó aplicar más de 6 acciones. |
+| `Mod desactivado: hay otra copia de Offline Companions Reborn` | Borra la otra DLL de Reborn o la de IA antigua, con el juego cerrado. No borres `SpiffoAiCompanions.dll`. |
+| No aparece `Conectado con Offline Companions Reborn` | El plugin no terminó de cargar. Lee la línea `Mod desactivado` correspondiente en `BepInEx/LogOutput.log`. |
+| Nadie te oye | Están a más de `TalkRange` (80 m) o, si gritas, de `ShoutRange` (120 m). El juego dice la distancia. Las zonas no cargadas exigen acercarte; `/llamar` lista esos nombres. |
+
+Reparar, fundir y las demás herramientas de trabajo siguen dependiendo de Reborn: una herramienta en la mochila o en un cofre, un hueco libre y el trabajo activado en `Maddhattr.OfflineCompanionsReborn.cfg`. Esta página no añade fallos que no estén en esos archivos.
+
+<a id="release"></a>
+
+## 📥 Release
+
+[Spiffo's Valheim AI Companions 0.25.5](https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/tag/v0.25.5)
+
+- [Spiffos-AI-Companions-v0.25.5.zip](https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/download/v0.25.5/Spiffos-AI-Companions-v0.25.5.zip)
+- [SHA256SUMS](https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/download/v0.25.5/SHA256SUMS)
+- Notas en el repo: [RELEASE_NOTES.md](RELEASE_NOTES.md)
+
+El SHA256 del zip es `9beb59ae96c84c26247cbb37eb15d6b802c2ae82e50eb3a64b7df4fa06af3f1d` (22.723.838 bytes), como figura en [`SHA256SUMS`](SHA256SUMS).
+
+<a id="credits"></a>
+
+## Créditos
+
+Spiffo's Valheim AI Companions incluye Offline Companions Reborn **1.5.8** de Maddhattr, basado en Offline Companions de ProfMags, con licencia MIT. El texto MIT está en [licenses/Offline-Companions-Reborn-MIT.txt](licenses/Offline-Companions-Reborn-MIT.txt) y en [codigo/Reborn/LICENSE](codigo/Reborn/LICENSE). [THIRD_PARTY_NOTICES.txt](THIRD_PARTY_NOTICES.txt) indica que esa concesión MIT cubre ese componente de terceros, no una licencia elegida aquí para el código o la DLL de Spiffo.
+
+Los archivos de interfaz y voz en español del paquete los escribió ROMAN, según ese aviso. Este mod no está afiliado con Maddhattr, ProfMags, Player2 ni con quienes hacen Valheim.
+
+La imagen de portada es arte promocional aportado para esta documentación. No es una captura de una sesión probada ni un respaldo oficial de Player2 o de Valheim.
