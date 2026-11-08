@@ -1,4 +1,4 @@
-Spiffo's Valheim AI Companions 0.25.8
+Spiffo's Valheim AI Companions 0.26.0
 
 AI-powered companion conversation, natural-language orders and long-term memory
 for Valheim, with English/Spanish language selection and Offline Companions
@@ -6,6 +6,19 @@ Reborn 1.5.8 integrated.
 
 Requires Valheim, BepInEx and an AI service. Voice input requires the Player2 app.
 See README.txt for installation and configuration.
+
+Multiplayer Update (0.26.0)
+
+- Shared speech: what your companions say is shown to other players who have
+  this mod, as a speech bubble over the companion and as a chat line, only
+  within the normal talking distance of Valheim's chat. Players further away
+  see nothing. What you type to your companion is not sent, and neither are
+  the mod's own notices. Each player chooses for their own companions with
+  [Multijugador] ShareSpeech in SpiffoAiCompanions.cfg, on by default.
+- Other players: the AI is told which other players are within 60 m of the
+  companion, up to 5, with their name, distance, whether they are badly hurt
+  and what they hold in their hands. The companion recognizes them and can
+  talk about them, but it only takes orders from its own player.
 
 Fixes in 0.25.8
 

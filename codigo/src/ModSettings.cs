@@ -56,6 +56,7 @@ namespace OfflineCompanionsAI
         public readonly ConfigEntry<float> ShoutRange;
         public readonly ConfigEntry<float> Cooldown;
         public readonly ConfigEntry<bool> ShowInChat;
+        public readonly ConfigEntry<bool> ShareSpeech;
 
         public readonly ConfigEntry<string> ReplyLanguage;
         public readonly ConfigEntry<string> Personality;
@@ -108,6 +109,7 @@ namespace OfflineCompanionsAI
             ShoutRange = cfg.Bind("Conversacion", "ShoutRange", 120f, new ConfigDescription("Maximum distance in meters at which a companion hears you when shouting with /s in chat. Beyond that, the game usually has their zone unloaded.", new AcceptableValueRange<float>(20f, 300f)));
             Cooldown = cfg.Bind("Conversacion", "Cooldown", 2f, new ConfigDescription("Minimum seconds between messages, to avoid overspending.", new AcceptableValueRange<float>(0f, 60f)));
             ShowInChat = cfg.Bind("Conversacion", "ShowInChat", true, "Logs the conversation in the chat window and shows it briefly. Press Enter to re-read it.");
+            ShareSpeech = cfg.Bind("Multijugador", "ShareSpeech", true, "Other players who have this mod see what your companions say, in their speech bubble and in the chat, only within the normal talking distance of Valheim's chat. What you type to them is not sent.");
 
             ReactNeeds = cfg.Bind("Reacciones", "Needs", true, "Warns when hungry with no food, gear is very worn, or backpack is full, at most once every 10 minutes per need.");
             VoiceEnabled = cfg.Bind("Voz", "Enabled", true, "Allows talking to the companion with your microphone. Only listens while you hold VoiceKey. Requires the Player2 app, where microphone and language are selected, and spends balance.");

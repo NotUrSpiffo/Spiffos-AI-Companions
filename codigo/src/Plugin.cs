@@ -22,7 +22,7 @@ namespace OfflineCompanionsAI
         public const string PluginGuid = "OfflineCompanionsAI";
 #endif
         public const string PluginName = "Spiffo's Valheim AI Companions";
-        public const string PluginVersion = "0.25.8";
+        public const string PluginVersion = "0.26.0";
 
         private const float EmoteCooldown = 10f;
 
@@ -264,6 +264,7 @@ namespace OfflineCompanionsAI
             {
                 BehaviorOverrides.SpeechMode = () => _settings.RebornSpeech.Value;
                 BehaviorOverrides.GroundItemFor = GroundItemFor;
+                SharedSpeech.ChatLine = AddToChat;
             BehaviorOverrides.ChopItemFor = ChopItemFor;
                 BehaviorOverrides.Apply(_harmony);
                 SpeechBubble.Apply(_harmony);
@@ -313,6 +314,7 @@ namespace OfflineCompanionsAI
                 _world = ZoneSystem.instance;
                 ResetSession();
             }
+            SharedSpeech.Update();
             if (Player.m_localPlayer == null) return;
             ShowHintOnce();
 
@@ -4030,6 +4032,7 @@ namespace OfflineCompanionsAI
             SaveMemory(id, memory);
 
             AddToChat(name, LlmProtocol.Shorten(spoken, 0));
+            if (_settings.ShareSpeech.Value && target != null) SharedSpeech.SendChat(target, name, LlmProtocol.Shorten(spoken, 0));
             // El compañero puede haber desaparecido mientras se esperaba la respuesta.
             if (target != null)
             {
@@ -4046,6 +4049,7 @@ namespace OfflineCompanionsAI
             string page = pages.Dequeue();
             float seconds = LlmProtocol.ReadingSeconds(page, _settings.ReadingSpeed.Value, _settings.MinReadingSeconds.Value, _settings.MaxReadingSeconds.Value);
             CompanionBridge.Say(target, page, seconds);
+            if (_settings.ShareSpeech.Value) SharedSpeech.SendBubble(target, page, seconds);
             _nextPageAt[target] = Time.time + seconds;
         }
 

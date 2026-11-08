@@ -1,6 +1,6 @@
 # Spiffo's Valheim AI Companions
 
-[Español](README.es.md) · [Latest release](https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/latest) · `main` is plugin `0.25.8`
+[Español](README.es.md) · [Latest release](https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/latest) · `main` is plugin `0.26.0`
 
 <p>
   <img src="docs/assets/cover.jpg" width="640" height="360" alt="Cover art of four illustrated companions in a snowy forest, titled Spiffo's AI Companions. Promotional artwork, not a gameplay screenshot, and not an endorsement by Valheim or Player2.">
@@ -49,7 +49,7 @@ This page describes settings and limits in this repository. It is not a gameplay
 
 Six built-in personalities are in the character editor: **Old Guard**, **Rookie**, **Explorer**, **Hunter**, **Craftsman**, and **Joker**. If `[Personaje] Personality` is empty, each companion without custom instructions gets one of those profiles. Inclination choices in the editor are **Automatic**, **None**, **Craft**, **Exploration**, **Hunting**, and **Foraging**. Automatic follows the profile; it does not override an order you give.
 
-On `main`, plugin **0.25.8** also changes these Reborn behaviors in `codigo/src/BehaviorOverrides.cs` and `codigo/src/SeatSync.cs`. What changed is in [RELEASE_NOTES.md](RELEASE_NOTES.md).
+On `main`, plugin **0.26.0** also changes these Reborn behaviors in `codigo/src/BehaviorOverrides.cs` and `codigo/src/SeatSync.cs`. What changed is in [RELEASE_NOTES.md](RELEASE_NOTES.md).
 
 - **Mining:** a stone or ore rock, or a section of one, is skipped when the code decides it can only be reached by swimming. If `MHR_Water.WouldSwim` or `MHR_GatherRules.AllowTarget` is missing, the log warns that this skip is unavailable.
 - **Fighting with a tool out:** if the chosen item is a fishing rod, has pickaxe damage, or is a tool, the mod tries a melee weapon, then a bow, and otherwise unequips that item. If the Reborn combat methods are missing, the log warns that the swap is unavailable.
@@ -57,6 +57,13 @@ On `main`, plugin **0.25.8** also changes these Reborn behaviors in `codigo/src/
 - **Companion limit (0.25.7):** a world holds at most **5** (`MaxCompanionsPerWorld`), a fixed constant, not a config entry. One order still addresses at most **4**. See [companions](#companions).
 - **Stone without a pickaxe (0.25.8):** an order for stone picks up loose stones when the companion has no pickaxe, even though Reborn stops collecting them once there is a bronze-or-better axe or a forge. With a pickaxe it mines rocks.
 - **Walking while seated (0.25.8):** every 0.5 s each loaded companion is checked; one that moves between 0.8 and 15 m/s for 1.5 s while its animation is seated is stood up, unless it is on a ship. The game that runs it stands it up for everyone; other games only on their own screen. The log gets a `[Sentado]` line.
+
+<a id="multiplayer"></a>
+
+## 🌍 Multiplayer (0.26.0)
+
+- **Shared speech:** with `[Multijugador] ShareSpeech = true` (the default), what your companions say is sent to the other players. Their game shows it as a bubble over the companion and as a chat line, only if they have this mod and are within Valheim's normal chat talking distance (`Talker.m_normalDistance`, the range of a player talking normally). Players further away see nothing. What you type to your companion is not sent, and neither are the mod's notices. The setting is per player: it decides whether your companions' speech is shared. `codigo/src/SharedSpeech.cs`.
+- **Other players:** each request to the AI lists the other players within **60** m of the companion, up to **5**: name, distance, whether they are badly hurt, and what they hold in their hands. Their inventory stays in their game, so it is not included. The companion recognizes them and can talk about them, but only takes orders from its own player. `codigo/src/GameContext.cs`.
 
 <a id="companions"></a>
 
@@ -94,7 +101,7 @@ The cover shows four illustrated figures. It is promotional art, not the world l
 3. Install and open the [Player2](https://player2.game) app. Leave `[IA] Provider` at `Player2` and leave `ApiKey` empty.
 4. Start Valheim. In chat, `/balance` should answer with your Player2 joules.
 
-The playable package is the [latest release](https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/latest). Inside that zip the DLL is under `install/BepInEx/plugins/`, and the sample configs are under `configuration examples/`. In this git tree the same DLL path is still [`instalar/BepInEx/plugins/SpiffoAiCompanions.dll`](instalar/BepInEx/plugins/SpiffoAiCompanions.dll). The source constant on `main` is plugin **0.25.8**. The published zip can lag behind that tree; use the latest release page, not an older checksum copied here.
+The playable package is the [latest release](https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/latest). Inside that zip the DLL is under `install/BepInEx/plugins/`, and the sample configs are under `configuration examples/`. In this git tree the same DLL path is still [`instalar/BepInEx/plugins/SpiffoAiCompanions.dll`](instalar/BepInEx/plugins/SpiffoAiCompanions.dll). The source constant on `main` is plugin **0.26.0**. The published zip can lag behind that tree; use the latest release page, not an older checksum copied here.
 
 <a id="requirements"></a>
 
@@ -270,6 +277,7 @@ Reborn’s wheel is the full command wheel in this source (follow, job actions, 
 | `Memoria` | Save chat, and summarize older chat with an extra AI request |
 | `Reacciones` | Event comments. Cooldown default **180** s (30–3600). `MaxPerHour` default **10** (1–60) |
 | `Autonomia` | `Normal` or `Autonomo`. `IntervalSeconds` default **75** (20–3600). `MaxPerHour` default **30** (1–120) |
+| `Multijugador` | `ShareSpeech` default `true`: other players with the mod see your companions' speech within normal chat distance. See [multiplayer](#multiplayer) |
 
 `RebornSpeech` default `Avisos`: Reborn’s own lines are limited to warnings such as having no axe. `Todas` is the original Reborn chatter. `Ninguna` silences those fixed lines. The AI replies are separate.
 

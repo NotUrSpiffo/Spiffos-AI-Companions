@@ -10,6 +10,8 @@ namespace OfflineCompanionsAI
     {
         private const float EnemyRadius = 30f;
         private const int MaxItems = 20;
+        private const float OtherPlayerRadius = 60f;
+        private const int MaxOtherPlayers = 5;
 
         public static string Describe(Player player, Component companion, LookTarget look)
         {
@@ -29,6 +31,10 @@ namespace OfflineCompanionsAI
             sb.AppendLine(ModLang.Pick(
                 "Lo que lleva equipado el jugador: " + Equipped(player.GetInventory()) + " (coméntalo solo si viene a cuento)",
                 "What the player has equipped: " + Equipped(player.GetInventory()) + " (mention only if relevant)"));
+            string others = OtherPlayers(player, companion);
+            if (others.Length > 0) sb.AppendLine(ModLang.Pick(
+                "Otros jugadores cerca: " + others + ". Los reconoces y puedes hablar de ellos, pero no son tu jugador: solo obedeces a " + player.GetPlayerName() + ".",
+                "Other players nearby: " + others + ". You recognize them and can talk about them, but they are not your player: you only take orders from " + player.GetPlayerName() + "."));
             if (self != null)
             {
                 sb.AppendLine(ModLang.Pick("Tu salud: ", "Your health: ") + Mathf.RoundToInt(self.GetHealth()) + "/" + Mathf.RoundToInt(self.GetMaxHealth()));
@@ -78,6 +84,47 @@ namespace OfflineCompanionsAI
                 sb.AppendLine(ModLang.Pick("Tu inventario: ", "Your inventory: ") + Inventory(humanoid.GetInventory()));
             }
             return sb.ToString().TrimEnd();
+        }
+
+        /// <summary>Los demás jugadores cercanos, del más cercano al más lejano: nombre, distancia, salud y lo que llevan.</summary>
+        private static string OtherPlayers(Player player, Component companion)
+        {
+            var near = new List<KeyValuePair<float, Player>>();
+            foreach (Player other in Player.GetAllPlayers())
+            {
+                if (other == null || other == player || other.IsDead()) continue;
+                float distance = Vector3.Distance(companion.transform.position, other.transform.position);
+                if (distance <= OtherPlayerRadius) near.Add(new KeyValuePair<float, Player>(distance, other));
+            }
+            IEnumerable<string> parts = near.OrderBy(kv => kv.Key).Take(MaxOtherPlayers).Select(kv => Describe(kv.Value, kv.Key));
+            return string.Join("; ", parts.ToArray());
+        }
+
+        private static string Describe(Player other, float distance)
+        {
+            string text = other.GetPlayerName() + ModLang.Pick(", a " + Mathf.RoundToInt(distance) + " m de ti", ", " + Mathf.RoundToInt(distance) + " m from you");
+            if (other.GetMaxHealth() > 0f && other.GetHealthPercentage() < Initiative.BadlyHurtShare) text += ModLang.Pick(", malherido", ", badly hurt");
+            // De otro jugador solo se sabe lo que se le ve en las manos: su inventario está en su juego.
+            var hands = new List<string>();
+            ZNetView view = other.GetComponent<ZNetView>();
+            ZDO zdo = view != null && view.IsValid() ? view.GetZDO() : null;
+            if (zdo != null)
+            {
+                string right = ItemName(zdo.GetInt(ZDOVars.s_rightItem));
+                string left = ItemName(zdo.GetInt(ZDOVars.s_leftItem));
+                if (right != null) hands.Add(right);
+                if (left != null && left != right) hands.Add(left);
+            }
+            if (hands.Count > 0) text += ModLang.Pick(", lleva en las manos " + string.Join(" y ", hands.ToArray()), ", holding " + string.Join(" and ", hands.ToArray()));
+            return text;
+        }
+
+        private static string ItemName(int hash)
+        {
+            if (hash == 0 || ObjectDB.instance == null) return null;
+            GameObject prefab = ObjectDB.instance.GetItemPrefab(hash);
+            ItemDrop drop = prefab != null ? prefab.GetComponent<ItemDrop>() : null;
+            return drop != null ? Localized(drop.m_itemData.m_shared.m_name) : null;
         }
 
         private static string NearbyEnemies(Component companion)
