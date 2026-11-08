@@ -15,7 +15,7 @@ Esta página describe ajustes y límites de este repositorio. No es un informe d
 ## Contenido
 
 - [Características](#features)
-- [Cuatro compañeros, tareas distintas](#companions)
+- [Cinco por mundo, cuatro por orden](#companions)
 - [Inicio rápido](#quick-start)
 - [Requisitos](#requirements)
 - [Instalación](#install)
@@ -38,7 +38,8 @@ Esta página describe ajustes y límites de este repositorio. No es un informe d
 | --- | --- |
 | Chat con quien miras, o con el más cercano | `TalkKey` por defecto `Y`; chat del juego si `TalkInGameChat` está activo |
 | Pulsar para hablar, mediante la app de Player2 | `[Voz]`: mantener `H`, máximo 15 segundos |
-| Encargos en lenguaje normal, distintos para cada compañero | `AllowActions` activo por defecto; ver [compañeros](#companions) |
+| Hasta 5 compañeros en un mundo | Constante fija `MaxCompanionsPerWorld` en `BehaviorOverrides.cs`. No es una clave de config. Ver [compañeros](#companions) |
+| Una tarea distinta para cada compañero nombrado en una orden | Como máximo 4 destinatarios (`Recipients.MaxPerOrder`). `AllowActions` activo por defecto |
 | Interfaz, indicaciones y respuestas en español e inglés | `[Personaje] Language` por defecto `Auto` |
 | Memoria entre sesiones | `[Memoria] Enabled` activo; se guarda sin cifrar en la carpeta de config del mod |
 | Comentarios breves ante jefes, biomas, muertes, asaltos y hechos parecidos | `[Reacciones]` activo; cada comentario es una petición a la IA |
@@ -53,24 +54,32 @@ En `main`, el plugin **0.25.7** cambia además estos comportamientos de Reborn e
 - **Picar:** se deja una roca de piedra o de mineral, o una sección, cuando el código decide que solo se llega nadando. Si faltan `MHR_Water.WouldSwim` o `MHR_GatherRules.AllowTarget`, el registro avisa de que ese filtro no está disponible.
 - **Pelear con una herramienta en la mano:** si el objeto elegido es una caña de pescar, tiene daño de pico o es una herramienta, el mod prueba un arma cuerpo a cuerpo, luego un arco, y si no, la desequipa. Si faltan los métodos de combate de Reborn, el registro avisa de que el cambio no está disponible.
 - **Atascado trabajando (0.25.7):** si un compañero que tala o pica pasa **20** segundos sin dar un golpe, sin acertar y sin moverse más de 1,5 m, fuera de combate y sin estar recuperando aguante, deja ese objetivo durante el tiempo de lista negra de Reborn y busca otro. El registro anota una línea `[Recoger]` con lo que tenía en la mano y si estaba atacando, en el suelo, nadando o sentado.
-- **Límite de compañeros (0.25.7):** un mundo admite como mucho **5** compañeros (`MaxCompanionsPerWorld`). Ver [compañeros](#companions).
+- **Límite de compañeros (0.25.7):** un mundo admite como mucho **5** (`MaxCompanionsPerWorld`), constante fija, no una clave de config. Una orden sigue dirigiéndose como máximo a **4**. Ver [compañeros](#companions).
 
 <a id="companions"></a>
 
-## 👥 Cuatro compañeros, tareas distintas
+## 👥 Cinco por mundo, cuatro por orden
 
-Puedes tener varios compañeros a la vez y darles **tareas diferentes**.
+Un mundo admite como mucho **5** compañeros. Una orden se dirige como máximo a **4** de los que están cerca. No son el mismo límite. Dentro de una orden se pueden dar tareas distintas, por ejemplo `Bjorn, tala madera` y después `Astrid, pesca`.
 
-Una misma orden hablada puede nombrar como máximo a **4** compañeros. El tope es `Recipients.MaxPerOrder` en `codigo/src/OrderPlanning.cs`.
+**Por mundo: 5, fijo.** `MaxCompanionsPerWorld` es la constante `5` en `codigo/src/BehaviorOverrides.cs`. No es una entrada de `SpiffoAiCompanions.cfg` ni del config de Reborn. En el anfitrión, y en solitario, la cuenta suma:
+
+- objetos de compañeros vivos (`HC_Companion` y variantes Dverger)
+- lápidas que esperan revivir, si ese id no está ya contado como vivo
+- fichas de la lista marcadas como no invocadas (despedidos)
+
+Un compañero nuevo solo se crea por `SpawnCompanion`: el inicial gratis (`SpawnStarterCompanion`, activo por defecto), la ofrenda del santuario de Odín (`CompanionPrice`, por defecto **1000** monedas) y la compra al comerciante. Si la cuenta ya es 5, esa llamada se rechaza. El aviso en el centro es `Ya tienes 5 compañeros en este mundo, el máximo.` El registro empieza por `[Compañeros] No se crea otro`. Las monedas se quitan solo si la invocación termina bien, así que un rechazo no cobra la ofrenda. Volver de una lápida, o volver a llamar a quien ya estaba despedido, no pasa por `SpawnCompanion`, así que esta comprobación no los rechaza. Un invitado no es el servidor: la cuenta usa `CompanionSetup.AllCompanions`, los compañeros cargados cerca de él, y no suma la lista de despedidos. Si no se puede parchear `SpawnCompanion`, el registro dice que este límite no está disponible.
+
+**Por orden: 4.** `Recipients.MaxPerOrder` vale 4 en `codigo/src/OrderPlanning.cs`. Solo elige a quiénes entra una orden hablada.
 
 - **Una persona:** `Bjorn, tala madera` es para Bjorn. Sin nombre, la orden es solo para quien estás hablando (a quien miras, o el más cercano dentro del alcance).
-- **Una lista:** nombres separados por comas, como máximo 4 en esa orden. Los nombres de más en la misma orden no se añaden.
+- **Una lista:** nombres separados por comas, como máximo 4 en esa orden. Un quinto nombre en la misma orden no se añade.
 - **El grupo:** `everyone`, `all`, `team`, `guys` o `everybody` (y `todos`, `todas`, `equipo`, `chicos`) elige hasta 4 compañeros cercanos, incluido quien responde.
-- **Tareas distintas:** usa otro mensaje. `Bjorn, tala madera` y después `Astrid, pesca` son dos órdenes: cada uno puede estar en otra cosa.
-- **Cola:** cada compañero guarda como máximo **5** tareas pendientes (`OrderSequence.MaxQueued`). Otra más responde `Tiene demasiadas tareas pendientes.`
-- **Un mensaje:** se aplican como máximo **6** acciones (`MaxActionsPerMessage`). El resto de esa misma respuesta dice `No aplicada: demasiadas órdenes a la vez.`
+- **Tareas distintas:** otro mensaje le da otra tarea a otra persona. Sigue siendo el tope de 4 por orden, no un quinto cuerpo en el mundo.
 
-Este código **no** fija una plantilla de 4 compañeros. La imagen de arriba es arte de portada con cuatro figuras, no un límite medido en partida. Desde la 0.25.7 un mundo admite como mucho **5** compañeros, contando los que van a revivir y los que despediste. Con 5, una invocación o compra nueva se rechaza con un aviso y no se cobran monedas. Los que reviven o vuelven a llamarse nunca se rechazan. En multijugador, un invitado solo puede contar los compañeros cargados cerca de él. Reborn ofrece un compañero inicial gratis la primera vez que un personaje entra en un mundo (`SpawnStarterCompanion`, activo por defecto) y puede invocar otro en el santuario de Odín por `CompanionPrice` monedas (por defecto **1000**, de tu inventario). Quien está en una zona no cargada no te oye. `/llamar` lo dice por nombre y pide que te acerques. Ese comando no gasta saldo de IA.
+**No es este 5.** Cada compañero guarda como máximo **5** tareas pendientes (`OrderSequence.MaxQueued`). Otra más responde `Tiene demasiadas tareas pendientes.` Un mensaje aplica como máximo **6** acciones (`MaxActionsPerMessage`). El resto de esa respuesta dice `No aplicada: demasiadas órdenes a la vez.`
+
+La portada muestra cuatro figuras ilustradas. Es arte promocional, no el límite del mundo. Quien está en una zona no cargada no te oye. `/llamar` lo dice por nombre y pide que te acerques. Ese comando no gasta saldo de IA.
 
 `/autonomia` cambia **a todos** entre el modo normal y el autónomo. El modo autónomo puede gastar saldo hasta `MaxPerHour` iniciativas por hora (por defecto 30).
 
@@ -283,7 +292,8 @@ El texto de la derecha es lo que muestra el mod, o la comprobación que indica s
 | `Se agotó el tiempo de escucha. Inténtalo de nuevo.` | Voz HTTP 404. |
 | `La IA no devolvió texto...` | Sube `MaxTokens` o ponlo en `0`. |
 | Responden y no actúan | `AllowActions` tiene que ser `true`. Con `ShowOrdersInChat` activo, las órdenes aplicadas empiezan por `Orden para <nombre>:`. |
-| `Tiene demasiadas tareas pendientes.` | Ese compañero ya tiene 5 tareas en cola. |
+| `Ya tienes 5 compañeros en este mundo, el máximo.` | `MaxCompanionsPerWorld` ya está lleno en esta cuenta: compañeros vivos, lápidas que esperan revivir y fichas despedidas, cuando eres el anfitrión. Una invocación nueva se rechaza y no se cobra la ofrenda. Revivir, o volver a llamar a quien ya estaba despedido, no usa esa comprobación. |
+| `Tiene demasiadas tareas pendientes.` | Ese compañero ya tiene 5 tareas en cola. Es la cola de tareas, no el límite de 5 compañeros por mundo. |
 | `No aplicada: demasiadas órdenes a la vez.` | Esa respuesta intentó aplicar más de 6 acciones. |
 | `Mod desactivado: hay otra copia de Offline Companions Reborn` | Borra la otra DLL de Reborn o la de IA antigua, con el juego cerrado. No borres `SpiffoAiCompanions.dll`. |
 | No aparece `Conectado con Offline Companions Reborn` | El plugin no terminó de cargar. Lee la línea `Mod desactivado` correspondiente en `BepInEx/LogOutput.log`. |

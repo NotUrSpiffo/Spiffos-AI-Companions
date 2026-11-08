@@ -15,7 +15,7 @@ This page describes settings and limits in this repository. It is not a gameplay
 ## Contents
 
 - [Features](#features)
-- [Four companions, separate jobs](#companions)
+- [Five in a world, four in one order](#companions)
 - [Quick start](#quick-start)
 - [Requirements](#requirements)
 - [Install](#install)
@@ -38,7 +38,8 @@ This page describes settings and limits in this repository. It is not a gameplay
 | --- | --- |
 | Text chat with the companion you look at, or the closest one | `TalkKey` default `Y`; in-game chat when `TalkInGameChat` is on |
 | Push-to-talk through the Player2 app | `[Voz]` default hold `H`, max 15 seconds |
-| Natural-language jobs, including a different job per companion | `AllowActions` default on; see [companions](#companions) |
+| Up to 5 companions in one world | Fixed constant `MaxCompanionsPerWorld` in `BehaviorOverrides.cs`. Not a config key. See [companions](#companions) |
+| A different job for each companion named in one order | At most 4 recipients (`Recipients.MaxPerOrder`). `AllowActions` default on |
 | English and Spanish UI, prompts, and replies | `[Personaje] Language` default `Auto` |
 | Memory between sessions | `[Memoria] Enabled` default on; stored unencrypted in the mod config folder |
 | Short comments on bosses, biomes, deaths, raids, and similar events | `[Reacciones]` default on; each comment is an AI request |
@@ -53,24 +54,32 @@ On `main`, plugin **0.25.7** also changes these Reborn behaviors in `codigo/src/
 - **Mining:** a stone or ore rock, or a section of one, is skipped when the code decides it can only be reached by swimming. If `MHR_Water.WouldSwim` or `MHR_GatherRules.AllowTarget` is missing, the log warns that this skip is unavailable.
 - **Fighting with a tool out:** if the chosen item is a fishing rod, has pickaxe damage, or is a tool, the mod tries a melee weapon, then a bow, and otherwise unequips that item. If the Reborn combat methods are missing, the log warns that the swap is unavailable.
 - **Stuck at work (0.25.7):** if a chopping or mining companion goes **20** seconds without a swing, a hit, or moving more than 1.5 m, outside combat and while not catching its breath, the target is left for Reborn's blacklist time and it looks for another. The log gets a `[Recoger]` line with what was in its hand and whether it was attacking, on the ground, swimming, or seated.
-- **Companion limit (0.25.7):** a world can hold at most **5** companions (`MaxCompanionsPerWorld`). See [companions](#companions).
+- **Companion limit (0.25.7):** a world holds at most **5** (`MaxCompanionsPerWorld`), a fixed constant, not a config entry. One order still addresses at most **4**. See [companions](#companions).
 
 <a id="companions"></a>
 
-## 👥 Four companions, separate jobs
+## 👥 Five in a world, four in one order
 
-You can have more than one companion out and give them **different** tasks.
+A world holds at most **5** companions. One order addresses at most **4** of the ones nearby. Those numbers are not the same limit. Inside an order you can still give different tasks, for example `Bjorn, chop wood` and then `Astrid, fish`.
 
-One spoken order can name at most **4** companions. That cap is `Recipients.MaxPerOrder` in `codigo/src/OrderPlanning.cs`.
+**Per world: 5, fixed.** `MaxCompanionsPerWorld` is the constant `5` in `codigo/src/BehaviorOverrides.cs`. It is not an entry in `SpiffoAiCompanions.cfg` or in the Reborn config. On the host, and in single player, the count adds:
+
+- living companion objects (`HC_Companion` and Dverger variants)
+- tombstones waiting to revive, when that id is not already counted alive
+- roster entries marked unsummoned (dismissed)
+
+A new companion is created only through `SpawnCompanion`: the free starter (`SpawnStarterCompanion`, default on), the Odin shrine offering (`CompanionPrice`, default **1000** coins), and a trader purchase. If the count is already 5, that call is refused. The center message is `You already have 5 companions in this world, the maximum.` The log line starts with `[Compañeros] No se crea otro`. Coins are removed only after spawn succeeds, so a refused summon does not take the offering. Coming back from a tombstone, or calling back someone already unsummoned, does not go through `SpawnCompanion`, so this check does not refuse them. A guest is not the server, so the count falls back to `CompanionSetup.AllCompanions`: the companions loaded near them. That fallback does not add the unsummoned roster. If `SpawnCompanion` cannot be patched, the log says this limit is unavailable.
+
+**Per order: 4.** `Recipients.MaxPerOrder` is 4 in `codigo/src/OrderPlanning.cs`. It only chooses who one spoken order includes.
 
 - **One person:** `Bjorn, chop wood` is for Bjorn. With no name, the order is only for the companion you are talking to (the one you look at, or the closest within talk range).
-- **A list:** names separated by commas, still at most 4 in that order. Extra names in the same order are not added.
+- **A list:** names separated by commas, still at most 4 in that order. A fifth name in the same order is not added.
 - **The group:** `everyone`, `all`, `team`, `guys`, or `everybody` (and `todos`, `todas`, `equipo`, `chicos`) selects up to 4 nearby companions, including the one who is answering.
-- **Separate jobs:** use another message. `Bjorn, chop wood` and then `Astrid, fish` are two orders, so each companion can be doing something else.
-- **Queue:** each companion keeps at most **5** pending tasks (`OrderSequence.MaxQueued`). One more returns `Has too many pending tasks.`
-- **One message:** at most **6** actions are applied (`MaxActionsPerMessage`). Further actions in that same reply return `Not applied: too many orders at once.`
+- **Separate jobs:** another message gives someone else a different task. That is still the order cap of 4, not a fifth body in the world.
 
-This source does **not** set a roster size of 4. The picture above is cover art of four figures, not a measured squad limit. Since 0.25.7 a world holds at most **5** companions, counting those waiting to revive and those you dismissed. With 5, a new summon or purchase is refused with a message and no coins are taken. Revived and recalled companions are never refused. In multiplayer, a guest can only count the companions loaded near them. Reborn offers one free starter the first time a character enters a world (`SpawnStarterCompanion`, default on) and can summon another at Odin’s Shrine for `CompanionPrice` coins (default **1000**, taken from your pack). Companions in an unloaded zone cannot hear you. `/recall` says so by name and tells you to walk closer. It does not spend AI credits.
+**Not this 5.** Each companion keeps at most **5** pending tasks (`OrderSequence.MaxQueued`). One more returns `Has too many pending tasks.` One message applies at most **6** actions (`MaxActionsPerMessage`). Further actions in that reply return `Not applied: too many orders at once.`
+
+The cover shows four illustrated figures. It is promotional art, not the world limit. Companions in an unloaded zone cannot hear you. `/recall` names them and tells you to walk closer. It does not spend AI credits.
 
 `/autonomy` switches **all** companions between normal mode and autonomous mode. Autonomous mode can spend credits up to `MaxPerHour` (default 30) initiatives an hour.
 
@@ -283,7 +292,8 @@ Text in the right-hand column is what the mod shows, or the check its own log te
 | `Listening time expired. Please try again.` | Voice HTTP 404. |
 | `The AI returned no text...` | Raise `MaxTokens` or set it to `0`. |
 | They answer and do not act | `AllowActions` must be `true`. With `ShowOrdersInChat` on, applied orders are prefixed `Order for <name>:`. |
-| `Has too many pending tasks.` | That companion already has 5 queued tasks. |
+| `You already have 5 companions in this world, the maximum.` | `MaxCompanionsPerWorld` is already reached on this count: living companions, tombs waiting to revive, and unsummoned roster entries when you are the host. A new summon is refused and the offering is not taken. Reviving, or recalling someone already unsummoned, does not use that check. |
+| `Has too many pending tasks.` | That companion already has 5 queued tasks. This is the task queue, not the world limit of 5 companions. |
 | `Not applied: too many orders at once.` | That single reply tried to apply more than 6 actions. |
 | `Mod desactivado: hay otra copia de Offline Companions Reborn` | Delete the other Reborn or old AI DLL with the game closed. Do not delete `SpiffoAiCompanions.dll`. |
 | No `Conectado con Offline Companions Reborn` line | The plugin did not finish loading. Read the matching `Mod desactivado` line in `BepInEx/LogOutput.log`. |
