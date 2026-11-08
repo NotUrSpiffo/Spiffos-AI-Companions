@@ -1,6 +1,6 @@
 # Spiffo's Valheim AI Companions
 
-[Español](README.es.md) · [Release v0.25.5](https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/tag/v0.25.5) · `main` is plugin `0.25.8`
+[Español](README.es.md) · `main` is plugin `0.25.8`
 
 <p>
   <img src="docs/assets/cover.jpg" width="640" height="360" alt="Cover art of four illustrated companions in a snowy forest, titled Spiffo's AI Companions. Promotional artwork, not a gameplay screenshot, and not an endorsement by Valheim or Player2.">
