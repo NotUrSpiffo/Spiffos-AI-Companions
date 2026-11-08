@@ -1989,6 +1989,18 @@ namespace OfflineCompanionsAI
             return result;
         }
 
+        /// <summary>Todos los compañeros vivos cargados en el mundo, también los de otros jugadores.</summary>
+        public static IEnumerable<Component> AllCompanions()
+        {
+            var result = new List<Component>();
+            foreach (object item in (IEnumerable)_allCompanions.GetValue(null, null))
+            {
+                Component c = item as Component;
+                if (c != null && IsAlive(c)) result.Add(c);
+            }
+            return result;
+        }
+
         public static string Name(Component companion)
         {
             Character character = companion.GetComponent<Character>();

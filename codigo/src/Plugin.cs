@@ -22,7 +22,7 @@ namespace OfflineCompanionsAI
         public const string PluginGuid = "OfflineCompanionsAI";
 #endif
         public const string PluginName = "Spiffo's Valheim AI Companions";
-        public const string PluginVersion = "0.25.7";
+        public const string PluginVersion = "0.25.8";
 
         private const float EmoteCooldown = 10f;
 
@@ -339,6 +339,7 @@ namespace OfflineCompanionsAI
             UpdateStrongEnemies(Player.m_localPlayer);
             UpdateReactions(Player.m_localPlayer);
             UpdateAutonomy(Player.m_localPlayer);
+            SeatSync.Update();
         }
 
         /// <summary>
@@ -418,6 +419,7 @@ namespace OfflineCompanionsAI
         {
             StopAllCoroutines();
             CompanionBridge.ForgetStrongEnemies();
+            SeatSync.Reset();
             _strongWarnedAt.Clear();
             _chains.Clear();
             _goals.Clear();
@@ -2460,7 +2462,7 @@ namespace OfflineCompanionsAI
         {
             foreach (KeyValuePair<Component, GatherGoal> goal in _goals)
             {
-                if (goal.Key != null && goal.Key.gameObject == worker && CompanionActions.OnlyOnGround(goal.Value.Item)) return goal.Value.Item;
+                if (goal.Key != null && goal.Key.gameObject == worker && CompanionActions.FoundOnGround(goal.Value.Item)) return goal.Value.Item;
             }
             return null;
         }

@@ -306,7 +306,9 @@ namespace OfflineCompanionsAI
         /// <summary>Lo único que puede dejar en el cofre al que va ahora. Lo demás es para otro cofre.</summary>
         public static readonly Dictionary<GameObject, HashSet<string>> StoreOnly = new Dictionary<GameObject, HashSet<string>>();
 
-        /// <summary>El objeto que un compañero debe buscar solo por el suelo, o null si no tiene ese encargo.</summary>
+        /// <summary>
+        /// El objeto que un compañero puede buscar por el suelo (sílex, o piedra cuando no tiene pico), o null si no tiene ese encargo.
+        /// </summary>
         public static System.Func<GameObject, string> GroundItemFor;
 
         private static void ApplyStoreFilter(Harmony harmony)
@@ -345,9 +347,13 @@ namespace OfflineCompanionsAI
             harmony.Patch(allowLoose, postfix: Hook(nameof(AllowLoosePostfix)));
         }
 
+        // Offline Companions deja de recoger piedras sueltas en cuanto alguien tiene un hacha de bronce o hay una forja,
+        // aunque el compañero no lleve pico: con un encargo de piedra se quedaba quieto sin poder conseguir ninguna.
+        // Con pico, la piedra se saca picando rocas como siempre.
         private static void LooseOnPostfix(Component __instance, ref bool noTool, ref bool __result)
         {
-            if (GroundItemFor?.Invoke(__instance.gameObject) == null) return;
+            string item = GroundItemFor?.Invoke(__instance.gameObject);
+            if (item == null || item == StoneItem && !noTool) return;
             noTool = true;
             __result = true;
         }
@@ -376,6 +382,7 @@ namespace OfflineCompanionsAI
         public static System.Func<GameObject, string> ChopItemFor;
 
         private const int WoodMode = 1;
+        private const string StoneItem = "Stone";
         private static MethodInfo _dropsOf;
         private static MethodInfo _isOwnPiece;
         private static FieldInfo _bestTree;

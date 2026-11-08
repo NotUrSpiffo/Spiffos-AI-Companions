@@ -1,6 +1,6 @@
 # Spiffo's Valheim AI Companions
 
-[English](README.md) · [Release v0.25.5](https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/tag/v0.25.5) · en `main` el plugin es `0.25.7`
+[English](README.md) · [Release v0.25.5](https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/tag/v0.25.5) · en `main` el plugin es `0.25.8`
 
 <p>
   <img src="docs/assets/cover.jpg" width="640" height="360" alt="Arte de portada con cuatro compañeros ilustrados en un bosque nevado y el título Spiffo's AI Companions. Es arte promocional, no una captura de partida, ni un respaldo de Valheim o de Player2.">
@@ -49,12 +49,14 @@ Esta página describe ajustes y límites de este repositorio. No es un informe d
 
 En el editor de personaje hay seis personalidades: **Vieja guardia**, **Aprendiz**, **Exploración**, **Caza**, **Oficio** y **Bromas**. Si `[Personaje] Personality` está vacío, cada compañero sin instrucciones propias recibe uno de esos perfiles. Las inclinaciones del editor son **Automática**, **Ninguna**, **Oficio**, **Exploración**, **Caza** y **Recolección**. Automática sigue el perfil y no anula una orden tuya.
 
-En `main`, el plugin **0.25.7** cambia además estos comportamientos de Reborn en `codigo/src/BehaviorOverrides.cs`. [RELEASE_NOTES.md](RELEASE_NOTES.md) dice que los cambios de la 0.25.6 y la 0.25.7 no se han probado en partida.
+En `main`, el plugin **0.25.8** cambia además estos comportamientos de Reborn en `codigo/src/BehaviorOverrides.cs` y `codigo/src/SeatSync.cs`. [RELEASE_NOTES.md](RELEASE_NOTES.md) dice que los cambios de la 0.25.6 a la 0.25.8 no se han probado en partida.
 
 - **Picar:** se deja una roca de piedra o de mineral, o una sección, cuando el código decide que solo se llega nadando. Si faltan `MHR_Water.WouldSwim` o `MHR_GatherRules.AllowTarget`, el registro avisa de que ese filtro no está disponible.
 - **Pelear con una herramienta en la mano:** si el objeto elegido es una caña de pescar, tiene daño de pico o es una herramienta, el mod prueba un arma cuerpo a cuerpo, luego un arco, y si no, la desequipa. Si faltan los métodos de combate de Reborn, el registro avisa de que el cambio no está disponible.
 - **Atascado trabajando (0.25.7):** si un compañero que tala o pica pasa **20** segundos sin dar un golpe, sin acertar y sin moverse más de 1,5 m, fuera de combate y sin estar recuperando aguante, deja ese objetivo durante el tiempo de lista negra de Reborn y busca otro. El registro anota una línea `[Recoger]` con lo que tenía en la mano y si estaba atacando, en el suelo, nadando o sentado.
 - **Límite de compañeros (0.25.7):** un mundo admite como mucho **5** (`MaxCompanionsPerWorld`), constante fija, no una clave de config. Una orden sigue dirigiéndose como máximo a **4**. Ver [compañeros](#companions).
+- **Piedra sin pico (0.25.8):** una orden de piedra recoge las piedras sueltas cuando el compañero no tiene pico, aunque Reborn deja de recogerlas en cuanto hay un hacha de bronce o mejor o una forja. Con pico pica rocas.
+- **Andar sentado (0.25.8):** cada 0,5 s se revisa cada compañero cargado; si se mueve entre 0,8 y 15 m/s durante 1,5 s con la animación de sentado, se le levanta, salvo en un barco. El juego que lo mueve lo levanta para todos; los demás, solo en su pantalla. El registro anota una línea `[Sentado]`.
 
 <a id="companions"></a>
 
@@ -92,7 +94,7 @@ La portada muestra cuatro figuras ilustradas. Es arte promocional, no el límite
 3. Instala y abre la app de [Player2](https://player2.game). Deja `[IA] Provider` en `Player2` y `ApiKey` vacío.
 4. Arranca Valheim. En el chat, `/saldo` debe responder con los joules de Player2.
 
-Hay dos builds distintas. El zip del [release v0.25.5](https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/tag/v0.25.5) es el plugin 0.25.5. La DLL de este repositorio en `main`, [`instalar/BepInEx/plugins/SpiffoAiCompanions.dll`](instalar/BepInEx/plugins/SpiffoAiCompanions.dll), es el plugin **0.25.7**. No son el mismo archivo.
+Hay dos builds distintas. El zip del [release v0.25.5](https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/tag/v0.25.5) es el plugin 0.25.5. La DLL de este repositorio en `main`, [`instalar/BepInEx/plugins/SpiffoAiCompanions.dll`](instalar/BepInEx/plugins/SpiffoAiCompanions.dll), es el plugin **0.25.8**. No son el mismo archivo.
 
 <a id="requirements"></a>
 
@@ -311,7 +313,7 @@ Reparar, fundir y las demás herramientas de trabajo siguen dependiendo de Rebor
 - [SHA256SUMS](https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/download/v0.25.5/SHA256SUMS)
 - Notas en el repo: [RELEASE_NOTES.md](RELEASE_NOTES.md)
 
-El zip de ese release pesa 22.723.838 bytes y su SHA256 es `9beb59ae96c84c26247cbb37eb15d6b802c2ae82e50eb3a64b7df4fa06af3f1d`, que es lo que registra el `SHA256SUMS` adjunto al release. [`SHA256SUMS`](SHA256SUMS) en `main` es otra línea: nombra la DLL 0.25.7. Esta página no cambia ese archivo, la DLL ni el release v0.25.5.
+El zip de ese release pesa 22.723.838 bytes y su SHA256 es `9beb59ae96c84c26247cbb37eb15d6b802c2ae82e50eb3a64b7df4fa06af3f1d`, que es lo que registra el `SHA256SUMS` adjunto al release. [`SHA256SUMS`](SHA256SUMS) en `main` es otra línea: nombra la DLL 0.25.8. Esta página no cambia ese archivo, la DLL ni el release v0.25.5.
 
 <a id="credits"></a>
 

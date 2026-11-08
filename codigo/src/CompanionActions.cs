@@ -323,6 +323,12 @@ namespace OfflineCompanionsAI
             return item == "Flint";
         }
 
+        /// <summary>Lo que también se recoge suelto por el suelo: el sílex y la piedra.</summary>
+        public static bool FoundOnGround(string item)
+        {
+            return item == "Flint" || item == "Stone";
+        }
+
         public static int JobForItem(string item)
         {
             return item != null && Items.TryGetValue(item, out LocalizedOption entry) ? entry.Value : 0;
