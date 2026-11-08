@@ -1,151 +1,194 @@
-# Spiffo's Valheim AI Companions (English & Bilingual Edition)
+# Spiffo's Valheim AI Companions
 
-A Valheim mod that adds AI-powered conversation, decision-making, and long-term memory to companions from [Offline Companions Reborn](https://github.com/MaddhattrRocks/Offline-Companions-Reborn). Talk to them in **English** or **Spanish**, by text or voice. They understand what is happening in the game, obey natural-language orders, and remember your adventures together.
+[Español](README.es.md) · [Release v0.25.5](https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/tag/v0.25.5) · `main` is plugin `0.25.6`
 
-It bundles **Offline Companions Reborn 1.5.8** directly inside `SpiffoAiCompanions.dll` and uses its movement, combat, and job logic, so you do **not** need to install Offline Companions Reborn separately.
+<p>
+  <img src="docs/assets/cover.jpg" width="640" height="360" alt="Cover art of four illustrated companions in a snowy forest, titled Spiffo's AI Companions. Promotional artwork, not a gameplay screenshot, and not an endorsement by Valheim or Player2.">
+</p>
+
+Talk to Valheim companions in **English or Spanish**, by text or microphone, and give them ordinary-language jobs. The mod’s default AI service is the **Player2** desktop app. Offline Companions Reborn **1.5.8** is already inside `SpiffoAiCompanions.dll`, so you do not install that mod again.
+
+This page describes settings and limits in this repository. It is not a gameplay test report. A [Player2 game page](https://player2.game/games/jorge-roman/game-f3f99636) has been submitted and was reported as under review. That page is not an approval.
+
+<a id="contents"></a>
+
+## Contents
+
+- [Features](#features)
+- [Four companions, separate jobs](#companions)
+- [Quick start](#quick-start)
+- [Requirements](#requirements)
+- [Install](#install)
+- [Player2 setup](#player2)
+- [Voice](#voice)
+- [Check that it is connected](#check)
+- [Other AI providers](#other-providers)
+- [Language](#language)
+- [Controls](#controls)
+- [Configuration](#config)
+- [Troubleshooting](#troubleshooting)
+- [Release](#release)
+- [Credits](#credits)
+
+<a id="features"></a>
+
+## ✨ Features
+
+| What you get | Where it is defined |
+| --- | --- |
+| Text chat with the companion you look at, or the closest one | `TalkKey` default `Y`; in-game chat when `TalkInGameChat` is on |
+| Push-to-talk through the Player2 app | `[Voz]` default hold `H`, max 15 seconds |
+| Natural-language jobs, including a different job per companion | `AllowActions` default on; see [companions](#companions) |
+| English and Spanish UI, prompts, and replies | `[Personaje] Language` default `Auto` |
+| Memory between sessions | `[Memoria] Enabled` default on; stored unencrypted in the mod config folder |
+| Short comments on bosses, biomes, deaths, raids, and similar events | `[Reacciones]` default on; each comment is an AI request |
+| Optional autonomous mode for every companion | `/autonomy`; default mode is `Normal` (they only do what you ask) |
+| Reborn movement, combat, and jobs inside this DLL | Reborn plugin version `1.5.8`; do not install a second copy |
+| Works without AI for a few exact phrases | `come` / `follow me`, `stop`, `stay`, plus the slash commands below |
+
+Six built-in personalities are in the character editor: **Old Guard**, **Rookie**, **Explorer**, **Hunter**, **Craftsman**, and **Joker**. If `[Personaje] Personality` is empty, each companion without custom instructions gets one of those profiles. Inclination choices in the editor are **Automatic**, **None**, **Craft**, **Exploration**, **Hunting**, and **Foraging**. Automatic follows the profile; it does not override an order you give.
+
+On `main`, plugin **0.25.6** also changes two Reborn behaviors in `codigo/src/BehaviorOverrides.cs`. [RELEASE_NOTES.md](RELEASE_NOTES.md) says these fixes have not been tested in game.
+
+- **Mining:** a stone or ore rock, or a section of one, is skipped when the code decides it can only be reached by swimming. If `MHR_Water.WouldSwim` or `MHR_GatherRules.AllowTarget` is missing, the log warns that this skip is unavailable.
+- **Fighting with a tool out:** if the chosen item is a fishing rod, has pickaxe damage, or is a tool, the mod tries a melee weapon, then a bow, and otherwise unequips that item. If the Reborn combat methods are missing, the log warns that the swap is unavailable.
+
+<a id="companions"></a>
+
+## 👥 Four companions, separate jobs
+
+You can have more than one companion out and give them **different** tasks.
+
+One spoken order can name at most **4** companions. That cap is `Recipients.MaxPerOrder` in `codigo/src/OrderPlanning.cs`.
+
+- **One person:** `Bjorn, chop wood` is for Bjorn. With no name, the order is only for the companion you are talking to (the one you look at, or the closest within talk range).
+- **A list:** names separated by commas, still at most 4 in that order. Extra names in the same order are not added.
+- **The group:** `everyone`, `all`, `team`, `guys`, or `everybody` (and `todos`, `todas`, `equipo`, `chicos`) selects up to 4 nearby companions, including the one who is answering.
+- **Separate jobs:** use another message. `Bjorn, chop wood` and then `Astrid, fish` are two orders, so each companion can be doing something else.
+- **Queue:** each companion keeps at most **5** pending tasks (`OrderSequence.MaxQueued`). One more returns `Has too many pending tasks.`
+- **One message:** at most **6** actions are applied (`MaxActionsPerMessage`). Further actions in that same reply return `Not applied: too many orders at once.`
+
+This source does **not** set a roster size of 4. The picture above is cover art of four figures, not a measured squad limit. Reborn offers one free starter the first time a character enters a world (`SpawnStarterCompanion`, default on) and can summon another at Odin’s Shrine for `CompanionPrice` coins (default **1000**, taken from your pack). Companions in an unloaded zone cannot hear you. `/recall` says so by name and tells you to walk closer. It does not spend AI credits.
+
+`/autonomy` switches **all** companions between normal mode and autonomous mode. Autonomous mode can spend credits up to `MaxPerHour` (default 30) initiatives an hour.
+
+<a id="quick-start"></a>
+
+## ⚡ Quick start
+
+1. Valheim already has [BepInEx](https://thunderstore.io/c/valheim/p/denikson/BepInExPack_Valheim/). If it does, leave that install in place.
+2. Copy only `SpiffoAiCompanions.dll` into `BepInEx/plugins/`. Do not add a separate Offline Companions Reborn plugin.
+3. Install and open the [Player2](https://player2.game) app. Leave `[IA] Provider` at `Player2` and leave `ApiKey` empty.
+4. Start Valheim. In chat, `/balance` should answer with your Player2 joules.
+
+Two different builds exist. The [v0.25.5 release](https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/tag/v0.25.5) zip is plugin 0.25.5. The DLL in this repository on `main`, [`instalar/BepInEx/plugins/SpiffoAiCompanions.dll`](instalar/BepInEx/plugins/SpiffoAiCompanions.dll), is plugin **0.25.6**. They are not the same file.
+
+<a id="requirements"></a>
 
 ## Requirements
 
-- Valheim with [BepInEx](https://thunderstore.io/c/valheim/p/denikson/BepInExPack_Valheim/).
-- An AI service: the [Player2](https://player2.game) app open and signed in, Ollama, LM Studio, or any OpenAI-compatible API.
-- For voice input: the Player2 app, where you select your microphone and speech recognition language.
+- Valheim with BepInEx. The pack linked above is the one this guide points at. If BepInEx is already installed, do not replace its files.
+- For the intended setup: the Player2 desktop app, running on the same PC, before you launch the game.
+- Voice always needs that app, even if chat uses another provider.
+- Ollama, LM Studio, or another OpenAI-compatible API can replace **chat** only. See [Other AI providers](#other-providers).
 
-## Installation
+<a id="install"></a>
 
-1. Install BepInEx.
-2. Copy `SpiffoAiCompanions.dll` (from `instalar/BepInEx/plugins/`) into `BepInEx/plugins/`.
-3. *(Optional, for Spanish UI in Reborn menus)* Copy the `Translations` folder into `BepInEx/plugins/OfflineCompanionsReborn/`.
-4. Open Player2 (or start your local LLM) and launch Valheim.
+## 📦 Install
 
-## Language Selection (`Auto` / `English` / `Spanish`)
+Do this with Valheim closed.
 
-The mod defaults to **`Auto`**, automatically matching Valheim's active language (**English**, **Español (Latinoamérica)**, or **Español (España)**). You can also force a specific language at any time without restarting the game:
+1. **BepInEx, once.** If `BepInEx` is not already in the Valheim folder, install [BepInExPack for Valheim](https://thunderstore.io/c/valheim/p/denikson/BepInExPack_Valheim/) using that pack’s own instructions. If it is already there, do not copy the pack over `winhttp.dll`, the doorstop files, or the existing `BepInEx` folder.
+2. **This mod only.** From the release zip, or from [`instalar/BepInEx/plugins/`](instalar/BepInEx/plugins/), copy `SpiffoAiCompanions.dll` into `Valheim/BepInEx/plugins/`. If that DLL is already there and you are updating this same mod, replace **that file only**.
+3. **Do not install Reborn beside it.** Movement and jobs come from Reborn 1.5.8 inside this DLL. Do not also install `Offline Companions Reborn`, `Companions.dll`, or an older `OfflineCompanionsAI.dll`. If another copy is loaded, the mod stops and logs: `Mod desactivado: hay otra copia de Offline Companions Reborn en <path>. Este mod ya la lleva dentro: borra ese archivo con Valheim cerrado.`
+4. **Spanish Reborn menus, optional.** Copy the `Translations` folder from [`instalar/BepInEx/plugins/OfflineCompanionsReborn/Translations/`](instalar/BepInEx/plugins/OfflineCompanionsReborn/Translations/) to `BepInEx/plugins/OfflineCompanionsReborn/`. That folder is only the Spanish `Spanish.json` files. It does not replace the DLL. The mod’s own language setting does not need this copy.
+5. **Config.** On first launch BepInEx creates `BepInEx/config/SpiffoAiCompanions.cfg` (the project is built with `NEW_INSTALL`, plugin GUID `SpiffoAiCompanions`). A reference file with the same defaults is [`configuracion/SpiffoAiCompanions.cfg`](configuracion/SpiffoAiCompanions.cfg). If you already changed your config, do not overwrite it with the sample.
 
-- **In-game command:** Type `/language auto`, `/language en`, or `/language es` (also `/lang` or `/idioma`).
-- **Character Editor (`Shift` + `Y` or `/character`):** Use the **Mod Language** buttons (`English`, `Español`, `Auto (Game)`) at the top of the Character Editor window.
-- **Config file (`BepInEx/config/SpiffoAiCompanions.cfg`):** Set `Language = Auto`, `English`, or `Spanish` under `[Personaje]`.
+Reborn’s own file, `BepInEx/config/Maddhattr.OfflineCompanionsReborn.cfg`, is separate. A reference copy is [`configuracion/Maddhattr.OfflineCompanionsReborn.cfg`](configuracion/Maddhattr.OfflineCompanionsReborn.cfg). You do not need to edit it for Player2. Do not replace it if you have already changed shrine price, keys, or jobs.
 
-Switching the language updates all mod UI windows, HUD notifications, Reborn menus/radial wheel, AI system prompts, built-in personality profiles, and companion replies immediately. Item names are read live from Valheim's active localization and matched against both **Latin American Spanish**, **European Spanish**, and **English** terms (e.g. *hongos* / *setas* / *mushrooms*, *pedernal* / *sílex* / *flint*, *madera fina* / *madera noble* / *fine wood*). Both English and Spanish slash commands are always accepted regardless of the active language.
+<a id="player2"></a>
 
-## Keys & Commands
+## 🎮 Player2 setup
 
-| Action | How |
-|---|---|
-| Talk | Type in game chat (`Enter`), or press `Y` |
-| Talk by voice | Hold `H`, speak, and release |
-| Edit character, backstory, rules, memory & language | `Shift` + `Y`, or type `/character` (`/personaje`) when talking |
-| Show command help in-game | `/help` (`/ayuda`) |
-| See what every companion is doing and where they are | `/status` (`/estado`) |
-| Call all companions to your side | `/recall` or `/call` (`/llamar`) |
-| Check your Player2 balance and requests made | `/balance` (`/saldo`) |
-| Toggle between normal and autonomous mode | `/autonomy` (`/autonomia`) |
-| Mark, list, or forget named places on the map | `/mark <name>`, `/places`, `/forget <name>` (`/marcar`, `/lugares`, `/olvidar`) |
-| Change mod language (`en`, `es`, `auto`) | `/language [en\|es\|auto]` (`/lang`, `/idioma`) |
+Player2 is the provider this mod is written to use. Chat goes to the Player2 app on your machine. You do not put a model name or an API key in the config for that setup.
 
-`/help`, `/status`, `/recall`, `/balance`, `/autonomy`, `/places`, `/mark`, `/forget`, and `/language` do **not** use AI credits and work even when no companion is nearby.
+Official Player2 pages used for the steps **outside** this mod:
 
-Anything you type in game chat is heard by the companion you are looking at or the closest one within ~80 m, and each message can use AI credits. To reach farther, shout with `/s` just like in standard Valheim chat: `/s come here` reaches up to ~120 m. Both distances can be adjusted with `TalkRange` and `ShoutRange`. If nobody hears you, the game tells you how far away your closest companion is.
+- Download the app from [player2.game](https://player2.game).
+- Player2’s own posts say to keep the desktop app open, that this local use does not ask you to paste an API key, and that API docs are at `http://localhost:4315/docs` while the app is running: [building AI NPCs](https://blog.player2.game/p/building-ai-npcs-with-player2-api), [introducing the app](https://blog.player2.game/p/we-are-sharing-2m-revenue-with-1000).
 
-When other players are in the game, a companion only responds to game chat if you say their name ("Bjorn, come here"), so your conversations with other players are not sent to the AI. You can disable game-chat listening with `TalkInGameChat` in the config.
+This repository does not name Player2’s sign-in screen or microphone screen. If the app asks you to sign in, do that in the app before you start Valheim.
 
-## What You Can Ask Them
+### Settings that match Player2
 
-| Category | Examples |
-|---|---|
-| Movement | "follow me", "come here", "go there", "go there and stay", "stay here", "stop" |
-| Go to nearby object | "go to the chest", "go to the chest you found", "go to the bed", or the nearest workbench, fire, boat, tree, or rock |
-| What you look at | "attack that one", "chop that tree", "cut that bush", "open that door", "get on that boat" |
-| Jobs | chop wood, mine, forage/gather, hunt, fish, farm, cook, smelt, repair the base |
-| Specific tasks | "get 10 stones", "cook 3 cooked meat", "smelt the copper", "sort the chests" |
-| Upkeep | "repair the buildings", "refuel the fires", "collect the honey", "restock the material piles" |
-| Other companions | "where is Bjorn?", "who is best at fishing?", "tell everyone to come here" |
-| Items | "pick up that axe", "give me what it dropped", "give me 5 wood", "drop the wood", "take wood from the chest", "grab arrows", "find food in the chests" |
-| Gear & food | "eat something", "drink a mead", "equip the bow", "repair your gear", "recover your gravestone" |
-| Combat | "guard this area", "switch to passive stance", "retreat below half health" |
-| Base & rest | "set your home here", "expand your home radius to 80 m", "stop picking items up", "go to sleep", "sit by the fire" |
-| Information | "what's nearby?", "what's in the chests?", "what did you gather?" |
-| Memory | "remember that our main base is to the north" |
-| Places | "mark the base here", "mark the mine over there", "go back to base", "go to the base and tend it", "take care of this place", "forget the mine" |
-| Exploration | "explore around here", "scout what's nearby" |
-| Group orders | "everyone, follow me", "Bjorn, chop wood" (up to 4 companions at once) |
-| Renaming | "your name is Astrid now" |
-| Emotes | "do a little dance", "wave at me" |
+In `BepInEx/config/SpiffoAiCompanions.cfg` the defaults are already the Player2 setup. The sample file’s `ApiKey` is empty on purpose. It is not a key you should fill in from this README, and this repository does not ship a Player2 secret.
 
-Companions also accompany their replies with emotes when appropriate, such as blowing a kiss or laughing. They only perform emotes when calm: no enemies within ~25 m, not working or on a task, and not sitting, sleeping, or swimming. You can disable this with `AllowEmotes` in the config.
+```ini
+[IA]
+Provider = Player2
+BaseUrl =
+Model =
+ApiKey =
 
-You can chain tasks together: *"chop that tree and give me what it drops"*.
+[Voz]
+Enabled = true
+VoiceKey = H
+MaxSeconds = 15
+BaseUrl = http://localhost:4315/v1
+```
 
-### Marked Places, Long-Distance Travel & Base Tending
+What the code does with those fields:
 
-Marked places belong to each world, are known by all your companions, and appear on the map. You can also use `/mark <name>`, `/forget <name>`, and `/places`, which cost no credits. If your companion has a home set, saying "go home" or "go to base" sends them there even if you haven't marked a place.
+| Setting | Player2 behavior |
+| --- | --- |
+| `[IA] Provider = Player2` | Chat is `POST http://localhost:4315/v1/chat/completions`. |
+| `[IA] BaseUrl` | Ignored for Player2. Used only when `Provider = Custom`. |
+| `[IA] Model` | Ignored. The request omits `model`. The config text says Player2 picks the model. |
+| `[IA] ApiKey` | Leave empty. If it is not empty, the mod also sends `Authorization: Bearer` with that value. The file stores it in plain text. Do not share the file after you add one. |
+| `[Voz] BaseUrl` | Microphone and `/balance`. Default `http://localhost:4315/v1`. |
+| Health check | While the provider is Player2, `GET http://localhost:4315/v1/health` every **60** seconds. |
 
-When sent to a place, the companion stops what they are doing and walks there to wait, navigating around water that cannot be crossed with a short swim. Outside the loaded zone around you, Valheim freezes entities, so if they get too far from you or stop making progress (15 s, or 30 s if you are right next to them), they fast-travel directly to the destination. From far away they cannot hear you, not even with `/recall`: you must walk closer to them. If they were in the middle of a task chain when fast-traveling to an unloaded zone, remaining steps are cancelled.
+Port **4315** is the local Player2 port this mod calls. Chat with `Provider = Player2` stays on `http://localhost:4315/v1` even if you change `[Voz] BaseUrl`. Change the voice URL only when the app is actually listening on another address. Ollama and LM Studio ports below are for those providers, not for Player2.
 
-`/status` shows how far they are from their destination and whether they are walking, going around water, or stuck, and once they arrive, that they are waiting there—even if they are in an unloaded zone.
+The mod sends its own `player2-game-key` header. You do not copy that value into `ApiKey`.
 
-**"Go to the base and tend it"** is different from **"go to the base"** (which only waits). Upon arrival, the companion maintains the site on their own without using AI credits (except for the arrival comment):
+<a id="voice"></a>
 
-- **Maintenance:** Uses Reborn's repair-and-restock job: fires, building repairs (with a hammer they carry or take from a chest near their home and put back afterwards), beehives, and material stacks around their home if nearby, or within ~30 m otherwise.
-- **Gathering by inclination:** During the day, if nearby chests have fewer than 50 of an item, they go gather 10 within 50 m of the site and store them in a chest. With **Craft**, wood; with **Gathering**, wood, stone, or wild plants; with **Exploration**, wild plants; with **Hunting**, meat from animals within range. Without chests they do not gather. Without an inclination they only maintain.
-- **No nagging:** Whatever they find (even if less than 10) is enough, and they rest for 5 minutes. If they find nothing, they wait 15 minutes before trying that resource again.
-- **Only while you are nearby:** Valheim freezes unloaded zones (~100 m with default settings), so nothing progresses while you are far away. The mod notifies you when giving the order if you are too far, and when you walk away. When you return, they resume automatically, even across game restarts.
-- **Until when:** Until you give another order such as "follow me", "come here", or "stop". If strong enemies are nearby, they stop gathering but stay at the site.
+## 🎙️ Voice
 
-### Exploration, Hunting & Inventory Details
+Voice is off only if `[Voz] Enabled = false`. Otherwise:
 
-**"Explore around here"** sends the companion walking for up to 4 minutes across terrain they haven't visited yet, using no credits except for the final report:
+1. Player2 is open. The mod’s config text says the microphone and the speech-recognition language are selected in that app.
+2. In Valheim, **hold** `VoiceKey` (default `H`), speak, and **release**.
+3. The mod calls `POST {Voice BaseUrl}/stt/start` with a timeout of `MaxSeconds` (default **15**, allowed **3–60**), then `POST .../stt/stop` when you release. It stops slightly before the app’s own timer (`StopMargin` 0.5 s).
+4. Voice uses the Player2 app even when `[IA] Provider` is `Ollama`, `LMStudio`, or `Custom`.
 
-- **What they discover:** Reveals the map around them with the same radius as you. Marks on the map and tells you what they find within ~50 m: crypts, caves, ruins, altars, wild chests, and copper, tin, or silver veins (up to 8 per trip, without repeating already marked spots). They remember what they found so you can ask them later.
-- **How far:** Stays within ~85 m of you so they don't enter unloaded zones. If you walk, they explore alongside you and reach farther. If you move away too fast, they abort and return.
+Each voice message can spend Player2 balance. `/balance` itself does not.
 
-When ordered to **hunt** (with or without a target count), they look from where they stand and, if no prey is visible, roam unvisited terrain within ~85 m of you to track prey down.
+<a id="check"></a>
 
-When asked to **store their items**, they carry each item to a nearby chest (up to 40 m) that already contains the same item, and anything else to the nearest chest with free space, making as many trips as needed. They keep equipped gear, food, weapons, armor, and torches.
+## ✅ Check that it is connected
 
-**Flint** is picked up from the ground (usually near water) rather than mined with a pickaxe, avoiding deep water where they would have to swim. If a companion gets stuck swimming without stamina for 45 seconds, they are safely teleported to the nearest dry land.
+These are the messages the mod prints. They are not a scripted playtest.
 
-When **looking for food**, they take 20% of the available stock of up to 3 different foods (the best ones across nearby chests, always at least 1). When **cooking**, they use all free, lit cooking stations nearby without exceeding the requested amount. When done, they store the food in a chest that already holds it, and do the same with metal or coal when smelting.
+1. Open Player2, then start Valheim.
+2. In `BepInEx/LogOutput.log`, a good load contains `Conectado con Offline Companions Reborn. Proveedor: Player2`.
+3. In the game chat box, type `/balance` or `/saldo`. The mod reads `{Voice BaseUrl}/joules`. Success looks like `Player2 balance: <number> joules`. If the app does not answer: `Could not check Player2 balance.`
+4. Press `Y`, or type in the game chat with `Enter`. The addressed companion shows `<name> is thinking...` while the request runs. Default talk distance is **80** m (`TalkRange`, allowed 2–100).
+5. Hold `H` and release. If the app is closed, voice says: `Could not connect to Player2 for voice recognition. Check that the app is open.`
 
-When you ask for a specific wood, such as fine wood or core wood, they only chop the trees that drop it. For any wood, they first finish the log of the tree they just felled, then go to whatever is closest: a standing tree, a log, or a stump.
+<a id="other-providers"></a>
 
-When mining, they skip the parts of a rock they could only reach by swimming, and rocks that have no other parts, since they can't mine while swimming. This happens often with copper and tin near lakes and rivers.
+## Other AI providers
 
-If they are attacked while holding a pickaxe, hammer, or fishing rod, they switch to a weapon, or fight with their fists if they have none.
+`[IA] Provider` accepts `Player2`, `Ollama`, `LMStudio`, and `Custom`.
 
-## Autonomous Mode
-
-By default, companions only act when asked. In **autonomous mode**, they also take the initiative: sharing thoughts, proposing plans, asking questions, and performing helpful tasks on their own. Toggle it with `/autonomy` (`/autonomia`) for all companions.
-
-- **What they can do on their own:** Gather up to 20 of a resource, hunt, pick up loose items, take up to 20 of an item from usable chests (plus food and ammo), store gathered items, sort chests, cook up to 5 rations, eat, equip gear, repair their gear, recover their gravestone, tend the base, explore briefly, or walk over to something nearby.
-- **What they never do on their own:** Attack a specific target, smelt ore, give or drop items, command other companions, or change their own settings.
-- **Threat assessment (`AvoidStrongEnemies`):** Compares how long your group would take to win vs. lose based on enemy health, damage, your armor and weapon, and group size. Also avoids enemies that would kill the companion in two hits unless they go down immediately. They still fight if you or they are attacked up close or if you order it, and bosses are excluded.
-- **Hunger & ammo:** If hungry without food, they check chests within ~40 m. If holding a bow or crossbow with no ammo, they fetch up to 30 arrows/bolts from chests without using AI credits.
-- **Cost control:** Configurable via `IntervalSeconds` (75 s default) and `MaxPerHour` (30 default). Pauses automatically if you stand completely still for 5 minutes.
-
-## Memory & Personality
-
-- **Firm facts:** Names, promises, preferences, and anything you ask them to remember are stored separately from the rolling conversation summary so the AI never overwrites them (~1500 characters).
-- **Lived experiences & expeditions:** Automatically records defeated bosses, deaths, close calls, raids, new biomes, completed jobs, and the first arrival at each marked place (up to 12 memories, prioritizing major events).
-- **Character Editor (`/character` or `Shift` + `Y`):** View and edit their name, Mod Language, Personality Profile (6 built-in profiles), Inclination (`Automatic`, `None`, `Craft`, `Exploration`, `Hunting`, `Gathering`), custom instructions, backstory, conversation rules, firm facts, summary, and experiences.
-- **Offline Companions built-in lines (`RebornSpeech`):** Set to `Avisos` (Warnings, default) so only important alerts ("I don't have an axe") appear without generic chatter talking over the AI personality.
-- **Command Wheel:** Simplified to Follow, Set Home, Dismiss, and the stance ring. Farming zones remain accessible via `Alt` + `Z`.
-- **Offline fallback:** If you run out of credits or lose connection, basic orders (`"come"`, `"follow me"`, `"stop"`, `"stay"`), the command wheel, and slash commands continue to work offline.
-
-## Configuration
-
-Located at `BepInEx/config/SpiffoAiCompanions.cfg` (created on first launch, or copy the pre-configured one from `configuracion/SpiffoAiCompanions.cfg`).
-
-| Section | Purpose |
-|---|---|
-| `IA` | Provider (`Player2`, `Ollama`, `LMStudio`, `Custom`), model, API key, and timeouts |
-| `Conversacion` | Keys, talk/shout range, reading speed, chat notices, and action permissions |
-| `Voz` | Enable voice input, push-to-talk key, and max duration |
-| `Memoria` | Save and summarize conversations across sessions |
-| `Reacciones` | Automatic event comments, cooldowns, and hourly limits |
-| `Personaje` | Mod language (`Language`), reply language (`ReplyLanguage`), shared personality, Reborn speech mode, and reply length |
-| `Autonomia` | Normal vs. autonomous mode, interval, hourly limit, and strong-enemy avoidance |
-
-Example with Ollama:
+| Provider | Chat URL the mod uses | Model field |
+| --- | --- | --- |
+| `Player2` | `http://localhost:4315/v1` | omitted |
+| `Ollama` | `http://localhost:11434/v1` | required; the config example is `llama3.2` |
+| `LMStudio` | `http://localhost:1234/v1` | required for most setups |
+| `Custom` | `[IA] BaseUrl`, including `/v1` | required for most services |
 
 ```ini
 [IA]
@@ -153,19 +196,117 @@ Provider = Ollama
 Model = llama3.2
 ```
 
-*(Note: The chosen model must support tool/function calling to execute in-game orders. Voice input still requires the Player2 app.)*
+Orders are sent as OpenAI-style `tools` with `tool_choice` `auto`. A model that never returns tool calls will not carry out free-form jobs. Exact phrases still run without a model reply: `follow me`, `come here`, `stop`, `stay`, and the Spanish lines in `OrderIntent` (`ven`, `para`, `quedate`, and the other entries in that list), including `everyone` or a companion’s name in front. Voice still needs Player2.
 
-## Troubleshooting
+`TimeoutSeconds` default **30** (5–180). `Temperature` default **0.8** (0–2). `MaxTokens` default **0** means no limit. A low limit can make the reply empty; the game then says to raise it or set it to 0.
 
-| Issue | What to check |
-|---|---|
-| Companion doesn't reply | Make sure the Player2 app is open and signed in (or your local LLM is running) |
-| Companion talks but doesn't obey | Check the `"Order for…"` lines in chat, and ensure `AllowActions = true` |
-| `"Get stones"` does nothing | Make sure they have a pickaxe, or there are loose stones nearby |
-| `"Repair"` or `"restock"` doesn't work | Make sure they carry a hammer or there is one in a chest within ~30 m of their home, that they are near that home with a free slot in their pack, and that those tasks are enabled in `RepairAndRestock` in the Offline Companions `.cfg` |
-| `"Fill the smelters"` does nothing | Make sure there is ore, wood, or fuel in nearby chests. They keep tending the smelters until you tell them to stop |
-| Mod doesn't load | Check `BepInEx/LogOutput.log` for `Connected to Offline Companions Reborn` (`Conectado con Offline Companions Reborn`) |
+<a id="language"></a>
 
-## Credits & License
+## 🌐 Language
 
-Includes Offline Companions Reborn by Maddhattr, based on Offline Companions by ProfMags (MIT License), integrated directly into this DLL. Not affiliated with Maddhattr, ProfMags, or Player2.
+`[Personaje] Language` default **`Auto`**. The source comment says Auto follows Valheim’s English, Español (Latinoamérica), or Español (España). In code, any Spanish game language selects the mod’s one Spanish mode; it is not a separate third UI. You can set `English` or `Spanish` without restarting.
+
+- Chat: `/language en`, `/language es`, `/language auto` (`/lang`, `/idioma`). With no argument it switches between English and Spanish.
+- Character editor: hold `LeftShift` and press `Y`, or type `/character` (`/personaje`) while a companion is the target. The buttons are `English`, `Español`, and `Auto (Game)`.
+- Both English and Spanish slash commands work either way.
+
+`ReplyLanguage` default `auto` follows that setting. Item names are matched across English and both Spanish vocabularies. One synonym group in `ItemNames` is `seta` / `hongo` / `mushroom`.
+
+<a id="controls"></a>
+
+## 🕹️ Controls
+
+Defaults. Change the key fields if these clash with another mod. `TalkKey` cannot be `T`: the config text says Valheim uses `T` for emotes.
+
+| Action | Default |
+| --- | --- |
+| Talk to who you look at, or the closest companion | `Y`, or Valheim chat (`Enter`) if `TalkInGameChat` is true |
+| Shout farther | `/s` plus the message, up to `ShoutRange` (default **120** m, allowed 20–300) |
+| Voice | Hold `H`, release to send |
+| Character sheet | `LeftShift` + `Y`, or `/character` |
+| Help, status, call everyone, balance | `/help`, `/status`, `/recall` or `/call`, `/balance` |
+| Autonomous mode for every companion | `/autonomy` |
+| Named places | `/mark <name>`, `/places`, `/forget <name>` |
+| Mod language | `/language en` · `es` · `auto` |
+| Reborn: point at something | Tap `Z` (`DirectTargetKey`). Hold `Z` to call companions |
+| Reborn: command wheel on one companion | Hold `E` while looking at them (`RadialMenuKey`) |
+| Reborn: farm zone editor | Hold `LeftAlt` and press `Z` |
+
+Spanish aliases: `/ayuda`, `/estado`, `/llamar`, `/saldo`, `/personaje`, `/autonomia`, `/lugares`, `/marcar`, `/olvidar`, `/idioma`.
+
+`/help`, `/status`, `/recall`, `/balance`, `/autonomy`, `/places`, `/mark`, `/forget`, and `/language` do not go through the AI (`RunCommand`). `/character` needs a companion as the target; otherwise the game says none of yours is nearby.
+
+With other players in the world, game chat is sent to the AI only if the message names a companion, so talk between players is not forwarded. `TalkInGameChat = false` turns game-chat listening off. The minimum gap between messages is `Cooldown` (default **2** seconds).
+
+In-game `/help` prints the order examples. The same list includes lines such as `follow me`, `get 10 stone`, `Bjorn, chop wood`, and `everyone, follow me`. Emotes are skipped while an enemy is within **25** m, while the companion is working, resting, swimming, or otherwise not in a position to emote, and for **10** seconds after the previous emote. `AllowEmotes = false` turns that off. `AllowActions = false` stops conversation from applying jobs.
+
+Reborn’s wheel is the full command wheel in this source (follow, job actions, set home, despawn, stances, and the other entries in `CompanionRadialMenu`). It is not reduced to four buttons. The despawn label in the English strings is `Despawn`.
+
+<a id="config"></a>
+
+## ⚙️ Configuration
+
+`BepInEx/config/SpiffoAiCompanions.cfg`
+
+| Section | What it controls |
+| --- | --- |
+| `IA` | Provider, and model / key / URL only when you are not on Player2 |
+| `Voz` | Microphone on or off, hold key, max seconds, Player2 voice URL |
+| `Conversacion` | Talk and edit keys, 80 m / 120 m ranges, chat echo, whether orders and emotes are allowed |
+| `Personaje` | `Language`, `ReplyLanguage`, shared personality, `RebornSpeech`, reply length |
+| `Memoria` | Save chat, and summarize older chat with an extra AI request |
+| `Reacciones` | Event comments. Cooldown default **180** s (30–3600). `MaxPerHour` default **10** (1–60) |
+| `Autonomia` | `Normal` or `Autonomo`. `IntervalSeconds` default **75** (20–3600). `MaxPerHour` default **30** (1–120) |
+
+`RebornSpeech` default `Avisos`: Reborn’s own lines are limited to warnings such as having no axe. `Todas` is the original Reborn chatter. `Ninguna` silences those fixed lines. The AI replies are separate.
+
+Exploration orders use `ExploreGoal.TimeLimitSeconds` (**240** s) and stay within `ReachShare` (**0.85**) of the loaded area around you, so they are not given a fixed “85 m” cap in this source. Finds reported on that trip are capped at **8**, looked for within **50** m (`ExploreFindMeters`).
+
+<a id="troubleshooting"></a>
+
+## 🛠️ Troubleshooting
+
+Text in the right-hand column is what the mod shows, or the check its own log tells you to make.
+
+| What you see | What the source says to check |
+| --- | --- |
+| `Could not connect to the AI. Check that the service is running.` | Player2 (or the other provider) is not answering. Open the app, then try again. |
+| `Could not check Player2 balance.` | `/balance` could not read `/joules`. Same app and `[Voz] BaseUrl`. |
+| `The AI rejected authentication. Check your API key or session.` | HTTP 401 or 403. For Player2, sign in inside the app if it asks, and leave `ApiKey` empty unless you intend to send a bearer token. |
+| `Your AI account does not have enough balance.` | The response body contained `insufficient_credits`. |
+| `Too many requests to the AI. Wait a moment.` | HTTP 429. |
+| `Could not connect to Player2 for voice recognition. Check that the app is open.` | Voice HTTP status 0. |
+| `Player2 is already listening. Try again in a moment.` | Voice HTTP 409. |
+| `Player2 voice recognition is unavailable. Check the microphone in the app.` | Voice HTTP 503. The mod does not name the app’s microphone control. |
+| `Listening time expired. Please try again.` | Voice HTTP 404. |
+| `The AI returned no text...` | Raise `MaxTokens` or set it to `0`. |
+| They answer and do not act | `AllowActions` must be `true`. With `ShowOrdersInChat` on, applied orders are prefixed `Order for <name>:`. |
+| `Has too many pending tasks.` | That companion already has 5 queued tasks. |
+| `Not applied: too many orders at once.` | That single reply tried to apply more than 6 actions. |
+| `Mod desactivado: hay otra copia de Offline Companions Reborn` | Delete the other Reborn or old AI DLL with the game closed. Do not delete `SpiffoAiCompanions.dll`. |
+| No `Conectado con Offline Companions Reborn` line | The plugin did not finish loading. Read the matching `Mod desactivado` line in `BepInEx/LogOutput.log`. |
+| Nobody hears you | They are farther than `TalkRange` (80 m) or, for a shout, `ShoutRange` (120 m). The game states the distance. Unloaded zones need you to walk closer; `/recall` lists those names. |
+
+Repair, smelting, and the other job tools still depend on Reborn: a tool in the pack or in a chest, a free slot, and the matching job enabled in `Maddhattr.OfflineCompanionsReborn.cfg`. This page does not add failure cases that are not in those files.
+
+<a id="release"></a>
+
+## 📥 Release
+
+[Spiffo's Valheim AI Companions 0.25.5](https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/tag/v0.25.5)
+
+- [Spiffos-AI-Companions-v0.25.5.zip](https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/download/v0.25.5/Spiffos-AI-Companions-v0.25.5.zip)
+- [SHA256SUMS](https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/download/v0.25.5/SHA256SUMS)
+- Notes in the repo: [RELEASE_NOTES.md](RELEASE_NOTES.md)
+
+The zip attached to that release is 22,723,838 bytes, SHA256 `9beb59ae96c84c26247cbb37eb15d6b802c2ae82e50eb3a64b7df4fa06af3f1d`, which is what the release’s own `SHA256SUMS` asset records. [`SHA256SUMS`](SHA256SUMS) on `main` is a different line: it names the 0.25.6 DLL. This page does not change that file, the DLL, or the v0.25.5 release.
+
+<a id="credits"></a>
+
+## Credits
+
+Spiffo's Valheim AI Companions includes Offline Companions Reborn **1.5.8** by Maddhattr, based on Offline Companions by ProfMags, under the MIT license. The MIT text is [licenses/Offline-Companions-Reborn-MIT.txt](licenses/Offline-Companions-Reborn-MIT.txt) and [codigo/Reborn/LICENSE](codigo/Reborn/LICENSE). [THIRD_PARTY_NOTICES.txt](THIRD_PARTY_NOTICES.txt) states that this MIT grant covers that third-party component, not a license chosen here for Spiffo’s own source or DLL.
+
+Spanish interface and speech files in the package were written by ROMAN, as that notice says. This mod is not affiliated with Maddhattr, ProfMags, Player2, or the makers of Valheim.
+
+The cover image is promotional art supplied for this documentation. It is not a screenshot of a tested session and not an official Player2 or Valheim endorsement.
