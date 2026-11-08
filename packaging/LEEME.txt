@@ -1,0 +1,36 @@
+Spiffo's Valheim AI Companions
+
+Descarga el paquete actual en:
+https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/latest
+
+El archivo de suma adjunto a esa página es el que corresponde a los archivos publicados allí. Este texto no fija la suma de un paquete viejo.
+
+Este zip es el paquete para jugar. El código fuente es el repositorio de Git, no este zip.
+
+INSTALACION
+
+Cierra Valheim antes.
+
+1. Valheim necesita BepInEx. Si BepInEx ya está instalado, no sustituyas sus archivos.
+2. Copia install/BepInEx/plugins/SpiffoAiCompanions.dll a la carpeta del juego BepInEx/plugins/. Si actualizas este mismo mod, sustituye solo esa DLL.
+3. No instales también Offline Companions Reborn. Reborn 1.5.8 ya va dentro de esta DLL. Si el registro dice que hay otra copia de Offline Companions Reborn, borra ese otro archivo con Valheim cerrado. No borres SpiffoAiCompanions.dll.
+4. Menús de Reborn en español, opcional: copia la carpeta Translations de install/BepInEx/plugins/OfflineCompanionsReborn/ a la carpeta del juego BepInEx/plugins/OfflineCompanionsReborn/. Esa copia no sustituye la DLL. Deja el nombre Spanish.json como está. El juego lee ese nombre.
+
+PLAYER2
+
+El proveedor de IA por defecto es Player2. Deja Provider en Player2 y ApiKey vacío. Abre la app de Player2 antes de arrancar Valheim. La voz usa esa app. La guía larga está en el README del repositorio:
+https://github.com/NotUrSpiffo/Spiffos-AI-Companions
+
+EJEMPLOS DE CONFIGURACION
+
+La carpeta "configuration examples" solo trae muestras:
+  SpiffoAiCompanions.cfg
+  Maddhattr.OfflineCompanionsReborn.cfg
+
+Son opcionales. En el primer arranque el juego escribe sus propios archivos en BepInEx/config/. No hace falta copiar estas muestras. Si ya editaste tu configuración, no la sustituyas con una muestra.
+
+AVISOS
+
+Los créditos de terceros y la licencia MIT de Reborn están en la carpeta licenses. Esos textos no cambian respecto del paquete del que sale este zip. Este paquete no añade una licencia para el código propio de Spiffo.
+
+Manual en inglés: README.txt
