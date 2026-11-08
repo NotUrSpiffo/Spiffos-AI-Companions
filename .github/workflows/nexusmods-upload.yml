@@ -1,0 +1,68 @@
+name: Upload to NexusMods
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to upload (e.g. v0.26.0)"
+        required: true
+
+permissions:
+  contents: write
+
+env:
+  NEXUS_MOD_ID: "15749645079318"
+  NEXUS_FILE_ID: "8337171"
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Resolve tag and version
+        id: meta
+        env:
+          EVENT_TAG: ${{ github.event.release.tag_name }}
+          INPUT_TAG: ${{ github.event.inputs.tag }}
+        run: |
+          TAG="${EVENT_TAG:-$INPUT_TAG}"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.meta.outputs.tag }}
+          fetch-depth: 0
+
+      - name: Build distribution zip from the tagged commit
+        run: |
+          python3 scripts/build-distribution-zip.py HEAD "SpiffosAICompanions-${{ steps.meta.outputs.version }}.zip"
+          ls -l *.zip
+
+      - name: Get changelog from the GitHub release
+        id: changelog
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.meta.outputs.tag }}
+        run: |
+          gh release view "$TAG" --json body --jq .body > changelog.txt || cp RELEASE_NOTES.md changelog.txt
+          {
+            echo "text<<CHANGELOG_EOF"
+            cat changelog.txt
+            echo
+            echo "CHANGELOG_EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Upload to NexusMods
+        uses: Nexus-Mods/upload-action@v1.0.0-beta.11
+        with:
+          api_key: ${{ secrets.NEXUS_API_KEY }}
+          file_id: ${{ env.NEXUS_FILE_ID }}
+          mod_id: ${{ env.NEXUS_MOD_ID }}
+          filename: SpiffosAICompanions-${{ steps.meta.outputs.version }}.zip
+          version: ${{ steps.meta.outputs.version }}
+          category: main
+          archive_existing_version: true
+          update_mod_version: true
+          changelog: ${{ steps.changelog.outputs.text }}
