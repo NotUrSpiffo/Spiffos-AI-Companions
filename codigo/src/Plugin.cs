@@ -22,7 +22,7 @@ namespace OfflineCompanionsAI
         public const string PluginGuid = "OfflineCompanionsAI";
 #endif
         public const string PluginName = "Spiffo's Valheim AI Companions";
-        public const string PluginVersion = "0.25.5";
+        public const string PluginVersion = "0.25.6";
 
         private const float EmoteCooldown = 10f;
 

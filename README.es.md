@@ -1,6 +1,6 @@
 # Spiffo's Valheim AI Companions
 
-[English](README.md) · [Release v0.25.5](https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/tag/v0.25.5) · Plugin `0.25.5`
+[English](README.md) · [Release v0.25.5](https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/tag/v0.25.5) · en `main` el plugin es `0.25.6`
 
 <p>
   <img src="docs/assets/cover.jpg" width="640" height="360" alt="Arte de portada con cuatro compañeros ilustrados en un bosque nevado y el título Spiffo's AI Companions. Es arte promocional, no una captura de partida, ni un respaldo de Valheim o de Player2.">
@@ -48,6 +48,11 @@ Esta página describe ajustes y límites de este repositorio. No es un informe d
 
 En el editor de personaje hay seis personalidades: **Vieja guardia**, **Aprendiz**, **Exploración**, **Caza**, **Oficio** y **Bromas**. Si `[Personaje] Personality` está vacío, cada compañero sin instrucciones propias recibe uno de esos perfiles. Las inclinaciones del editor son **Automática**, **Ninguna**, **Oficio**, **Exploración**, **Caza** y **Recolección**. Automática sigue el perfil y no anula una orden tuya.
 
+En `main`, el plugin **0.25.6** cambia además dos comportamientos de Reborn en `codigo/src/BehaviorOverrides.cs`. [RELEASE_NOTES.md](RELEASE_NOTES.md) dice que esas correcciones no se han probado en partida.
+
+- **Picar:** se deja una roca de piedra o de mineral, o una sección, cuando el código decide que solo se llega nadando. Si faltan `MHR_Water.WouldSwim` o `MHR_GatherRules.AllowTarget`, el registro avisa de que ese filtro no está disponible.
+- **Pelear con una herramienta en la mano:** si el objeto elegido es una caña de pescar, tiene daño de pico o es una herramienta, el mod prueba un arma cuerpo a cuerpo, luego un arco, y si no, la desequipa. Si faltan los métodos de combate de Reborn, el registro avisa de que el cambio no está disponible.
+
 <a id="companions"></a>
 
 ## 👥 Cuatro compañeros, tareas distintas
@@ -76,7 +81,7 @@ Este código **no** fija una plantilla de 4 compañeros. La imagen de arriba es 
 3. Instala y abre la app de [Player2](https://player2.game). Deja `[IA] Provider` en `Player2` y `ApiKey` vacío.
 4. Arranca Valheim. En el chat, `/saldo` debe responder con los joules de Player2.
 
-La DLL empaquetada y la suma están en el [release v0.25.5](https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/tag/v0.25.5). La misma DLL también está en [`instalar/BepInEx/plugins/SpiffoAiCompanions.dll`](instalar/BepInEx/plugins/SpiffoAiCompanions.dll) en esta etiqueta.
+Hay dos builds distintas. El zip del [release v0.25.5](https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/tag/v0.25.5) es el plugin 0.25.5. La DLL de este repositorio en `main`, [`instalar/BepInEx/plugins/SpiffoAiCompanions.dll`](instalar/BepInEx/plugins/SpiffoAiCompanions.dll), es el plugin **0.25.6**. No son el mismo archivo.
 
 <a id="requirements"></a>
 
@@ -294,7 +299,7 @@ Reparar, fundir y las demás herramientas de trabajo siguen dependiendo de Rebor
 - [SHA256SUMS](https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/download/v0.25.5/SHA256SUMS)
 - Notas en el repo: [RELEASE_NOTES.md](RELEASE_NOTES.md)
 
-El SHA256 del zip es `9beb59ae96c84c26247cbb37eb15d6b802c2ae82e50eb3a64b7df4fa06af3f1d` (22.723.838 bytes), como figura en [`SHA256SUMS`](SHA256SUMS).
+El zip de ese release pesa 22.723.838 bytes y su SHA256 es `9beb59ae96c84c26247cbb37eb15d6b802c2ae82e50eb3a64b7df4fa06af3f1d`, que es lo que registra el `SHA256SUMS` adjunto al release. [`SHA256SUMS`](SHA256SUMS) en `main` es otra línea: nombra la DLL 0.25.6. Esta página no cambia ese archivo, la DLL ni el release v0.25.5.
 
 <a id="credits"></a>
 
