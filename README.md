@@ -38,7 +38,7 @@ This page describes settings and limits in this repository. It is not a gameplay
 | --- | --- |
 | Text chat with the companion you look at, or the closest one | `TalkKey` default `Y`; in-game chat when `TalkInGameChat` is on |
 | Push-to-talk through the Player2 app | `[Voz]` default hold `H`, max 15 seconds |
-| Natural-language jobs, including a different job per companion | `AllowActions` default on; see [companions](#companions) |
+| Natural-language jobs, a different one for each companion, in a squad of 4 | `AllowActions` default on; `Recipients.MaxPerOrder`; see [companions](#companions) |
 | English and Spanish UI, prompts, and replies | `[Personaje] Language` default `Auto` |
 | Memory between sessions | `[Memoria] Enabled` default on; stored unencrypted in the mod config folder |
 | Short comments on bosses, biomes, deaths, raids, and similar events | `[Reacciones]` default on; each comment is an AI request |
@@ -57,18 +57,16 @@ On `main`, plugin **0.25.6** also changes two Reborn behaviors in `codigo/src/Be
 
 ## 👥 Four companions, separate jobs
 
-You can have more than one companion out and give them **different** tasks.
+The squad is **4** companions at once. Each of them can be given a different task. That maximum is the same in the published tag v0.25.5 and on `main` 0.25.6.
 
-One spoken order can name at most **4** companions. That cap is `Recipients.MaxPerOrder` in `codigo/src/OrderPlanning.cs`.
+What the code enforces is who one order can include. `Recipients.MaxPerOrder` is 4 in `codigo/src/OrderPlanning.cs`. `everyone`, `all`, `team`, `guys`, and `everybody` (and `todos`, `todas`, `equipo`, `chicos`) resolve to at most 4 nearby companions, including the one who answers. A comma-separated list stops at 4; a fifth name in that same order is not added. The prompt sent to the model states that same cap. `codigo/tests/ProtocolCheck/Program.cs` checks both cases.
 
 - **One person:** `Bjorn, chop wood` is for Bjorn. With no name, the order is only for the companion you are talking to (the one you look at, or the closest within talk range).
-- **A list:** names separated by commas, still at most 4 in that order. Extra names in the same order are not added.
-- **The group:** `everyone`, `all`, `team`, `guys`, or `everybody` (and `todos`, `todas`, `equipo`, `chicos`) selects up to 4 nearby companions, including the one who is answering.
-- **Separate jobs:** use another message. `Bjorn, chop wood` and then `Astrid, fish` are two orders, so each companion can be doing something else.
+- **Separate jobs inside the four:** another message, such as `Astrid, fish`, gives a different task to someone else in that squad.
 - **Queue:** each companion keeps at most **5** pending tasks (`OrderSequence.MaxQueued`). One more returns `Has too many pending tasks.`
 - **One message:** at most **6** actions are applied (`MaxActionsPerMessage`). Further actions in that same reply return `Not applied: too many orders at once.`
 
-This source does **not** set a roster size of 4. The picture above is cover art of four figures, not a measured squad limit. Reborn offers one free starter the first time a character enters a world (`SpawnStarterCompanion`, default on) and can summon another at Odin’s Shrine for `CompanionPrice` coins (default **1000**, taken from your pack). Companions in an unloaded zone cannot hear you. `/recall` says so by name and tells you to walk closer. It does not spend AI credits.
+Reborn’s recruit path is a one-time free starter (`StarterFix`, once per character and world) and then an offering of `CompanionPrice` coins at Odin’s Shrine (default **1000**, a price, allowed 0–50000). `SpawnCompanion`, `HireWithCoins`, `CompanionSetup.Awake`, and the roster snapshot do not keep a second counter that rejects another body. The minimap list grows with whoever is loaded. This page still describes a squad of 4, which is the limit the order system applies. Companions in an unloaded zone cannot hear you. `/recall` names them and tells you to walk closer. It does not spend AI credits.
 
 `/autonomy` switches **all** companions between normal mode and autonomous mode. Autonomous mode can spend credits up to `MaxPerHour` (default 30) initiatives an hour.
 

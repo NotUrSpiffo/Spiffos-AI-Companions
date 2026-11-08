@@ -38,7 +38,7 @@ Esta página describe ajustes y límites de este repositorio. No es un informe d
 | --- | --- |
 | Chat con quien miras, o con el más cercano | `TalkKey` por defecto `Y`; chat del juego si `TalkInGameChat` está activo |
 | Pulsar para hablar, mediante la app de Player2 | `[Voz]`: mantener `H`, máximo 15 segundos |
-| Encargos en lenguaje normal, distintos para cada compañero | `AllowActions` activo por defecto; ver [compañeros](#companions) |
+| Encargos en lenguaje normal, uno distinto por compañero, en un grupo de 4 | `AllowActions` activo por defecto; `Recipients.MaxPerOrder`; ver [compañeros](#companions) |
 | Interfaz, indicaciones y respuestas en español e inglés | `[Personaje] Language` por defecto `Auto` |
 | Memoria entre sesiones | `[Memoria] Enabled` activo; se guarda sin cifrar en la carpeta de config del mod |
 | Comentarios breves ante jefes, biomas, muertes, asaltos y hechos parecidos | `[Reacciones]` activo; cada comentario es una petición a la IA |
@@ -57,18 +57,16 @@ En `main`, el plugin **0.25.6** cambia además dos comportamientos de Reborn en 
 
 ## 👥 Cuatro compañeros, tareas distintas
 
-Puedes tener varios compañeros a la vez y darles **tareas diferentes**.
+El grupo es de **4** compañeros a la vez. A cada uno se le puede dar una tarea distinta. Ese máximo es el mismo en la etiqueta publicada v0.25.5 y en `main` 0.25.6.
 
-Una misma orden hablada puede nombrar como máximo a **4** compañeros. El tope es `Recipients.MaxPerOrder` en `codigo/src/OrderPlanning.cs`.
+Lo que el código impone es a quiénes entra una orden. `Recipients.MaxPerOrder` vale 4 en `codigo/src/OrderPlanning.cs`. `everyone`, `all`, `team`, `guys` y `everybody` (y `todos`, `todas`, `equipo`, `chicos`) resuelven como máximo 4 compañeros cercanos, incluido quien responde. Una lista separada por comas se corta en 4; un quinto nombre en esa misma orden no se añade. El prompt que recibe el modelo dice el mismo tope. `codigo/tests/ProtocolCheck/Program.cs` comprueba los dos casos.
 
 - **Una persona:** `Bjorn, tala madera` es para Bjorn. Sin nombre, la orden es solo para quien estás hablando (a quien miras, o el más cercano dentro del alcance).
-- **Una lista:** nombres separados por comas, como máximo 4 en esa orden. Los nombres de más en la misma orden no se añaden.
-- **El grupo:** `everyone`, `all`, `team`, `guys` o `everybody` (y `todos`, `todas`, `equipo`, `chicos`) elige hasta 4 compañeros cercanos, incluido quien responde.
-- **Tareas distintas:** usa otro mensaje. `Bjorn, tala madera` y después `Astrid, pesca` son dos órdenes: cada uno puede estar en otra cosa.
+- **Tareas distintas dentro de los cuatro:** otro mensaje, como `Astrid, pesca`, le da otra tarea a otra persona de ese grupo.
 - **Cola:** cada compañero guarda como máximo **5** tareas pendientes (`OrderSequence.MaxQueued`). Otra más responde `Tiene demasiadas tareas pendientes.`
 - **Un mensaje:** se aplican como máximo **6** acciones (`MaxActionsPerMessage`). El resto de esa misma respuesta dice `No aplicada: demasiadas órdenes a la vez.`
 
-Este código **no** fija una plantilla de 4 compañeros. La imagen de arriba es arte de portada con cuatro figuras, no un límite medido en partida. Reborn ofrece un compañero inicial gratis la primera vez que un personaje entra en un mundo (`SpawnStarterCompanion`, activo por defecto) y puede invocar otro en el santuario de Odín por `CompanionPrice` monedas (por defecto **1000**, de tu inventario). Quien está en una zona no cargada no te oye. `/llamar` lo dice por nombre y pide que te acerques. Ese comando no gasta saldo de IA.
+El reclutamiento de Reborn es un compañero inicial gratis, una sola vez por personaje y mundo (`StarterFix`), y después una ofrenda de `CompanionPrice` monedas en el santuario de Odín (por defecto **1000**, un precio, de 0 a 50000). `SpawnCompanion`, `HireWithCoins`, `CompanionSetup.Awake` y la copia de la lista no llevan un segundo contador que rechace otro cuerpo. La lista del minimapa crece con quien esté cargado. Esta página describe un grupo de 4, que es el límite que aplica el sistema de órdenes. Quien está en una zona no cargada no te oye. `/llamar` lo dice por nombre y pide que te acerques. Ese comando no gasta saldo de IA.
 
 `/autonomia` cambia **a todos** entre el modo normal y el autónomo. El modo autónomo puede gastar saldo hasta `MaxPerHour` iniciativas por hora (por defecto 30).
 
