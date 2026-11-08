@@ -84,6 +84,7 @@ namespace OfflineCompanionsAI
             ApplyCooking(harmony);
             ApplyCookSpread(harmony);
             ApplySpacingPatience(harmony);
+            ApplyToolInFight(harmony);
             ApplyUpkeep(harmony);
             ApplySmelting(harmony);
             ApplySpeechFilter(harmony);
@@ -446,6 +447,89 @@ namespace OfflineCompanionsAI
             harmony.Patch(swings, postfix: Hook(nameof(SwingsPostfix)));
             harmony.Patch(directed, prefix: Hook(nameof(DirectedPrefix)));
             harmony.Patch(_sectionExposed, postfix: Hook(nameof(SectionExposedPostfix)));
+
+            _wouldSwim = AccessTools.Method("Companions.MHR_Water:WouldSwim");
+            MethodInfo allow = AccessTools.Method("Companions.MHR_GatherRules:AllowTarget");
+            if (_wouldSwim == null || allow == null)
+            {
+                Plugin.Log.LogWarning("Dejar las rocas a las que solo se llega nadando no está disponible en esta versión de Offline Companions Reborn: puede nadar hasta ellas y agotarse.");
+                return;
+            }
+            harmony.Patch(allow, postfix: Hook(nameof(RockReachableDry)));
+        }
+
+        private const int StoneMode = 2;
+        private const int OreMode = 3;
+        private const float DryStandRing = 1f;
+        private const int DryStandSamples = 8;
+        private const int MaxWetReports = 5;
+        private static int _wetReports;
+
+        /// <summary>
+        /// Offline Companions no mira el agua al elegir roca. Una veta de cobre o de estaño metida en un lago tiene secciones
+        /// sobre el fondo que da por buenas, y va nadando hasta ellas: nadando no puede picar, y se agota una y otra vez.
+        /// </summary>
+        private static void RockReachableDry(GameObject go, int mode, ref bool __result)
+        {
+            if (!__result || go == null || (mode != StoneMode && mode != OreMode)) return;
+            try
+            {
+                bool dry;
+                if (go.GetComponent<MineRock5>() != null)
+                {
+                    // Las secciones que valen ya descartan las que están bajo el agua.
+                    dry = false;
+                    foreach (Transform section in go.transform)
+                    {
+                        if (!section.gameObject.activeSelf) continue;
+                        Collider collider = section.GetComponent<Collider>();
+                        if (collider != null && (bool)_sectionExposed.Invoke(null, new object[] { collider })) { dry = true; break; }
+                    }
+                }
+                else
+                {
+                    dry = !SolidBounds(go, out Bounds bounds) || StandsDryBeside(bounds);
+                }
+                if (dry) return;
+                __result = false;
+                if (_wetReports < MaxWetReports)
+                {
+                    _wetReports++;
+                    Plugin.Log.LogInfo("[Picar] Se deja " + go.name + " en " + go.transform.position.ToString("F1") + ": solo se llega nadando.");
+                }
+            }
+            catch (System.Exception ex)
+            {
+                // Dentro de la búsqueda de Offline Companions: ante la duda, se queda con lo que él decidió.
+                Plugin.Log.LogError("[Picar] " + ex);
+            }
+        }
+
+        private static bool SolidBounds(GameObject go, out Bounds bounds)
+        {
+            bounds = default(Bounds);
+            bool any = false;
+            foreach (Collider collider in go.GetComponentsInChildren<Collider>())
+            {
+                if (collider.isTrigger || !collider.enabled) continue;
+                if (any) bounds.Encapsulate(collider.bounds);
+                else { bounds = collider.bounds; any = true; }
+            }
+            return any;
+        }
+
+        // Se mira alrededor, justo por fuera, si hay algún sitio donde se haga pie. Sin forma de saberlo, no se descarta.
+        private static bool StandsDryBeside(Bounds bounds)
+        {
+            if (_wouldSwim == null) return true;
+            float ring = Mathf.Max(bounds.extents.x, bounds.extents.z) + DryStandRing;
+            for (int i = 0; i < DryStandSamples; i++)
+            {
+                float angle = i * 2f * Mathf.PI / DryStandSamples;
+                var spot = new Vector3(bounds.center.x + Mathf.Cos(angle) * ring, bounds.center.y, bounds.center.z + Mathf.Sin(angle) * ring);
+                if (!(bool)_wouldSwim.Invoke(null, new object[] { null, spot })) return true;
+            }
+            return false;
         }
 
         /// <summary>
@@ -464,7 +548,7 @@ namespace OfflineCompanionsAI
                     __result = known.Value;
                     return;
                 }
-                bool visible = SectionShowsAboveGround(__0);
+                bool visible = SectionShowsAboveGround(__0) && SectionReachableDry(__0);
                 if (_sectionVisible.Count > MaxSectionsRemembered) _sectionVisible.Clear();
                 _sectionVisible[__0] = new KeyValuePair<float, bool>(now, visible);
                 __result = visible;
@@ -498,6 +582,18 @@ namespace OfflineCompanionsAI
             {
                 _buriedReports++;
                 Plugin.Log.LogInfo("[Picar] Sección enterrada descartada en " + bounds.center.ToString("F1") + ": asoma " + highest.ToString("F1") + " m sobre el suelo.");
+            }
+            return false;
+        }
+
+        // Nadando no puede picar: una sección rodeada de agua honda no sirve aunque asome.
+        private static bool SectionReachableDry(Collider section)
+        {
+            if (StandsDryBeside(section.bounds)) return true;
+            if (_wetReports < MaxWetReports)
+            {
+                _wetReports++;
+                Plugin.Log.LogInfo("[Picar] Sección en el agua descartada en " + section.bounds.center.ToString("F1") + ": no hay dónde ponerse sin nadar.");
             }
             return false;
         }
@@ -626,6 +722,66 @@ namespace OfflineCompanionsAI
                 return;
             }
             harmony.Patch(spacing, postfix: Hook(nameof(SpacingPostfix)));
+        }
+
+        private static MethodInfo _forceMelee;
+        private static MethodInfo _forceRanged;
+        private static FieldInfo _fightHumanoid;
+        private static FieldInfo _fightCreature;
+        private const float ToolSwapLogSeconds = 30f;
+        private static readonly Dictionary<Component, float> _toolSwapLogged = new Dictionary<Component, float>();
+
+        /// <summary>
+        /// En la postura de pelear a distancia, con el enemigo cerca, Offline Companions solo saca el arma de cuerpo a cuerpo
+        /// si tiene las manos vacías o un arco. Con el pico de picar en la mano no cambia nada, y con el pico no le deja
+        /// atacar: se queda bloqueando sin dar un golpe.
+        /// </summary>
+        private static void ApplyToolInFight(Harmony harmony)
+        {
+            System.Type fight = AccessTools.TypeByName("Companions.CompanionCombatAI");
+            MethodInfo select = fight == null ? null : AccessTools.Method(fight, "SelectBestAttack");
+            _forceMelee = fight == null ? null : AccessTools.Method(fight, "TryForceMeleeWeapon");
+            _forceRanged = fight == null ? null : AccessTools.Method(fight, "TryForceRangedWeapon");
+            _fightHumanoid = fight == null ? null : AccessTools.Field(fight, "_humanoid");
+            _fightCreature = fight == null ? null : AccessTools.Field(fight, "_targetCreature");
+            if (select == null || _forceMelee == null || _forceRanged == null || _fightHumanoid == null || _fightCreature == null)
+            {
+                Plugin.Log.LogWarning("Cambiar la herramienta por un arma al pelear no está disponible en esta versión de Offline Companions Reborn: puede quedarse con el pico en la mano.");
+                return;
+            }
+            harmony.Patch(select, postfix: Hook(nameof(WeaponOutForFight)));
+        }
+
+        // Las mismas cosas con las que Offline Companions no deja atacar.
+        private static bool CannotFightWith(ItemDrop.ItemData item)
+        {
+            return item.m_shared.m_animationState == ItemDrop.ItemData.AnimationState.FishingRod
+                || item.GetDamage().m_pickaxe > 0f
+                || item.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Tool;
+        }
+
+        private static void WeaponOutForFight(Component __instance, ref ItemDrop.ItemData __result)
+        {
+            try
+            {
+                if (__result == null || !CannotFightWith(__result) || _fightCreature.GetValue(__instance) == null) return;
+                var humanoid = _fightHumanoid.GetValue(__instance) as Humanoid;
+                if (humanoid == null || humanoid.InAttack()) return;
+                string tool = __result.m_shared.m_name;
+                // Su arma de cuerpo a cuerpo, o el arco, o los puños: cualquier cosa antes que no poder atacar.
+                if (!(bool)_forceMelee.Invoke(__instance, null) && !(bool)_forceRanged.Invoke(__instance, null))
+                    humanoid.UnequipItem(__result);
+                __result = humanoid.GetCurrentWeapon();
+                float now = Time.time;
+                if (_toolSwapLogged.TryGetValue(__instance, out float last) && now - last < ToolSwapLogSeconds) return;
+                _toolSwapLogged[__instance] = now;
+                Plugin.Log.LogInfo("[Combate] " + CompanionBridge.Name(__instance) + ": deja " + tool + " y pelea con " + (__result?.m_shared?.m_name ?? "los puños") + ".");
+            }
+            catch (System.Exception ex)
+            {
+                // Se pide cada segundo durante la pelea: mejor que siga con lo que él eligió.
+                Plugin.Log.LogError("[Combate] " + ex);
+            }
         }
 
         private static void ApplyCooking(Harmony harmony)
