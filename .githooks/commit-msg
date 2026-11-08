@@ -1,0 +1,61 @@
+#!/bin/sh
+# commit-msg hook: drop Co-authored-by trailers whose identity contains "claude".
+# Matching is case-insensitive and applies only to that trailer, not to prose.
+# The message file is left untouched when nothing matches, so encoding and
+# line endings stay as Git wrote them.
+set -eu
+
+if [ "${1-}" = "" ]; then
+  echo "commit-msg: usage: commit-msg <message-file>" >&2
+  exit 1
+fi
+
+file=$1
+if [ ! -f "$file" ]; then
+  echo "commit-msg: message file not found: $file" >&2
+  exit 1
+fi
+
+tmp=$(mktemp "${TMPDIR:-/tmp}/commit-msg.XXXXXX")
+trap 'rm -f "$tmp"' EXIT
+
+# 0 = no matching trailer. 3 = rewritten. Other statuses are awk failures.
+set +e
+LC_ALL=C awk '
+function lower_copy(s,    i, c, out) {
+  out = ""
+  for (i = 1; i <= length(s); i++) {
+    c = substr(s, i, 1)
+    out = out tolower(c)
+  }
+  return out
+}
+{
+  line = $0
+  if (length(line) > 0 && substr(line, length(line), 1) == "\r")
+    line = substr(line, 1, length(line) - 1)
+  low = lower_copy(line)
+  if (low ~ /^[ \t]*co-authored-by:[ \t]*.*claude/) {
+    removed++
+    next
+  }
+  printf "%s%s", $0, ORS
+}
+END {
+  if (removed > 0) exit 3
+  exit 0
+}
+' "$file" > "$tmp"
+status=$?
+set -e
+
+if [ "$status" -eq 0 ]; then
+  exit 0
+fi
+if [ "$status" -ne 3 ]; then
+  echo "commit-msg: could not filter $file (status $status)" >&2
+  exit "$status"
+fi
+
+cat "$tmp" > "$file"
+exit 0
