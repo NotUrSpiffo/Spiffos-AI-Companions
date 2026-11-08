@@ -1,6 +1,6 @@
 # Spiffo's Valheim AI Companions
 
-[Español](README.es.md) · `main` is plugin `0.25.8`
+[Español](README.es.md) · [Latest release](https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/latest) · `main` is plugin `0.25.8`
 
 <p>
   <img src="docs/assets/cover.jpg" width="640" height="360" alt="Cover art of four illustrated companions in a snowy forest, titled Spiffo's AI Companions. Promotional artwork, not a gameplay screenshot, and not an endorsement by Valheim or Player2.">
@@ -49,7 +49,7 @@ This page describes settings and limits in this repository. It is not a gameplay
 
 Six built-in personalities are in the character editor: **Old Guard**, **Rookie**, **Explorer**, **Hunter**, **Craftsman**, and **Joker**. If `[Personaje] Personality` is empty, each companion without custom instructions gets one of those profiles. Inclination choices in the editor are **Automatic**, **None**, **Craft**, **Exploration**, **Hunting**, and **Foraging**. Automatic follows the profile; it does not override an order you give.
 
-On `main`, plugin **0.25.8** also changes these Reborn behaviors in `codigo/src/BehaviorOverrides.cs` and `codigo/src/SeatSync.cs`. [RELEASE_NOTES.md](RELEASE_NOTES.md) says the changes from 0.25.6 to 0.25.8 have not been tested in game.
+On `main`, plugin **0.25.8** also changes these Reborn behaviors in `codigo/src/BehaviorOverrides.cs` and `codigo/src/SeatSync.cs`. What changed is in [RELEASE_NOTES.md](RELEASE_NOTES.md).
 
 - **Mining:** a stone or ore rock, or a section of one, is skipped when the code decides it can only be reached by swimming. If `MHR_Water.WouldSwim` or `MHR_GatherRules.AllowTarget` is missing, the log warns that this skip is unavailable.
 - **Fighting with a tool out:** if the chosen item is a fishing rod, has pickaxe damage, or is a tool, the mod tries a melee weapon, then a bow, and otherwise unequips that item. If the Reborn combat methods are missing, the log warns that the swap is unavailable.
@@ -94,7 +94,7 @@ The cover shows four illustrated figures. It is promotional art, not the world l
 3. Install and open the [Player2](https://player2.game) app. Leave `[IA] Provider` at `Player2` and leave `ApiKey` empty.
 4. Start Valheim. In chat, `/balance` should answer with your Player2 joules.
 
-Two different builds exist. The [v0.25.5 release](https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/tag/v0.25.5) zip is plugin 0.25.5. The DLL in this repository on `main`, [`instalar/BepInEx/plugins/SpiffoAiCompanions.dll`](instalar/BepInEx/plugins/SpiffoAiCompanions.dll), is plugin **0.25.8**. They are not the same file.
+The playable package is the [latest release](https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/latest). Inside that zip the DLL is under `install/BepInEx/plugins/`, and the sample configs are under `configuration examples/`. In this git tree the same DLL path is still [`instalar/BepInEx/plugins/SpiffoAiCompanions.dll`](instalar/BepInEx/plugins/SpiffoAiCompanions.dll). The source constant on `main` is plugin **0.25.8**. The published zip can lag behind that tree; use the latest release page, not an older checksum copied here.
 
 <a id="requirements"></a>
 
@@ -307,13 +307,9 @@ Repair, smelting, and the other job tools still depend on Reborn: a tool in the 
 
 ## 📥 Release
 
-[Spiffo's Valheim AI Companions 0.25.5](https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/tag/v0.25.5)
+Download the current package from the [latest release](https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/latest). The checksum file on that page matches the files published there. This page does not repeat an older package hash.
 
-- [Spiffos-AI-Companions-v0.25.5.zip](https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/download/v0.25.5/Spiffos-AI-Companions-v0.25.5.zip)
-- [SHA256SUMS](https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/download/v0.25.5/SHA256SUMS)
-- Notes in the repo: [RELEASE_NOTES.md](RELEASE_NOTES.md)
-
-The zip attached to that release is 22,723,838 bytes, SHA256 `9beb59ae96c84c26247cbb37eb15d6b802c2ae82e50eb3a64b7df4fa06af3f1d`, which is what the release’s own `SHA256SUMS` asset records. [`SHA256SUMS`](SHA256SUMS) on `main` is a different line: it names the 0.25.8 DLL. This page does not change that file, the DLL, or the v0.25.5 release.
+Notes in the repo: [RELEASE_NOTES.md](RELEASE_NOTES.md). [`SHA256SUMS`](SHA256SUMS) in this tree names the DLL committed here, which can be newer than the zip on the latest release.
 
 <a id="credits"></a>
 

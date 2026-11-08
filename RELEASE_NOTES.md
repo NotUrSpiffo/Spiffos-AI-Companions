@@ -40,10 +40,5 @@ See the included README for installation and configuration.
   and so are rocks with no other parts. Before, copper and tin veins in lakes
   made the companion swim to them, unable to mine, until it ran out of stamina.
 
-The 0.25.8 fixes have not been tested in game yet. They come from the 0.25.7
-test, where stone orders failed and a friend's companion was seen walking
-seated. In the 0.25.6 test the combat fix was not exercised and mining still
-got stuck, which led to 0.25.7.
-
 Package includes the supplied DLL, source, example configurations, Spanish
 translations, third-party notices and the complete Reborn MIT license.

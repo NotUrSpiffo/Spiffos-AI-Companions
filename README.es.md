@@ -1,6 +1,6 @@
 # Spiffo's Valheim AI Companions
 
-[English](README.md) · [Release v0.25.5](https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/tag/v0.25.5) · en `main` el plugin es `0.25.8`
+[English](README.md) · [Último release](https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/latest) · en `main` el plugin es `0.25.8`
 
 <p>
   <img src="docs/assets/cover.jpg" width="640" height="360" alt="Arte de portada con cuatro compañeros ilustrados en un bosque nevado y el título Spiffo's AI Companions. Es arte promocional, no una captura de partida, ni un respaldo de Valheim o de Player2.">
@@ -49,7 +49,7 @@ Esta página describe ajustes y límites de este repositorio. No es un informe d
 
 En el editor de personaje hay seis personalidades: **Vieja guardia**, **Aprendiz**, **Exploración**, **Caza**, **Oficio** y **Bromas**. Si `[Personaje] Personality` está vacío, cada compañero sin instrucciones propias recibe uno de esos perfiles. Las inclinaciones del editor son **Automática**, **Ninguna**, **Oficio**, **Exploración**, **Caza** y **Recolección**. Automática sigue el perfil y no anula una orden tuya.
 
-En `main`, el plugin **0.25.8** cambia además estos comportamientos de Reborn en `codigo/src/BehaviorOverrides.cs` y `codigo/src/SeatSync.cs`. [RELEASE_NOTES.md](RELEASE_NOTES.md) dice que los cambios de la 0.25.6 a la 0.25.8 no se han probado en partida.
+En `main`, el plugin **0.25.8** cambia además estos comportamientos de Reborn en `codigo/src/BehaviorOverrides.cs` y `codigo/src/SeatSync.cs`. Lo que cambió está en [RELEASE_NOTES.md](RELEASE_NOTES.md).
 
 - **Picar:** se deja una roca de piedra o de mineral, o una sección, cuando el código decide que solo se llega nadando. Si faltan `MHR_Water.WouldSwim` o `MHR_GatherRules.AllowTarget`, el registro avisa de que ese filtro no está disponible.
 - **Pelear con una herramienta en la mano:** si el objeto elegido es una caña de pescar, tiene daño de pico o es una herramienta, el mod prueba un arma cuerpo a cuerpo, luego un arco, y si no, la desequipa. Si faltan los métodos de combate de Reborn, el registro avisa de que el cambio no está disponible.
@@ -94,7 +94,7 @@ La portada muestra cuatro figuras ilustradas. Es arte promocional, no el límite
 3. Instala y abre la app de [Player2](https://player2.game). Deja `[IA] Provider` en `Player2` y `ApiKey` vacío.
 4. Arranca Valheim. En el chat, `/saldo` debe responder con los joules de Player2.
 
-Hay dos builds distintas. El zip del [release v0.25.5](https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/tag/v0.25.5) es el plugin 0.25.5. La DLL de este repositorio en `main`, [`instalar/BepInEx/plugins/SpiffoAiCompanions.dll`](instalar/BepInEx/plugins/SpiffoAiCompanions.dll), es el plugin **0.25.8**. No son el mismo archivo.
+El paquete para jugar es el [último release](https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/latest). En ese zip la DLL está en `install/BepInEx/plugins/`, y las configs de ejemplo en `configuration examples/`. En este árbol git la misma DLL sigue en [`instalar/BepInEx/plugins/SpiffoAiCompanions.dll`](instalar/BepInEx/plugins/SpiffoAiCompanions.dll). La constante de fuente en `main` es el plugin **0.25.8**. El zip publicado puede ir por detrás de este árbol; usa la página del último release, no una suma vieja copiada aquí.
 
 <a id="requirements"></a>
 
@@ -307,13 +307,9 @@ Reparar, fundir y las demás herramientas de trabajo siguen dependiendo de Rebor
 
 ## 📥 Release
 
-[Spiffo's Valheim AI Companions 0.25.5](https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/tag/v0.25.5)
+Descarga el paquete actual en el [último release](https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/latest). El archivo de suma de esa página corresponde a los archivos publicados allí. Esta página no repite la suma de un paquete anterior.
 
-- [Spiffos-AI-Companions-v0.25.5.zip](https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/download/v0.25.5/Spiffos-AI-Companions-v0.25.5.zip)
-- [SHA256SUMS](https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/download/v0.25.5/SHA256SUMS)
-- Notas en el repo: [RELEASE_NOTES.md](RELEASE_NOTES.md)
-
-El zip de ese release pesa 22.723.838 bytes y su SHA256 es `9beb59ae96c84c26247cbb37eb15d6b802c2ae82e50eb3a64b7df4fa06af3f1d`, que es lo que registra el `SHA256SUMS` adjunto al release. [`SHA256SUMS`](SHA256SUMS) en `main` es otra línea: nombra la DLL 0.25.8. Esta página no cambia ese archivo, la DLL ni el release v0.25.5.
+Notas en el repo: [RELEASE_NOTES.md](RELEASE_NOTES.md). [`SHA256SUMS`](SHA256SUMS) en este árbol nombra la DLL que está aquí, que puede ser más nueva que el zip del último release.
 
 <a id="credits"></a>
 
