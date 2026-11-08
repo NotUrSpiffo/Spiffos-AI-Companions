@@ -1,6 +1,6 @@
 # Spiffo's Valheim AI Companions
 
-[Español](README.es.md) · [Release v0.25.5](https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/tag/v0.25.5) · Plugin `0.25.5`
+[Español](README.es.md) · [Release v0.25.5](https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/tag/v0.25.5) · `main` is plugin `0.25.6`
 
 <p>
   <img src="docs/assets/cover.jpg" width="640" height="360" alt="Cover art of four illustrated companions in a snowy forest, titled Spiffo's AI Companions. Promotional artwork, not a gameplay screenshot, and not an endorsement by Valheim or Player2.">
@@ -48,6 +48,11 @@ This page describes settings and limits in this repository. It is not a gameplay
 
 Six built-in personalities are in the character editor: **Old Guard**, **Rookie**, **Explorer**, **Hunter**, **Craftsman**, and **Joker**. If `[Personaje] Personality` is empty, each companion without custom instructions gets one of those profiles. Inclination choices in the editor are **Automatic**, **None**, **Craft**, **Exploration**, **Hunting**, and **Foraging**. Automatic follows the profile; it does not override an order you give.
 
+On `main`, plugin **0.25.6** also changes two Reborn behaviors in `codigo/src/BehaviorOverrides.cs`. [RELEASE_NOTES.md](RELEASE_NOTES.md) says these fixes have not been tested in game.
+
+- **Mining:** a stone or ore rock, or a section of one, is skipped when the code decides it can only be reached by swimming. If `MHR_Water.WouldSwim` or `MHR_GatherRules.AllowTarget` is missing, the log warns that this skip is unavailable.
+- **Fighting with a tool out:** if the chosen item is a fishing rod, has pickaxe damage, or is a tool, the mod tries a melee weapon, then a bow, and otherwise unequips that item. If the Reborn combat methods are missing, the log warns that the swap is unavailable.
+
 <a id="companions"></a>
 
 ## 👥 Four companions, separate jobs
@@ -76,7 +81,7 @@ This source does **not** set a roster size of 4. The picture above is cover art 
 3. Install and open the [Player2](https://player2.game) app. Leave `[IA] Provider` at `Player2` and leave `ApiKey` empty.
 4. Start Valheim. In chat, `/balance` should answer with your Player2 joules.
 
-The packaged DLL and checksum are on the [v0.25.5 release](https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/tag/v0.25.5). The same DLL is also at [`instalar/BepInEx/plugins/SpiffoAiCompanions.dll`](instalar/BepInEx/plugins/SpiffoAiCompanions.dll) in this tag.
+Two different builds exist. The [v0.25.5 release](https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/tag/v0.25.5) zip is plugin 0.25.5. The DLL in this repository on `main`, [`instalar/BepInEx/plugins/SpiffoAiCompanions.dll`](instalar/BepInEx/plugins/SpiffoAiCompanions.dll), is plugin **0.25.6**. They are not the same file.
 
 <a id="requirements"></a>
 
@@ -294,7 +299,7 @@ Repair, smelting, and the other job tools still depend on Reborn: a tool in the 
 - [SHA256SUMS](https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/download/v0.25.5/SHA256SUMS)
 - Notes in the repo: [RELEASE_NOTES.md](RELEASE_NOTES.md)
 
-The zip’s SHA256 is `9beb59ae96c84c26247cbb37eb15d6b802c2ae82e50eb3a64b7df4fa06af3f1d` (22,723,838 bytes), as recorded in [`SHA256SUMS`](SHA256SUMS).
+The zip attached to that release is 22,723,838 bytes, SHA256 `9beb59ae96c84c26247cbb37eb15d6b802c2ae82e50eb3a64b7df4fa06af3f1d`, which is what the release’s own `SHA256SUMS` asset records. [`SHA256SUMS`](SHA256SUMS) on `main` is a different line: it names the 0.25.6 DLL. This page does not change that file, the DLL, or the v0.25.5 release.
 
 <a id="credits"></a>
 
