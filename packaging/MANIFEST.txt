@@ -1,19 +1,21 @@
-Base commit: 50e07573bb6c7d7dd5bbad5a5fc2f8835f2b567f
-Plugin: 0.26.2
-DLL SHA256: f74cd548611e9e3c66c6c2de0ca3ef5c820eb8c0f486932a691074c6d2a1acf5
-DLL bytes: 13381632
-ZIP SHA256: 5ff13adbd897b3d81ac4b27b186a3b2884f52e5de41eb005e115751f61ca974e
-ZIP bytes: 11487109
+Base commit: 8d220db
+Plugin: 0.26.3
+DLL SHA256: e9035ce7b2bdd3956ed7a236288ea615eb85b8b026bd674f374373758dbf1eb3
+DLL bytes: 13484544
+ZIP SHA256: cfbf9dcca762661c63ead2851804ca83071f8cf6d26b78cfd64ce49f5489c619
+ZIP bytes: 11532731
 
 Root entries:
-b13a33a3518a64c54a5f4143dd9c7b1a59664dc4e1e000c8414d33357365ff79      2087  LEEME.txt
-eb8462c0b8def776922a0a1272d14980195fa617aed4b3cb0053c6147fea7af6      2066  README.txt
-31a7e65d54e574ed9769389cf398e38c4843a5336bb9d9112f7dcb4a2a3528e1      5128  RELEASE_NOTES.txt
+7db26c4198ea0329c8720cbdaad7d927a2b15ffaac14981fff68c91314aa55b8      2078  LEEME.txt
+72e6a163ea3ab50a74a310ae5f3532104ed78763c342ffdc5a596511ef9bb9e7      2064  README.txt
+85be37f8ff5b9d5a6f5d88d6798727ef3aeb5a5f3ea8958a3f4de800c5b40937      5724  RELEASE_NOTES.txt
 4b71533d1d9f836bdbdb1aa626729f846118828d21fc2b7bce706756c4c937cc    121234  configuration examples/Maddhattr.OfflineCompanionsReborn.cfg
-4c9b337b4451b2bc1563d302de675cfd2a08c681f2b1fd4412b33d617f1049f7       499  configuration examples/README.txt
-86c79238d690930e0c27ead24956417ee6d8d2a3e6b6a771fd1d5a5f67a31b0c     22950  configuration examples/SpiffoAiCompanions.cfg
+7b9dd536e89d370b8ab2d34df42ec9ba11dbdab17fb438b89027fa8ccce9a895       488  configuration examples/README.txt
+997ac292787be1e736aaf9fa6fc7cb46246b8cea31ffb806ab192fc8019d5628     23012  configuration examples/SpiffoAiCompanions.cfg
+5b0e44c7c7629a303b456cbc32de98583ebbe1b173defbda11ddb8c189f0b9e9     47757  install/BepInEx/plugins/OfflineCompanionsReborn/Translations/Russian.json
 972c73816d1140e5dce15309d37f0e9b5896ef12e767cdefca0826b62669dcca     29898  install/BepInEx/plugins/OfflineCompanionsReborn/Translations/Spanish.json
+5e55e6c050f9ef399363260d65a332f083005b658a06f1c8f763236b86b4e727     10081  install/BepInEx/plugins/OfflineCompanionsReborn/Translations/speech/Russian.json
 a1999be9614199573ee86ee4723e6601d9fb127c05f6c39e850de42c1b8646e4      6165  install/BepInEx/plugins/OfflineCompanionsReborn/Translations/speech/Spanish.json
-f74cd548611e9e3c66c6c2de0ca3ef5c820eb8c0f486932a691074c6d2a1acf5  13381632  install/BepInEx/plugins/SpiffoAiCompanions.dll
+e9035ce7b2bdd3956ed7a236288ea615eb85b8b026bd674f374373758dbf1eb3  13484544  install/BepInEx/plugins/SpiffoAiCompanions.dll
 d6596225604d1d86e9205fe61e823b7a38005a572ba485da2b4e8b6e4464660d      1189  licenses/Offline-Companions-Reborn-MIT.txt
-cc910160a1d8f7b160a426defd6b2377bc33c2dfc0af0b3f1655ace91812d173      1080  licenses/THIRD_PARTY_NOTICES.txt
+bfa8ef5cb4373e4fc878fa997a15a60be5cdd1634faa40ae887563f068347574      1080  licenses/THIRD_PARTY_NOTICES.txt
