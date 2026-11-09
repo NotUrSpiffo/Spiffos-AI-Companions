@@ -72,7 +72,7 @@ namespace OfflineCompanionsAI
 
         public ModSettings(ConfigFile cfg)
         {
-            Language = cfg.Bind("Personaje", "Language", ModLanguage.Auto, "Mod UI, command and prompt language: Auto (matches Valheim's language: English, Spanish_Latam, Spanish), English, or Spanish. Can also be changed in-game from the Character Editor or with /language.");
+            Language = cfg.Bind("Personaje", "Language", ModLanguage.Auto, "Mod UI, command and prompt language: Auto (matches Valheim's language: English, Spanish_Latam, Spanish, Russian), English, Spanish, or Russian. Can also be changed in-game from the Character Editor or with /language.");
             ModLang.Current = Language.Value;
             Language.SettingChanged += (_, __) =>
             {

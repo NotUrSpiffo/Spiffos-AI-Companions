@@ -19,6 +19,10 @@ COMMIT_FILES = {
         "install/BepInEx/plugins/OfflineCompanionsReborn/Translations/Spanish.json",
     "instalar/BepInEx/plugins/OfflineCompanionsReborn/Translations/speech/Spanish.json":
         "install/BepInEx/plugins/OfflineCompanionsReborn/Translations/speech/Spanish.json",
+    "instalar/BepInEx/plugins/OfflineCompanionsReborn/Translations/Russian.json":
+        "install/BepInEx/plugins/OfflineCompanionsReborn/Translations/Russian.json",
+    "instalar/BepInEx/plugins/OfflineCompanionsReborn/Translations/speech/Russian.json":
+        "install/BepInEx/plugins/OfflineCompanionsReborn/Translations/speech/Russian.json",
     "configuracion/SpiffoAiCompanions.cfg":
         "configuration examples/SpiffoAiCompanions.cfg",
     "configuracion/Maddhattr.OfflineCompanionsReborn.cfg":
@@ -55,8 +59,8 @@ def main() -> int:
         data.decode("utf-8")
     payloads = {dst: git_bytes(commit, src) for src, dst in COMMIT_FILES.items()}
     dll = payloads["install/BepInEx/plugins/SpiffoAiCompanions.dll"]
-    if b"\x060.26.2" not in dll or b"0.26.1" in dll:
-        print("DLL is not the 0.26.2 assembly", file=sys.stderr)
+    if b"\x060.26.3" not in dll or b"0.26.2" in dll:
+        print("DLL is not the 0.26.3 assembly", file=sys.stderr)
         return 1
     payloads.update(texts)
     dest.parent.mkdir(parents=True, exist_ok=True)

@@ -1,12 +1,12 @@
 # Spiffo's Valheim AI Companions
 
-[English](README.md) · [Último release](https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/latest) · en `main` el plugin es `0.26.2`
+[English](README.md) · [Русский](README.ru.md) · [Último release](https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/latest) · en `main` el plugin es `0.26.3`
 
 <p>
   <img src="docs/assets/cover.jpg" width="640" height="360" alt="Arte de portada con cuatro compañeros ilustrados en un bosque nevado y el título Spiffo's AI Companions. Es arte promocional, no una captura de partida, ni un respaldo de Valheim o de Player2.">
 </p>
 
-Habla con los compañeros de Valheim en **español o inglés**, por texto o con el micrófono, y dales encargos en lenguaje normal. El servicio de IA previsto es la aplicación de escritorio **Player2**. Offline Companions Reborn **1.5.8** ya va dentro de `SpiffoAiCompanions.dll`: no instales ese mod otra vez.
+Habla con los compañeros de Valheim en **español, inglés o ruso**, por texto o con el micrófono, y dales encargos en lenguaje normal. El servicio de IA previsto es la aplicación de escritorio **Player2**. Offline Companions Reborn **1.5.8** ya va dentro de `SpiffoAiCompanions.dll`: no instales ese mod otra vez.
 
 Esta página describe ajustes y límites de este repositorio. No es un informe de pruebas en partida. Hay una [ficha en Player2](https://player2.game/games/jorge-roman/game-f3f99636) enviada y comunicada como en revisión. Esa ficha no es una aprobación.
 
@@ -23,6 +23,7 @@ Esta página describe ajustes y límites de este repositorio. No es un informe d
 - [Voz](#voice)
 - [Comprobar la conexión](#check)
 - [Otros proveedores de IA](#other-providers)
+- [Ruso](#russian)
 - [Idioma](#language)
 - [Controles](#controls)
 - [Configuración del mod](#config)
@@ -40,7 +41,7 @@ Esta página describe ajustes y límites de este repositorio. No es un informe d
 | Pulsar para hablar, mediante la app de Player2 | `[Voz]`: mantener `H`, máximo 15 segundos |
 | Hasta 5 compañeros en un mundo | Constante fija `MaxCompanionsPerWorld` en `BehaviorOverrides.cs`. No es una clave de config. Ver [compañeros](#companions) |
 | Una tarea distinta para cada compañero nombrado en una orden | Como máximo 4 destinatarios (`Recipients.MaxPerOrder`). `AllowActions` activo por defecto |
-| Interfaz, indicaciones y respuestas en español e inglés | `[Personaje] Language` por defecto `Auto` |
+| Interfaz, indicaciones y respuestas en español, inglés y ruso | `[Personaje] Language` por defecto `Auto` |
 | Memoria entre sesiones | `[Memoria] Enabled` activo; se guarda sin cifrar en la carpeta de config del mod |
 | Comentarios breves ante jefes, biomas, muertes, asaltos y hechos parecidos | `[Reacciones]` activo; cada comentario es una petición a la IA |
 | Modo autónomo opcional para todos los compañeros | `/autonomia`; el modo por defecto es `Normal` (solo hacen lo que pides) |
@@ -49,7 +50,7 @@ Esta página describe ajustes y límites de este repositorio. No es un informe d
 
 En el editor de personaje hay seis personalidades: **Vieja guardia**, **Aprendiz**, **Exploración**, **Caza**, **Oficio** y **Bromas**. Si `[Personaje] Personality` está vacío, cada compañero sin instrucciones propias recibe uno de esos perfiles. Las inclinaciones del editor son **Automática**, **Ninguna**, **Oficio**, **Exploración**, **Caza** y **Recolección**. Automática sigue el perfil y no anula una orden tuya.
 
-En `main`, el plugin **0.26.2** cambia además estos comportamientos de Reborn en `codigo/src/BehaviorOverrides.cs`, `codigo/src/SeatSync.cs` y `codigo/src/StorageSortPatches.cs`. Lo que cambió está en [RELEASE_NOTES.md](RELEASE_NOTES.md).
+En `main`, el plugin **0.26.3** cambia además estos comportamientos de Reborn en `codigo/src/BehaviorOverrides.cs`, `codigo/src/SeatSync.cs` y `codigo/src/StorageSortPatches.cs`. Lo que cambió está en [RELEASE_NOTES.md](RELEASE_NOTES.md).
 
 - **Picar:** se deja una roca de piedra o de mineral, o una sección, cuando el código decide que solo se llega nadando. Si faltan `MHR_Water.WouldSwim` o `MHR_GatherRules.AllowTarget`, el registro avisa de que ese filtro no está disponible.
 - **Pelear con una herramienta en la mano:** si el objeto elegido es una caña de pescar, tiene daño de pico o es una herramienta, el mod prueba un arma cuerpo a cuerpo, luego un arco, y si no, la desequipa. Si faltan los métodos de combate de Reborn, el registro avisa de que el cambio no está disponible.
@@ -82,6 +83,18 @@ Estos cambios solo se activan si están cargados [Warfare](https://thunderstore.
 El combate, la caza, picar, reparar y la valoración de enemigos demasiado fuertes ya leían los datos del juego, así que las armas de Warfare y las criaturas de Monstrum siguen las mismas reglas que las del juego base.
 
 Los textos en español del mod usan ahora español neutro.
+
+<a id="russian"></a>
+
+## 🇷🇺 Ruso (0.26.3)
+
+El ruso se añadió a pedido de un jugador. Es nuevo, y se agradecen los comentarios de quienes juegan en ruso. Guía en ruso: [README.ru.md](README.ru.md).
+
+- **Textos del mod:** la interfaz, los avisos, las indicaciones a la IA y las descripciones de herramientas tienen versión en ruso. `Auto` la elige con Valheim en ruso, o pon `[Personaje] Language = Russian`. `codigo/src/ModLang.cs`.
+- **Menús y frases de Reborn:** `Russian.json` en [`instalar/BepInEx/plugins/OfflineCompanionsReborn/Translations/`](instalar/BepInEx/plugins/OfflineCompanionsReborn/Translations/) y en su carpeta `speech/`.
+- **Comandos:** `/помощь`, `/статус`, `/позвать`, `/баланс`, `/персонаж`, `/автономия`, `/места`, `/отметить`, `/забыть`, `/язык`.
+- **Órdenes sin IA:** `за мной`, `ко мне`, `стой`, `жди здесь` y las demás líneas en ruso de `OrderIntent`.
+- **Revisado antes de publicar:** los términos siguen la traducción rusa del propio Valheim (fermentador «Бродильная бочка», martillo «Молот», cultivador «Пропашник»), se completaron descripciones de herramientas que estaban recortadas para que digan lo mismo que en inglés y español, se corrigieron varios casos gramaticales, y las palabras rusas con «й» o «ё», como «домой» o «желтый гриб», ya coinciden con lo que escribe el jugador.
 
 <a id="companions"></a>
 
@@ -119,7 +132,7 @@ La portada muestra cuatro figuras ilustradas. Es arte promocional, no el límite
 3. Instala y abre la app de [Player2](https://player2.game). Deja `[IA] Provider` en `Player2` y `ApiKey` vacío.
 4. Arranca Valheim. En el chat, `/saldo` debe responder con los joules de Player2.
 
-El paquete para jugar es el [último release](https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/latest). En ese zip la DLL está en `install/BepInEx/plugins/`, y las configs de ejemplo en `configuration examples/`. En este árbol git la misma DLL sigue en [`instalar/BepInEx/plugins/SpiffoAiCompanions.dll`](instalar/BepInEx/plugins/SpiffoAiCompanions.dll). La constante de fuente en `main` es el plugin **0.26.2**. El zip publicado puede ir por detrás de este árbol; usa la página del último release, no una suma vieja copiada aquí.
+El paquete para jugar es el [último release](https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/latest). En ese zip la DLL está en `install/BepInEx/plugins/`, y las configs de ejemplo en `configuration examples/`. En este árbol git la misma DLL sigue en [`instalar/BepInEx/plugins/SpiffoAiCompanions.dll`](instalar/BepInEx/plugins/SpiffoAiCompanions.dll). La constante de fuente en `main` es el plugin **0.26.3**. El zip publicado puede ir por detrás de este árbol; usa la página del último release, no una suma vieja copiada aquí.
 
 <a id="requirements"></a>
 
@@ -139,7 +152,7 @@ Hazlo con Valheim cerrado.
 1. **BepInEx, una vez.** Si no hay carpeta `BepInEx` en Valheim, instala [BepInExPack para Valheim](https://thunderstore.io/c/valheim/p/denikson/BepInExPack_Valheim/) siguiendo las instrucciones de ese pack. Si ya está, no copies el pack encima de `winhttp.dll`, de los archivos doorstop ni de la carpeta `BepInEx` existente.
 2. **Solo este mod.** Desde el zip del release, o desde [`instalar/BepInEx/plugins/`](instalar/BepInEx/plugins/), copia `SpiffoAiCompanions.dll` a `Valheim/BepInEx/plugins/`. Si actualizas este mismo mod, sustituye **solo ese archivo**.
 3. **No instales Reborn al lado.** El movimiento y los trabajos salen de Reborn 1.5.8 dentro de esta DLL. No instales también `Offline Companions Reborn`, `Companions.dll` ni un `OfflineCompanionsAI.dll` antiguo. Si hay otra copia cargada, el mod se detiene y escribe: `Mod desactivado: hay otra copia de Offline Companions Reborn en <ruta>. Este mod ya la lleva dentro: borra ese archivo con Valheim cerrado.`
-4. **Menús de Reborn en español, opcional.** Copia la carpeta `Translations` de [`instalar/BepInEx/plugins/OfflineCompanionsReborn/Translations/`](instalar/BepInEx/plugins/OfflineCompanionsReborn/Translations/) a `BepInEx/plugins/OfflineCompanionsReborn/`. Ahí solo están los `Spanish.json`. No sustituye la DLL. El idioma del propio mod no necesita esta copia.
+4. **Menús de Reborn en español o ruso, opcional.** Copia la carpeta `Translations` de [`instalar/BepInEx/plugins/OfflineCompanionsReborn/Translations/`](instalar/BepInEx/plugins/OfflineCompanionsReborn/Translations/) a `BepInEx/plugins/OfflineCompanionsReborn/`. Ahí solo están los `Spanish.json` y `Russian.json`. No sustituye la DLL. El idioma del propio mod no necesita esta copia.
 5. **Configuración.** En el primer arranque BepInEx crea `BepInEx/config/SpiffoAiCompanions.cfg` (el proyecto se compila con `NEW_INSTALL`, GUID `SpiffoAiCompanions`). Un archivo de referencia con los mismos valores por defecto es [`configuracion/SpiffoAiCompanions.cfg`](configuracion/SpiffoAiCompanions.cfg). Si ya editaste tu config, no la machaques con la muestra.
 
 El archivo de Reborn, `BepInEx/config/Maddhattr.OfflineCompanionsReborn.cfg`, es otro. Hay una copia de referencia en [`configuracion/Maddhattr.OfflineCompanionsReborn.cfg`](configuracion/Maddhattr.OfflineCompanionsReborn.cfg). No hace falta tocarlo para Player2. No lo reemplaces si ya cambiaste el precio del santuario, las teclas o los trabajos.
@@ -234,7 +247,7 @@ Provider = Ollama
 Model = llama3.2
 ```
 
-Las órdenes se envían como `tools` al estilo OpenAI, con `tool_choice` `auto`. Un modelo que no devuelve llamadas a herramientas no cumplirá encargos libres. Unas frases exactas sí se ejecutan aunque el modelo no conteste: `follow me`, `come here`, `stop`, `stay`, y las líneas en español de `OrderIntent` (`ven`, `para`, `quedate` y el resto de esa lista), con `todos` o el nombre de un compañero delante. La voz sigue necesitando Player2.
+Las órdenes se envían como `tools` al estilo OpenAI, con `tool_choice` `auto`. Un modelo que no devuelve llamadas a herramientas no cumplirá encargos libres. Unas frases exactas sí se ejecutan aunque el modelo no conteste: `follow me`, `come here`, `stop`, `stay`, y las líneas en español y en ruso de `OrderIntent` (`ven`, `para`, `quedate`, `за мной`, `стой` y el resto de esa lista), con `todos` o el nombre de un compañero delante. La voz sigue necesitando Player2.
 
 `TimeoutSeconds` por defecto **30** (5–180). `Temperature` por defecto **0.8** (0–2). `MaxTokens` por defecto **0** significa sin límite. Un límite bajo puede dejar la respuesta vacía; el juego pide subirlo o ponerlo en 0.
 
@@ -242,13 +255,13 @@ Las órdenes se envían como `tools` al estilo OpenAI, con `tool_choice` `auto`.
 
 ## 🌐 Idioma
 
-`[Personaje] Language` por defecto **`Auto`**. El comentario del código dice que Auto sigue el inglés de Valheim, Español (Latinoamérica) o Español (España). En el código, cualquier idioma de juego en español elige el único modo español del mod; no hay una tercera interfaz. Puedes poner `English` o `Spanish` sin reiniciar.
+`[Personaje] Language` por defecto **`Auto`**. Auto sigue el inglés de Valheim, Español (Latinoamérica), Español (España) o el ruso. En el código, cualquier idioma de juego en español elige el único modo español del mod. Puedes poner `English`, `Spanish` o `Russian` sin reiniciar.
 
-- Chat: `/idioma es`, `/idioma en`, `/idioma auto` (`/language`, `/lang`). Sin argumento alterna entre inglés y español.
-- Editor de personaje: mantén `LeftShift` y pulsa `Y`, o escribe `/personaje` (`/character`) con un compañero como destino. Los botones son `English`, `Español` y `Auto (Game)` (en la interfaz en español, el tercero es `Automático`).
-- Los comandos en inglés y en español valen en los dos idiomas.
+- Chat: `/idioma es`, `/idioma en`, `/idioma ru`, `/idioma auto` (`/language`, `/lang`, `/язык`). Sin argumento pasa de inglés a español, a ruso y vuelta a empezar.
+- Editor de personaje: mantén `LeftShift` y pulsa `Y`, o escribe `/personaje` (`/character`) con un compañero como destino. Los botones son `English`, `Español`, `Русский` y `Auto (Game)` (en la interfaz en español, el último es `Automático`).
+- Los comandos en inglés, español y ruso valen en cualquier idioma.
 
-`ReplyLanguage` por defecto `auto` sigue ese ajuste. Los nombres de objetos se comparan en inglés y en los dos vocabularios de español. Un grupo de sinónimos en `ItemNames` es `seta` / `hongo` / `mushroom`.
+`ReplyLanguage` por defecto `auto` sigue ese ajuste. Los nombres de objetos se comparan en inglés, en los dos vocabularios de español y en ruso. Un grupo de sinónimos en `ItemNames` es `seta` / `hongo` / `mushroom`.
 
 <a id="controls"></a>
 
@@ -265,12 +278,12 @@ Valores por defecto. Cambia las teclas si chocan con otro mod. `TalkKey` no pued
 | Ayuda, estado, llamar a todos, saldo | `/ayuda`, `/estado`, `/llamar` o `/recall` / `/call`, `/saldo` |
 | Modo autónomo para todos | `/autonomia` |
 | Lugares con nombre | `/marcar <nombre>`, `/lugares`, `/olvidar <nombre>` |
-| Idioma del mod | `/idioma es` · `en` · `auto` |
+| Idioma del mod | `/idioma es` · `en` · `ru` · `auto` |
 | Reborn: señalar algo | Pulsa `Z` (`DirectTargetKey`). Mantén `Z` para llamarlos |
 | Reborn: rueda de órdenes de uno | Mantén `E` mientras lo miras (`RadialMenuKey`) |
 | Reborn: editor de zona de cultivo | Mantén `LeftAlt` y pulsa `Z` |
 
-También valen `/help`, `/status`, `/recall`, `/balance`, `/character`, `/autonomy`, `/places`, `/mark`, `/forget` y `/language`.
+También valen `/help`, `/status`, `/recall`, `/balance`, `/character`, `/autonomy`, `/places`, `/mark`, `/forget` y `/language`, y en ruso `/помощь`, `/статус`, `/позвать`, `/баланс`, `/персонаж`, `/автономия`, `/места`, `/отметить`, `/забыть` y `/язык`.
 
 `/ayuda`, `/estado`, `/llamar`, `/saldo`, `/autonomia`, `/lugares`, `/marcar`, `/olvidar` y `/idioma` no pasan por la IA (`RunCommand`). `/personaje` necesita un compañero como destino; si no, el juego dice que no hay ninguno tuyo cerca.
 

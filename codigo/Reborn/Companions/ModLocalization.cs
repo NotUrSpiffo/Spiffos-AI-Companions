@@ -460,7 +460,7 @@ public static class ModLocalization
 			return;
 		}
 		OfflineCompanionsAI.ModLang.UpdateGameLanguage(loc.GetSelectedLanguage());
-		string selectedLanguage = OfflineCompanionsAI.ModLang.IsEnglish ? "English" : "Spanish";
+		string selectedLanguage = OfflineCompanionsAI.ModLang.IsRussian ? "Russian" : (OfflineCompanionsAI.ModLang.IsSpanish ? "Spanish" : "English");
 		if (selectedLanguage == _lastInjectedLanguage)
 		{
 			return;

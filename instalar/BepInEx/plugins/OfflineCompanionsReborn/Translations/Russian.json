@@ -1,0 +1,1492 @@
+{
+    "entries": [
+        {
+            "key": "hc_ui_title_companions",
+            "value": "Спутники"
+        },
+        {
+            "key": "hc_ui_title_choose",
+            "value": "Выбери своего спутника"
+        },
+        {
+            "key": "hc_ui_btn_spawn",
+            "value": "Призвать спутника"
+        },
+        {
+            "key": "hc_ui_title_hire",
+            "value": "Призвать спутника"
+        },
+        {
+            "key": "hc_ui_btn_hire",
+            "value": "Призвать спутника"
+        },
+        {
+            "key": "hc_ui_desc_hire",
+            "value": "Один призовёт ещё одного спутника, если ты сделаешь подношение в размере {0} монет. Настрой внешний вид слева, а затем призови его.\n\nОн будет следовать за тобой, сражаться плечом к плечу и нести припасы. Экипируй его и следи за сытостью, чтобы он был готов к бою."
+        },
+        {
+            "key": "hc_shrine_use",
+            "value": "Твои спутники"
+        },
+        {
+            "key": "hc_shrine_title",
+            "value": "Святилище Одина"
+        },
+        {
+            "key": "hc_shrine_flavor",
+            "value": "Здесь ты можешь сделать подношение Одину, чтобы получить его милость, и узнать, как дела у твоих спутников в этом приключении."
+        },
+        {
+            "key": "hc_shrine_btn_recover",
+            "value": "Восстановить"
+        },
+        {
+            "key": "hc_shrine_btn_recover_list",
+            "value": "Восстановить"
+        },
+        {
+            "key": "hc_shrine_btn_summon",
+            "value": "Призвать"
+        },
+        {
+            "key": "hc_shrine_recover_title",
+            "value": "Восстановление спутников"
+        },
+        {
+            "key": "hc_shrine_offering",
+            "value": "Призыв нового спутника требует подношения в размере {0} монет."
+        },
+        {
+            "key": "hc_shrine_unsummoned",
+            "value": "Отозван: можно вернуть без снаряжения"
+        },
+        {
+            "key": "hc_shrine_back",
+            "value": "Назад"
+        },
+        {
+            "key": "hc_shrine_none",
+            "value": "В этом мире пока нет зарегистрированных спутников. Спутник регистрируется, проведя рядом с тобой несколько секунд."
+        },
+        {
+            "key": "hc_shrine_alive",
+            "value": "Жив"
+        },
+        {
+            "key": "hc_shrine_dead",
+            "value": "Погиб: вернётся благодаря своему надгробию"
+        },
+        {
+            "key": "hc_shrine_lost",
+            "value": "Потерян: можно восстановить"
+        },
+        {
+            "key": "hc_shrine_unknown",
+            "value": "Неизвестно: не рядом, может быть ещё жив"
+        },
+        {
+            "key": "hc_msg_hire_need",
+            "value": "Один требует подношение в {0} монет для призыва спутника: у тебя {1}, не хватает {2}."
+        },
+        {
+            "key": "hc_msg_hired",
+            "value": "Один призвал для тебя нового спутника!"
+        },
+        {
+            "key": "hc_ui_btn_buy",
+            "value": "Купить {0} ({1})"
+        },
+        {
+            "key": "hc_ui_btn_need",
+            "value": "Требуется {0}"
+        },
+        {
+            "key": "hc_ui_bank",
+            "value": "Банк: {0}"
+        },
+        {
+            "key": "hc_ui_label_type",
+            "value": "Тип"
+        },
+        {
+            "key": "hc_ui_label_gender",
+            "value": "Пол"
+        },
+        {
+            "key": "hc_ui_label_hair",
+            "value": "Причёска"
+        },
+        {
+            "key": "hc_ui_label_beard",
+            "value": "Борода"
+        },
+        {
+            "key": "hc_ui_label_skin",
+            "value": "Цвет кожи"
+        },
+        {
+            "key": "hc_ui_label_hairtone",
+            "value": "Цвет волос"
+        },
+        {
+            "key": "hc_ui_label_hairshade",
+            "value": "Оттенок волос"
+        },
+        {
+            "key": "hc_ui_label_subtype",
+            "value": "Подтип"
+        },
+        {
+            "key": "hc_ui_btn_male",
+            "value": "Мужской"
+        },
+        {
+            "key": "hc_ui_btn_female",
+            "value": "Женский"
+        },
+        {
+            "key": "hc_ui_btn_companion",
+            "value": "Спутник"
+        },
+        {
+            "key": "hc_ui_btn_dverger",
+            "value": "Двергр"
+        },
+        {
+            "key": "hc_ui_beard_none",
+            "value": "Нет"
+        },
+        {
+            "key": "hc_ui_desc_starter",
+            "value": "Один сжалился над тобой и послал верного спутника в твоё путешествие. Настрой его внешний вид слева и призови в этот мир.\n\nОн будет следовать за тобой, сражаться плечом к плечу и нести припасы. Экипируй его и корми, чтобы он был готов к бою.\n\nНажми Escape, чтобы пропустить: у тебя будет шанс призвать спутника при следующем входе."
+        },
+        {
+            "key": "hc_ui_desc_trader",
+            "value": "Найми верного спутника в своё путешествие. Он пойдёт за тобой по всему миру и будет сражаться рядом с тобой против любой угрозы.\n\nУ каждого спутника своё здоровье, выносливость и инвентарь. Тебе нужно будет экипировать его и кормить, чтобы поддерживать боеготовность.\n\nПоговори со спутником, чтобы открыть его панель, управлять снаряжением и отдавать приказы.\n\nНастрой внешний вид слева и подтверди покупку."
+        },
+        {
+            "key": "hc_ui_placeholder_name",
+            "value": "Введи имя..."
+        },
+        {
+            "key": "hc_ui_label_food",
+            "value": "Еда"
+        },
+        {
+            "key": "hc_radial_follow",
+            "value": "Следовать"
+        },
+        {
+            "key": "hc_radial_wood",
+            "value": "Древесина"
+        },
+        {
+            "key": "hc_radial_stone",
+            "value": "Камень"
+        },
+        {
+            "key": "hc_radial_ore",
+            "value": "Руда"
+        },
+        {
+            "key": "hc_radial_forage",
+            "value": "Сбор"
+        },
+        {
+            "key": "hc_radial_smelt",
+            "value": "Плавка"
+        },
+        {
+            "key": "hc_radial_pending",
+            "value": "В очереди"
+        },
+        {
+            "key": "hc_radial_sethome",
+            "value": "Задать дом"
+        },
+        {
+            "key": "hc_radial_wander",
+            "value": "Гулять"
+        },
+        {
+            "key": "hc_radial_pickup",
+            "value": "Подбор"
+        },
+        {
+            "key": "hc_radial_command",
+            "value": "Слушаться"
+        },
+        {
+            "key": "hc_radial_balanced",
+            "value": "Баланс"
+        },
+        {
+            "key": "hc_radial_aggressive",
+            "value": "Агрессивный"
+        },
+        {
+            "key": "hc_radial_defensive",
+            "value": "Защитный"
+        },
+        {
+            "key": "hc_radial_passive",
+            "value": "Пассивный"
+        },
+        {
+            "key": "hc_radial_melee",
+            "value": "Ближний бой"
+        },
+        {
+            "key": "hc_radial_ranged",
+            "value": "Дальний бой"
+        },
+        {
+            "key": "hc_radial_hunt",
+            "value": "Охота"
+        },
+        {
+            "key": "hc_radial_farm",
+            "value": "Земледелие"
+        },
+        {
+            "key": "hc_radial_fish",
+            "value": "Рыбалка"
+        },
+        {
+            "key": "hc_radial_cook",
+            "value": "Готовка"
+        },
+        {
+            "key": "hc_radial_repair",
+            "value": "Ремонт и припасы"
+        },
+        {
+            "key": "hc_radial_despawn",
+            "value": "Отпустить"
+        },
+        {
+            "key": "hc_despawn_popup_title",
+            "value": "Отпустить спутника"
+        },
+        {
+            "key": "hc_despawn_popup_text",
+            "value": "Навсегда удалить {0}? Все переносимые вещи останутся в надгробии."
+        },
+        {
+            "key": "hc_despawn_popup_recover",
+            "value": "Передумал? До следующей загрузки этого мира Святилище Одина может вернуть спутника — но без экипировки, которая останется в надгробии."
+        },
+        {
+            "key": "hc_radial_active",
+            "value": "АКТИВНО"
+        },
+        {
+            "key": "hc_radial_on",
+            "value": "ВКЛ"
+        },
+        {
+            "key": "hc_radial_off",
+            "value": "ВЫКЛ"
+        },
+        {
+            "key": "hc_hover_inventory",
+            "value": "Инвентарь"
+        },
+        {
+            "key": "hc_hover_commands",
+            "value": "Приказы"
+        },
+        {
+            "key": "hc_hover_hold",
+            "value": "Удерживать"
+        },
+        {
+            "key": "hc_tomb_hold_resurrect",
+            "value": "Удерживай для воскрешения"
+        },
+        {
+            "key": "hc_tomb_resurrecting",
+            "value": "Воскрешение... {0}%"
+        },
+        {
+            "key": "hc_tier_companion",
+            "value": "Спутник"
+        },
+        {
+            "key": "hc_tier_warrior",
+            "value": "Воин"
+        },
+        {
+            "key": "hc_tier_mage",
+            "value": "Маг"
+        },
+        {
+            "key": "hc_tier_fire_mage",
+            "value": "Маг огня"
+        },
+        {
+            "key": "hc_tier_ice_mage",
+            "value": "Маг льда"
+        },
+        {
+            "key": "hc_tier_support",
+            "value": "Поддержка"
+        },
+        {
+            "key": "hc_speech_found_1",
+            "value": "Я повсюду тебя ищу!"
+        },
+        {
+            "key": "hc_speech_found_2",
+            "value": "Вот ты где!"
+        },
+        {
+            "key": "hc_speech_found_3",
+            "value": "Наконец-то ты нашёлся!"
+        },
+        {
+            "key": "hc_msg_not_yours",
+            "value": "Этот спутник тебе не принадлежит."
+        },
+        {
+            "key": "hc_msg_need_coins",
+            "value": "В банке недостаточно монет! Нужно {0}"
+        },
+        {
+            "key": "hc_msg_arrived",
+            "value": "Прибыл твой новый {0}!"
+        },
+        {
+            "key": "hc_msg_returned",
+            "value": "{0} возвращается в {1}!"
+        },
+        {
+            "key": "hc_msg_location_home",
+            "value": "дом"
+        },
+        {
+            "key": "hc_msg_location_spawn",
+            "value": "точку появления мира"
+        },
+        {
+            "key": "hc_msg_starter_joined",
+            "value": "К твоему путешествию присоединяется спутник!"
+        },
+        {
+            "key": "hc_msg_name_default",
+            "value": "Спутник"
+        },
+        {
+            "key": "hc_menu_mod_options",
+            "value": "Настройки мода"
+        },
+        {
+            "key": "hc_minimap_grave",
+            "value": "Могила"
+        },
+        {
+            "key": "hc_msg_sleep_waiting",
+            "value": "Ждём, пока уснёт {0}..."
+        },
+        {
+            "key": "hc_msg_sleep_waiting_generic",
+            "value": "Ждём, пока уснут спутники..."
+        },
+        {
+            "key": "hc_msg_rested",
+            "value": "{0}: эффект «Отдых» (комфорт: {1})"
+        },
+        {
+            "key": "hc_msg_rested_suffix",
+            "value": "Отдых"
+        },
+        {
+            "key": "hc_msg_tools_weak",
+            "value": "{0}: инструменты недостаточно крепкие"
+        },
+        {
+            "key": "hc_msg_reposition_on",
+            "value": "Режим перемещения интерфейса: тяни мышью, F7 для сохранения"
+        },
+        {
+            "key": "hc_msg_reposition_off",
+            "value": "Позиция интерфейса сохранена"
+        },
+        {
+            "key": "hc_msg_commanded",
+            "value": "Иду на позицию."
+        },
+        {
+            "key": "hc_speech_repair_start",
+            "value": "Пора заняться ремонтом."
+        },
+        {
+            "key": "hc_speech_repair_done",
+            "value": "Всё починено!"
+        },
+        {
+            "key": "hc_speech_smelt_monitoring",
+            "value": "Всё работает. Я послежу."
+        },
+        {
+            "key": "hc_speech_smelt_done",
+            "value": "Плавка окончена."
+        },
+        {
+            "key": "hc_speech_smelt_fuel",
+            "value": "Иду за топливом."
+        },
+        {
+            "key": "hc_speech_smelt_materials",
+            "value": "Иду за сырьём."
+        },
+        {
+            "key": "hc_speech_homestead_refuel",
+            "value": "Пора подбросить дров."
+        },
+        {
+            "key": "hc_speech_homestead_stoked",
+            "value": "Огонь горит ярко."
+        },
+        {
+            "key": "hc_speech_homestead_repair",
+            "value": "Сейчас подлатаю."
+        },
+        {
+            "key": "hc_speech_homestead_repaired",
+            "value": "Как новенькое."
+        },
+        {
+            "key": "hc_speech_homestead_tidy",
+            "value": "Давай-ка приберусь."
+        },
+        {
+            "key": "hc_speech_homestead_tidied",
+            "value": "Всё убрано."
+        },
+        {
+            "key": "hc_speech_homestead_cooked",
+            "value": "Что-то вкусненькое!"
+        },
+        {
+            "key": "hc_speech_repair_buildings_done",
+            "value": "Все постройки отремонтированы."
+        },
+        {
+            "key": "hc_speech_repair_nothing",
+            "value": "Чинить нечего."
+        },
+        {
+            "key": "hc_speech_repair_no_hammer",
+            "value": "Для этого мне нужен молот."
+        },
+        {
+            "key": "hc_speech_restock_done",
+            "value": "Костры и факелы заправлены."
+        },
+        {
+            "key": "hc_speech_restock_nothing",
+            "value": "Топливо не требуется."
+        },
+        {
+            "key": "hc_speech_upkeep_nothing",
+            "value": "Всё в полном порядке."
+        },
+        {
+            "key": "hc_idle_why_0",
+            "value": "Сейчас дел нет."
+        },
+        {
+            "key": "hc_idle_why_1",
+            "value": "Здесь больше нечего рубить."
+        },
+        {
+            "key": "hc_idle_why_2",
+            "value": "Поблизости нечего копать."
+        },
+        {
+            "key": "hc_idle_why_3",
+            "value": "Здесь нет руды."
+        },
+        {
+            "key": "hc_idle_why_5",
+            "value": "Сейчас нечего собирать."
+        },
+        {
+            "key": "hc_idle_why_6",
+            "value": "Печи заняты — подожду."
+        },
+        {
+            "key": "hc_idle_why_7",
+            "value": "Поблизости нет дичи."
+        },
+        {
+            "key": "hc_idle_why_8",
+            "value": "Ждём, пока созреет урожай."
+        },
+        {
+            "key": "hc_idle_why_9",
+            "value": "Рыба не клюёт."
+        },
+        {
+            "key": "hc_idle_why_15",
+            "value": "Всё в порядке."
+        },
+        {
+            "key": "hc_idle_why_17",
+            "value": "Готовить сейчас нечего."
+        },
+        {
+            "key": "hc_idle_chat_1",
+            "value": "Отличный денёк для дел."
+        },
+        {
+            "key": "hc_idle_chat_2",
+            "value": "Что-нибудь нужно?"
+        },
+        {
+            "key": "hc_idle_chat_3",
+            "value": "Перерыв бы не помешал."
+        },
+        {
+            "key": "hc_idle_chat_4",
+            "value": "Тихо тут вокруг."
+        },
+        {
+            "key": "hc_idle_chat_5",
+            "value": "Пахнет дождём."
+        },
+        {
+            "key": "hc_idle_chat_6",
+            "value": "Есть работа?"
+        },
+        {
+            "key": "hc_status_sleeping",
+            "value": "Спит"
+        },
+        {
+            "key": "hc_status_resting",
+            "value": "Отдыхает"
+        },
+        {
+            "key": "hc_status_hunting",
+            "value": "Охота: {0}"
+        },
+        {
+            "key": "hc_status_fighting",
+            "value": "Бой: {0}"
+        },
+        {
+            "key": "hc_status_spear",
+            "value": "Ищет своё копьё"
+        },
+        {
+            "key": "hc_status_order",
+            "value": "Выполняет твой приказ"
+        },
+        {
+            "key": "hc_status_nothing",
+            "value": "нет дел"
+        },
+        {
+            "key": "hc_status_following_look",
+            "value": "следует за тобой, присматривая работу"
+        },
+        {
+            "key": "hc_status_following",
+            "value": "Следует за тобой"
+        },
+        {
+            "key": "hc_status_idle",
+            "value": "Бездельничает"
+        },
+        {
+            "key": "hc_status_staying",
+            "value": "Остаётся на месте"
+        },
+        {
+            "key": "hc_status_waiting",
+            "value": "Ждёт"
+        },
+        {
+            "key": "hc_status_fetching",
+            "value": "Идёт за: {0}"
+        },
+        {
+            "key": "hc_status_putting_back",
+            "value": "Кладёт на место: {0}"
+        },
+        {
+            "key": "hc_status_unloading",
+            "value": "Разгружает сумки"
+        },
+        {
+            "key": "hc_status_repairing_gear",
+            "value": "Чинит своё снаряжение"
+        },
+        {
+            "key": "hc_status_needs_home",
+            "value": "Нужно: {0} — ждёт возвращения домой"
+        },
+        {
+            "key": "hc_status_job_wood",
+            "value": "Древесина"
+        },
+        {
+            "key": "hc_status_job_stone",
+            "value": "Камень"
+        },
+        {
+            "key": "hc_status_job_ore",
+            "value": "Руда"
+        },
+        {
+            "key": "hc_status_job_forage",
+            "value": "Сбор"
+        },
+        {
+            "key": "hc_status_job_smelt",
+            "value": "Плавка"
+        },
+        {
+            "key": "hc_status_job_hunt",
+            "value": "Охота"
+        },
+        {
+            "key": "hc_status_job_farm",
+            "value": "Земледелие"
+        },
+        {
+            "key": "hc_status_job_fish",
+            "value": "Рыбалка"
+        },
+        {
+            "key": "hc_status_job_upkeep",
+            "value": "Ремонт и припасы"
+        },
+        {
+            "key": "hc_status_job_cook",
+            "value": "Готовка"
+        },
+        {
+            "key": "hc_status_job_mead",
+            "value": "Медовуха"
+        },
+        {
+            "key": "hc_doing_chop",
+            "value": "рубит: {0}"
+        },
+        {
+            "key": "hc_doing_mine",
+            "value": "добывает: {0}"
+        },
+        {
+            "key": "hc_doing_pick",
+            "value": "подбирает: {0}"
+        },
+        {
+            "key": "hc_doing_forage",
+            "value": "собирает: {0}"
+        },
+        {
+            "key": "hc_doing_hunt",
+            "value": "охота: {0}"
+        },
+        {
+            "key": "hc_doing_encumbered",
+            "value": "несёт слишком много — идёт медленно"
+        },
+        {
+            "key": "hc_doing_fish",
+            "value": "ловит рыбу: {0}"
+        },
+        {
+            "key": "hc_doing_smelt_load",
+            "value": "загружает {0}: {1}"
+        },
+        {
+            "key": "hc_doing_smelt_fuel",
+            "value": "заправляет топливом: {0}"
+        },
+        {
+            "key": "hc_doing_smelt_collect",
+            "value": "забирает слитки из: {0}"
+        },
+        {
+            "key": "hc_doing_take_pile",
+            "value": "разбирает: {0}"
+        },
+        {
+            "key": "hc_doing_upkeep_repair",
+            "value": "чинит: {0}"
+        },
+        {
+            "key": "hc_doing_upkeep_fuel",
+            "value": "заправляет топливом: {0}"
+        },
+        {
+            "key": "hc_doing_upkeep_sort",
+            "value": "сортирует: {0}"
+        },
+        {
+            "key": "hc_doing_upkeep_tidy",
+            "value": "складывает в кучи: {0}"
+        },
+        {
+            "key": "hc_doing_upkeep_stow",
+            "value": "возвращает на место: {0}"
+        },
+        {
+            "key": "hc_doing_upkeep_pile",
+            "value": "складывает: {0}"
+        },
+        {
+            "key": "hc_doing_upkeep_honey",
+            "value": "собирает мёд"
+        },
+        {
+            "key": "hc_doing_home",
+            "value": "идёт домой"
+        },
+        {
+            "key": "hc_doing_cook_make",
+            "value": "готовит: {0}"
+        },
+        {
+            "key": "hc_doing_cook_rescue",
+            "value": "снимает еду с: {0}"
+        },
+        {
+            "key": "hc_doing_cook_store",
+            "value": "убирает: {0}"
+        },
+        {
+            "key": "hc_doing_mead_fill",
+            "value": "заливает в бродильную бочку: {0}"
+        },
+        {
+            "key": "hc_doing_mead_tap",
+            "value": "сливает из бродильной бочки"
+        },
+        {
+            "key": "hc_why_gather_limit",
+            "value": "{0} {1}/{2} — предел."
+        },
+        {
+            "key": "hc_why_gather_tier",
+            "value": "Для «{0}» нужен инструмент получше: {1}."
+        },
+        {
+            "key": "hc_tool_axe",
+            "value": "топор"
+        },
+        {
+            "key": "hc_tool_pickaxe",
+            "value": "кирка"
+        },
+        {
+            "key": "hc_why_gather_near_base",
+            "value": "Оставляет деревья ({0} шт.) ближе {1} м к постройкам."
+        },
+        {
+            "key": "hc_why_hunt_at_target",
+            "value": "{0} {1}/{2} — достаточно."
+        },
+        {
+            "key": "hc_why_hunt_none_range",
+            "value": "Нет дичи в радиусе {0} м."
+        },
+        {
+            "key": "hc_why_fish_none",
+            "value": "Нет рыбы в радиусе {0} м."
+        },
+        {
+            "key": "hc_why_fish_at_target",
+            "value": "{0} {1}/{2} — достаточно."
+        },
+        {
+            "key": "hc_why_fish_bait",
+            "value": "Нет наживки для: {0} ({1})."
+        },
+        {
+            "key": "hc_why_fish_no_bank",
+            "value": "Неоткуда ловить: {0}."
+        },
+        {
+            "key": "hc_why_smelt_no_ore",
+            "value": "Нет руды для: {0}."
+        },
+        {
+            "key": "hc_why_smelt_no_wood",
+            "value": "Нет древесины для: {0}."
+        },
+        {
+            "key": "hc_why_smelt_no_fuel",
+            "value": "Нет {0} для: {1}."
+        },
+        {
+            "key": "hc_why_smelt_pile_hammer",
+            "value": "Нужен молот, чтобы разобрать: {0}."
+        },
+        {
+            "key": "hc_why_upkeep_no_fuel",
+            "value": "Нет топлива ({0}) для огня."
+        },
+        {
+            "key": "hc_why_upkeep_no_station",
+            "value": "Для {0} повреждённых деталей нет станции ремесла поблизости."
+        },
+        {
+            "key": "hc_why_farm_seed_min",
+            "value": "Семян на минимуме ({0}) — оставляем резерв."
+        },
+        {
+            "key": "hc_why_farm_zone_full",
+            "value": "Каждая грядка засеяна."
+        },
+        {
+            "key": "hc_why_farm_no_seed",
+            "value": "Нет семян ({0}) для посадки."
+        },
+        {
+            "key": "hc_act_fetch_tool",
+            "value": "Иду за: {0}."
+        },
+        {
+            "key": "hc_act_return_tool",
+            "value": "Возвращаю на место: {0}."
+        },
+        {
+            "key": "hc_act_bed",
+            "value": "Пора спать."
+        },
+        {
+            "key": "hc_status_farm_harvesting",
+            "value": "собирает урожай"
+        },
+        {
+            "key": "hc_status_farm_pickup",
+            "value": "подбирает урожай"
+        },
+        {
+            "key": "hc_status_farm_seeds",
+            "value": "берёт семена"
+        },
+        {
+            "key": "hc_status_farm_planting",
+            "value": "сажает: {0}"
+        },
+        {
+            "key": "hc_status_farm_storing",
+            "value": "складывает урожай"
+        },
+        {
+            "key": "hc_cmd_refused_off",
+            "value": "{0}: функция «Слушаться» выключена в радиальном меню."
+        },
+        {
+            "key": "hc_cmd_refused_far",
+            "value": "{0} на расстоянии {1} м. Удерживай {2} с, чтобы призвать всех."
+        },
+        {
+            "key": "hc_why_spear_lost",
+            "value": "Моё оружие потеряно: {0}."
+        },
+        {
+            "key": "hc_msg_companion_died",
+            "value": "{0} погибает ({1}, в {2} м от тебя)"
+        },
+        {
+            "key": "hc_where",
+            "value": "{0}, в {1} м от тебя"
+        },
+        {
+            "key": "hc_status_recover",
+            "value": "Забирает своё снаряжение"
+        },
+        {
+            "key": "hc_status_recover_wait",
+            "value": "Забирает своё снаряжение — ждёт безопасности"
+        },
+        {
+            "key": "hc_status_recover_far",
+            "value": "Снаряжение вне досягаемости"
+        },
+        {
+            "key": "hc_status_recover_equip",
+            "value": "Надевает снаряжение"
+        },
+        {
+            "key": "hc_speech_recover_wait",
+            "value": "Их слишком много. Подожду, пока утихнет, чтобы забрать вещи."
+        },
+        {
+            "key": "hc_speech_recover_far",
+            "value": "Снаряжение далеко. Не буду лезть в драку."
+        },
+        {
+            "key": "hc_speech_recover_done",
+            "value": "Я снова при оружии."
+        },
+        {
+            "key": "hc_msg_stance_set",
+            "value": "{0}: {1}"
+        },
+        {
+            "key": "hc_msg_stance_none",
+            "value": "Нет спутников поблизости для: {0}."
+        },
+        {
+            "key": "hc_msg_resurrected",
+            "value": "{0} воскресает!"
+        },
+        {
+            "key": "hc_msg_back_bed",
+            "value": "{0} возвращается — у кровати ({1})"
+        },
+        {
+            "key": "hc_msg_back_spawn",
+            "value": "{0} возвращается — в точке появления мира ({1})"
+        },
+        {
+            "key": "hc_msg_back_here",
+            "value": "{0} возвращается — рядом с тобой"
+        },
+        {
+            "key": "hc_why_hunt_none",
+            "value": "Дичи поблизости нет."
+        },
+        {
+            "key": "hc_why_hunt_enough",
+            "value": "Мяса нам вполне хватает."
+        },
+        {
+            "key": "hc_why_hunt_reach",
+            "value": "Дичь поблизости вне досягаемости."
+        },
+        {
+            "key": "hc_why_hunt_passive",
+            "value": "В пассивном режиме я не охочусь."
+        },
+        {
+            "key": "hc_why_hunt_spear",
+            "value": "Сначала нужно вернуть копьё."
+        },
+        {
+            "key": "hc_why_hunt_got_away",
+            "value": "Добыча ушла."
+        },
+        {
+            "key": "hc_why_pack_full",
+            "value": "Мой инвентарь переполнен."
+        },
+        {
+            "key": "hc_why_pack_full_far",
+            "value": "Инвентарь полон, а дом слишком далеко."
+        },
+        {
+            "key": "hc_why_gather_none",
+            "value": "Здесь больше нечего собирать."
+        },
+        {
+            "key": "hc_why_no_way",
+            "value": "Я не вижу дороги туда."
+        },
+        {
+            "key": "hc_why_cant_reach_up",
+            "value": "Мне туда не забраться."
+        },
+        {
+            "key": "hc_why_chests_full",
+            "value": "Сундуки дома заполнены."
+        },
+        {
+            "key": "hc_why_chest_unreachable",
+            "value": "Мне не добраться до этого сундука."
+        },
+        {
+            "key": "hc_why_farm_no_zones",
+            "value": "Ничего не созрело и сажать негде."
+        },
+        {
+            "key": "hc_why_farm_waiting",
+            "value": "Ждём, пока созреет урожай."
+        },
+        {
+            "key": "hc_why_farm_no_chest",
+            "value": "В сундуках нет места для урожая."
+        },
+        {
+            "key": "hc_why_smelt_no_chests",
+            "value": "Возле печей нет сундуков."
+        },
+        {
+            "key": "hc_why_smelt_nothing",
+            "value": "В сундуках нечего плавить."
+        },
+        {
+            "key": "hc_why_cook_nothing",
+            "value": "Сейчас готовить нечего."
+        },
+        {
+            "key": "hc_why_mead_short",
+            "value": "{0} {1}/{2} для «{3}»."
+        },
+        {
+            "key": "hc_why_cook_no_food",
+            "value": "Нет съедобных ингредиентов поблизости."
+        },
+        {
+            "key": "hc_why_cook_stocked",
+            "value": "Запасов еды вполне достаточно."
+        },
+        {
+            "key": "hc_why_cook_no_station",
+            "value": "Не могу использовать станцию «{0}» (уровень, огонь или крыша)."
+        },
+        {
+            "key": "hc_why_repair_no_station",
+            "value": "Рядом с домом нет станции ремесла, способной починить: {0}."
+        },
+        {
+            "key": "hc_why_tool_taken",
+            "value": "Ты забираешь мой инструмент ({0}) — обойдусь без него."
+        },
+        {
+            "key": "hc_why_need_tool",
+            "value": "Для этой работы требуется: {0}."
+        },
+        {
+            "key": "hc_why_fish_no_rod",
+            "value": "Мне нужна удочка."
+        },
+        {
+            "key": "hc_speech_farm_planting",
+            "value": "Пора сеять семена."
+        },
+        {
+            "key": "hc_speech_farm_harvesting",
+            "value": "Урожай готов к сбору!"
+        },
+        {
+            "key": "hc_speech_farm_done",
+            "value": "С полем закончено."
+        },
+        {
+            "key": "hc_speech_farm_no_seeds",
+            "value": "Мне нужны семена для посадки."
+        },
+        {
+            "key": "hc_speech_farm_no_cultivator",
+            "value": "Мне нужен пропашник для посадки."
+        },
+        {
+            "key": "hc_speech_no_chest",
+            "value": "Поблизости нет сундука, чтобы разгрузиться!"
+        },
+        {
+            "key": "hc_speech_no_bow",
+            "value": "Мне нужны лук и стрелы, чтобы стрелять!"
+        },
+        {
+            "key": "hc_speech_overweight",
+            "value": "Спина трещит от такой тяжести!"
+        },
+        {
+            "key": "hc_speech_cook_cooking",
+            "value": "Приготовлю что-нибудь вкусное."
+        },
+        {
+            "key": "hc_speech_cook_brewing",
+            "value": "Ставлю новую закваску."
+        },
+        {
+            "key": "hc_speech_cook_fermenter",
+            "value": "Заливаю в бродильную бочку."
+        },
+        {
+            "key": "hc_speech_cook_tapping",
+            "value": "Эта партия созрела!"
+        },
+        {
+            "key": "hc_speech_cook_storing",
+            "value": "Убираю всё по местам."
+        },
+        {
+            "key": "hc_speech_fish_need_rod",
+            "value": "Мне нужна удочка."
+        },
+        {
+            "key": "hc_speech_broke_axe",
+            "value": "Мой топор сломался. Починю, когда вернёмся домой."
+        },
+        {
+            "key": "hc_speech_broke_pickaxe",
+            "value": "Моя кирка сломалась. Починю, когда вернёмся домой."
+        },
+        {
+            "key": "hc_speech_broke_tool",
+            "value": "Инструмент сломался. Починю, когда вернёмся домой."
+        },
+        {
+            "key": "hc_speech_unload",
+            "value": "Сначала нужно разгрузить сумки."
+        },
+        {
+            "key": "hc_speech_need_axe",
+            "value": "Для этого мне нужен топор."
+        },
+        {
+            "key": "hc_speech_need_pickaxe",
+            "value": "Для этого мне нужна кирка."
+        },
+        {
+            "key": "hc_speech_need_arrows",
+            "value": "Мне нужны стрелы."
+        },
+        {
+            "key": "hc_speech_plenty_wood",
+            "value": "Древесины у нас предостаточно."
+        },
+        {
+            "key": "hc_speech_plenty_stone",
+            "value": "Камня у нас предостаточно."
+        },
+        {
+            "key": "hc_speech_plenty_ore",
+            "value": "Руды у нас предостаточно."
+        },
+        {
+            "key": "hc_speech_fish_need_bait",
+            "value": "Для рыбалки нужна наживка."
+        },
+        {
+            "key": "hc_speech_fish_no_water",
+            "value": "Не могу найти воду поблизости..."
+        },
+        {
+            "key": "hc_speech_fish_got_away",
+            "value": "Сорвалась!"
+        },
+        {
+            "key": "hc_speech_fish_caught",
+            "value": "Поймана рыба: {0}!"
+        },
+        {
+            "key": "hc_speech_fish_full",
+            "value": "В сумках больше нет места!"
+        },
+        {
+            "key": "hc_speech_tomb_found",
+            "value": "Мои пожитки!"
+        },
+        {
+            "key": "hc_speech_tomb_recovered",
+            "value": "Всё забрано, ничего не потерялось."
+        },
+        {
+            "key": "hc_speech_tomb_empty",
+            "value": "Тут больше нечего брать."
+        },
+        {
+            "key": "hc_speech_deposit_done",
+            "value": "Всё сложено в сундуки."
+        },
+        {
+            "key": "hc_speech_deposit_empty",
+            "value": "Мне нечего складывать."
+        },
+        {
+            "key": "hc_cmd_comehere_1",
+            "value": "Иду!"
+        },
+        {
+            "key": "hc_cmd_comehere_2",
+            "value": "Уже возвращаюсь!"
+        },
+        {
+            "key": "hc_cmd_comehere_3",
+            "value": "Прямо за тобой."
+        },
+        {
+            "key": "hc_cmd_attack_1",
+            "value": "В атаку!"
+        },
+        {
+            "key": "hc_cmd_attack_2",
+            "value": "Иду на врага!"
+        },
+        {
+            "key": "hc_cmd_attack_3",
+            "value": "Я с ними разберусь!"
+        },
+        {
+            "key": "hc_cmd_attack_4",
+            "value": "За Одина!"
+        },
+        {
+            "key": "hc_cmd_cart_pull_1",
+            "value": "Я повезу телегу."
+        },
+        {
+            "key": "hc_cmd_cart_pull_2",
+            "value": "Телега взята!"
+        },
+        {
+            "key": "hc_cmd_cart_pull_3",
+            "value": "Дай-ка я потяну."
+        },
+        {
+            "key": "hc_cmd_cart_release_1",
+            "value": "Отпускаю."
+        },
+        {
+            "key": "hc_cmd_cart_release_2",
+            "value": "Телега свободна."
+        },
+        {
+            "key": "hc_cmd_cart_release_3",
+            "value": "Отцеплено!"
+        },
+        {
+            "key": "hc_cmd_door_1",
+            "value": "Иду к двери."
+        },
+        {
+            "key": "hc_cmd_door_2",
+            "value": "Сейчас открою."
+        },
+        {
+            "key": "hc_cmd_door_3",
+            "value": "Дверь открыта!"
+        },
+        {
+            "key": "hc_cmd_doorclose_1",
+            "value": "Закрываю."
+        },
+        {
+            "key": "hc_cmd_doorclose_2",
+            "value": "Сейчас прикрою."
+        },
+        {
+            "key": "hc_cmd_doorclose_3",
+            "value": "Закрываю дверь."
+        },
+        {
+            "key": "hc_cmd_door_locked",
+            "value": "Заперто на замок."
+        },
+        {
+            "key": "hc_cmd_sit_1",
+            "value": "Тепло и уютно."
+        },
+        {
+            "key": "hc_cmd_sit_2",
+            "value": "Хорошее место передохнуть."
+        },
+        {
+            "key": "hc_cmd_sit_3",
+            "value": "Присяду тут."
+        },
+        {
+            "key": "hc_cmd_sleep_1",
+            "value": "Пора немного поспать."
+        },
+        {
+            "key": "hc_cmd_sleep_2",
+            "value": "Сон сейчас не помешает."
+        },
+        {
+            "key": "hc_cmd_sleep_3",
+            "value": "Разбуди, если понадоблюсь."
+        },
+        {
+            "key": "hc_cmd_wake_1",
+            "value": "Я на ногах!"
+        },
+        {
+            "key": "hc_cmd_wake_2",
+            "value": "Уже пора?"
+        },
+        {
+            "key": "hc_cmd_wake_3",
+            "value": "Ладно, пойдём."
+        },
+        {
+            "key": "hc_cmd_notmybed_1",
+            "value": "Это не моя кровать."
+        },
+        {
+            "key": "hc_cmd_notmybed_2",
+            "value": "Она уже занята."
+        },
+        {
+            "key": "hc_cmd_notmybed_3",
+            "value": "Мне не положено в неё ложиться."
+        },
+        {
+            "key": "hc_cmd_deposit_1",
+            "value": "Сгружаю добычу."
+        },
+        {
+            "key": "hc_cmd_deposit_2",
+            "value": "Складываю добро."
+        },
+        {
+            "key": "hc_cmd_deposit_3",
+            "value": "Облегчаю ношу."
+        },
+        {
+            "key": "hc_cmd_deposit_empty_1",
+            "value": "Мне нечего выгружать."
+        },
+        {
+            "key": "hc_cmd_deposit_empty_2",
+            "value": "Сумки уже пустые."
+        },
+        {
+            "key": "hc_cmd_harvest_1",
+            "value": "Я соберу это."
+        },
+        {
+            "key": "hc_cmd_harvest_2",
+            "value": "За дело!"
+        },
+        {
+            "key": "hc_cmd_harvest_3",
+            "value": "Отличная находка."
+        },
+        {
+            "key": "hc_cmd_cancel_1",
+            "value": "Жду распоряжений."
+        },
+        {
+            "key": "hc_cmd_cancel_2",
+            "value": "Ожидаю приказов."
+        },
+        {
+            "key": "hc_cmd_cancel_3",
+            "value": "Готов, когда скажешь."
+        },
+        {
+            "key": "hc_cmd_move_1",
+            "value": "Выдвигаюсь туда."
+        },
+        {
+            "key": "hc_cmd_move_2",
+            "value": "В пути."
+        },
+        {
+            "key": "hc_cmd_move_3",
+            "value": "Иду."
+        },
+        {
+            "key": "hc_cmd_repair_1",
+            "value": "Починю своё снаряжение."
+        },
+        {
+            "key": "hc_cmd_repair_2",
+            "value": "Время ремонта."
+        },
+        {
+            "key": "hc_cmd_repair_3",
+            "value": "Тут нужно подлатать."
+        },
+        {
+            "key": "hc_cmd_board_1",
+            "value": "Поднимаюсь на борт!"
+        },
+        {
+            "key": "hc_cmd_board_2",
+            "value": "Все на борт!"
+        },
+        {
+            "key": "hc_cmd_board_3",
+            "value": "Запрыгиваю."
+        },
+        {
+            "key": "hc_cmd_repair_nothing_1",
+            "value": "Здесь чинить нечего."
+        },
+        {
+            "key": "hc_cmd_repair_nothing_2",
+            "value": "Моё снаряжение в порядке."
+        },
+        {
+            "key": "hc_cmd_repair_nothing_3",
+            "value": "Ремонт не требуется."
+        },
+        {
+            "key": "hc_cmd_hive",
+            "value": "Заберу мёд."
+        },
+        {
+            "key": "hc_cmd_hive_empty",
+            "value": "Тут ещё нет мёда."
+        },
+        {
+            "key": "hc_say_encumbered",
+            "value": "Слишком тяжело — еле ноги передвигаю."
+        },
+        {
+            "key": "hc_say_no_torches",
+            "value": "Мой последний факел догорел."
+        },
+        {
+            "key": "hc_say_portal_stay",
+            "value": "Это нельзя пронести через портал: {0}. Подожду здесь."
+        },
+        {
+            "key": "hc_say_portal_left",
+            "value": "В сундуке возле портала оставлено: {0}."
+        },
+        {
+            "key": "hc_cmd_tombstone_1",
+            "value": "Заберу свои вещи."
+        },
+        {
+            "key": "hc_cmd_tombstone_2",
+            "value": "Сейчас подберу."
+        },
+        {
+            "key": "hc_cmd_tombstone_3",
+            "value": "Иду подобрать пожитки."
+        },
+        {
+            "key": "hc_cmd_smelt_1",
+            "value": "Буду поддерживать пламя."
+        },
+        {
+            "key": "hc_cmd_smelt_2",
+            "value": "Пора плавить."
+        },
+        {
+            "key": "hc_cmd_smelt_3",
+            "value": "Присмотрю за печью."
+        },
+        {
+            "key": "hc_radial_farmzones",
+            "value": "Зоны земледелия"
+        },
+        {
+            "key": "hc_farmzone_title",
+            "value": "Выбор культуры"
+        },
+        {
+            "key": "hc_farmzone_any",
+            "value": "Любая культура"
+        },
+        {
+            "key": "hc_farmzone_hint",
+            "value": "[ЛКМ] Разместить  [ПКМ] Удалить  [Колёсико] Размер  [ПКМ+Колёсико] Поворот  [Esc] Выход"
+        },
+        {
+            "key": "hc_farmzone_hint_gamepad",
+            "value": "[{0}] Разместить  [{1}] Удалить  [{2}/{3}] Размер  [{4}] Поворот  [{5}] Выход"
+        },
+        {
+            "key": "hc_farmzone_full",
+            "value": "Достигнут максимум зон (4)"
+        }
+    ]
+}

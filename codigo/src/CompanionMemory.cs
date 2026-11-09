@@ -44,15 +44,15 @@ namespace OfflineCompanionsAI
 
         public static string Arrival(string place, IList<string> with)
         {
-            string text = ModLang.Pick("Llegué por primera vez a ", "I arrived for the first time at ") + place;
+            string text = ModLang.Pick("Llegué por primera vez a ", "I arrived for the first time at ", "Я впервые пришёл в ") + place;
             if (with == null || with.Count == 0) return text + ".";
             var names = new List<string>(with);
             bool more = names.Count > MaxNames;
             if (more) names.RemoveRange(MaxNames, names.Count - MaxNames);
-            string last = more ? ModLang.Pick("otros", "others") : names[names.Count - 1];
+            string last = more ? ModLang.Pick("otros", "others", "другие") : names[names.Count - 1];
             if (!more) names.RemoveAt(names.Count - 1);
-            string joinWord = ModLang.Pick(" y ", " and ");
-            string withWord = ModLang.Pick(" con ", " with ");
+            string joinWord = ModLang.Pick(" y ", " and ", " и ");
+            string withWord = ModLang.Pick(" con ", " with ", " с ");
             return text + withWord + (names.Count > 0 ? string.Join(", ", names.ToArray()) + joinWord : "") + last + ".";
         }
 
@@ -60,33 +60,37 @@ namespace OfflineCompanionsAI
         {
             return ModLang.Pick(
                 "Estuve a punto de morir" + In(place) + " y salí con vida.",
-                "I nearly died" + In(place) + " and made it out alive.");
+                "I nearly died" + In(place) + " and made it out alive.",
+                "Я чуть не погиб" + In(place) + " и остался в живых.");
         }
 
         public static string Death(string place)
         {
             return ModLang.Pick(
                 "Morí" + In(place) + " y volví a la vida.",
-                "I died" + In(place) + " and came back to life.");
+                "I died" + In(place) + " and came back to life.",
+                "Я погиб" + In(place) + " и вернулся к жизни.");
         }
 
         public static string PlayerNearDeath(string player, string place)
         {
             return ModLang.Pick(
                 player + " estuvo a punto de morir" + In(place) + " y salió adelante a mi lado.",
-                player + " nearly died" + In(place) + " and pulled through by my side.");
+                player + " nearly died" + In(place) + " and pulled through by my side.",
+                player + " чуть не погиб" + In(place) + " и выстоял рядом со мной.");
         }
 
         public static string Raid(string place)
         {
             return ModLang.Pick(
                 "Aguantamos una incursión de enemigos" + In(place) + ".",
-                "We held off an enemy raid" + In(place) + ".");
+                "We held off an enemy raid" + In(place) + ".",
+                "Мы отбили набег врагов" + In(place) + ".");
         }
 
         private static string In(string place)
         {
-            return string.IsNullOrEmpty(place) ? "" : ModLang.Pick(" en ", " at ") + place;
+            return string.IsNullOrEmpty(place) ? "" : ModLang.Pick(" en ", " at ", " в ") + place;
         }
     }
 
@@ -124,11 +128,13 @@ namespace OfflineCompanionsAI
         private const int MaxFactsPerSummary = 3;
         private const string FactPrefixEs = "HECHO:";
         private const string FactPrefixEn = "FACT:";
+        private const string FactPrefixRu = "ФАКТ:";
         private const string DayPrefixEs = "Día ";
         private const string DayPrefixEn = "Day ";
+        private const string DayPrefixRu = "День ";
 
-        private static string FactPrefix => ModLang.Pick(FactPrefixEs, FactPrefixEn);
-        private static string DayPrefix => ModLang.Pick(DayPrefixEs, DayPrefixEn);
+        private static string FactPrefix => ModLang.Pick(FactPrefixEs, FactPrefixEn, FactPrefixRu);
+        private static string DayPrefix => ModLang.Pick(DayPrefixEs, DayPrefixEn, DayPrefixRu);
 
         public string Summary = "";
         public List<MemoryEntry> Recent = new List<MemoryEntry>();
@@ -180,8 +186,8 @@ namespace OfflineCompanionsAI
             return StayLabel == null
                 ? null
                 : (StayTend
-                    ? ModLang.Pick("encargándose de ", "tending ")
-                    : ModLang.Pick("esperando en ", "waiting at ")) + StayLabel;
+                    ? ModLang.Pick("encargándose de ", "tending ", "следит за ")
+                    : ModLang.Pick("esperando en ", "waiting at ", "ждёт в ")) + StayLabel;
         }
 
         /// <summary>True solo la primera vez que llega a ese lugar.</summary>
@@ -269,6 +275,10 @@ namespace OfflineCompanionsAI
                 {
                     if (added < MaxFactsPerSummary && AddFact(line.Substring(FactPrefixEn.Length))) added++;
                 }
+                else if (line.StartsWith(FactPrefixRu, System.StringComparison.OrdinalIgnoreCase))
+                {
+                    if (added < MaxFactsPerSummary && AddFact(line.Substring(FactPrefixRu.Length))) added++;
+                }
                 else if (line.Length > 0)
                 {
                     if (text.Length > 0) text.Append('\n');
@@ -352,13 +362,13 @@ namespace OfflineCompanionsAI
         public string LongTerm()
         {
             var text = new StringBuilder();
-            if (Facts.Count > 0) AppendList(text, ModLang.Pick("Hechos firmes:", "Core facts:"), Facts);
-            if (Events.Count > 0) AppendList(text, ModLang.Pick("Lo que han vivido juntos:", "What you have lived through:"), DescribeEvents());
+            if (Facts.Count > 0) AppendList(text, ModLang.Pick("Hechos firmes:", "Core facts:", "Твёрдые факты:"), Facts);
+            if (Events.Count > 0) AppendList(text, ModLang.Pick("Lo que han vivido juntos:", "What you have lived through:", "Пережитое вместе:"), DescribeEvents());
             if (text.Length == 0) return Summary;
             if (!string.IsNullOrWhiteSpace(Summary))
             {
                 text.AppendLine();
-                text.AppendLine(ModLang.Pick("Otros recuerdos:", "Other memories:"));
+                text.AppendLine(ModLang.Pick("Otros recuerdos:", "Other memories:", "Прочие воспоминания:"));
                 text.AppendLine(Summary);
             }
             return text.ToString().TrimEnd();
@@ -421,6 +431,12 @@ namespace OfflineCompanionsAI
                         day = parsedEn;
                         line = line.Substring(colon + 1).Trim();
                     }
+                    else if (line.StartsWith(DayPrefixRu, System.StringComparison.OrdinalIgnoreCase)
+                        && int.TryParse(line.Substring(DayPrefixRu.Length, colon - DayPrefixRu.Length).Trim(), out int parsedRu))
+                    {
+                        day = parsedRu;
+                        line = line.Substring(colon + 1).Trim();
+                    }
                 }
                 string text = line;
                 MemoryEvent known = before.Find(e => string.Equals(e.Text, text, System.StringComparison.OrdinalIgnoreCase));
@@ -451,40 +467,56 @@ namespace OfflineCompanionsAI
             if (Facts.Count > 0 || Events.Count > 0)
             {
                 var saved = new StringBuilder();
-                if (Facts.Count > 0) AppendList(saved, ModLang.Pick("Hechos firmes:", "Core facts:"), Facts);
-                if (Events.Count > 0) AppendList(saved, ModLang.Pick("Sucesos:", "Events:"), DescribeEvents());
-                text.AppendLine(ModLang.Pick("Ya guardado aparte, no lo repitas:", "Already saved separately, do not repeat:"));
+                if (Facts.Count > 0) AppendList(saved, ModLang.Pick("Hechos firmes:", "Core facts:", "Твёрдые факты:"), Facts);
+                if (Events.Count > 0) AppendList(saved, ModLang.Pick("Sucesos:", "Events:", "События:"), DescribeEvents());
+                text.AppendLine(ModLang.Pick("Ya guardado aparte, no lo repitas:", "Already saved separately, do not repeat:", "Уже сохранено отдельно, не повторяй:"));
                 text.AppendLine(saved.ToString().TrimEnd());
                 text.AppendLine();
             }
             if (!string.IsNullOrWhiteSpace(Summary))
             {
-                text.AppendLine(ModLang.Pick("Recuerdos actuales:", "Current memories:"));
+                text.AppendLine(ModLang.Pick("Recuerdos actuales:", "Current memories:", "Текущие воспоминания:"));
                 text.AppendLine(Summary);
                 text.AppendLine();
             }
-            text.AppendLine(ModLang.Pick("Conversación nueva:", "New conversation:"));
-            string playerLabel = ModLang.Pick("Jugador: ", "Player: ");
+            text.AppendLine(ModLang.Pick("Conversación nueva:", "New conversation:", "Новый разговор:"));
+            string playerLabel = ModLang.Pick("Jugador: ", "Player: ", "Игрок: ");
             for (int i = 0; i < count && i < Recent.Count; i++)
             {
                 text.AppendLine((Recent[i].Role == "user" ? playerLabel : companionName + ": ") + Recent[i].Content);
             }
 
-            string instructions = ModLang.IsSpanish
-                ? "Actualizas los recuerdos de " + companionName + ", compañero del jugador en Valheim. "
+            string instructions;
+            if (ModLang.IsRussian)
+            {
+                instructions = "Ты обновляешь воспоминания персонажа " + companionName + ", спутника игрока в Valheim. "
+                    + "Объедини текущие воспоминания и новый разговор в единый текст от первого лица на русском языке. "
+                    + "Сохраняй то, что важно для будущего: отношения, планы, общие истории. "
+                    + "Отбрасывай сиюминутное: здоровье, инвентарь или уже выполненные приказы, и не описывай как продолжающееся то, что происходило в тот момент (например, бой). "
+                    + "Не добавляй ничего, чего нет в тексте. Строки в скобках — события игры, а не слова игрока. "
+                    + "Если в новом разговоре появилось то, что нужно помнить всегда (имя, форма обращения, обещание или явное предпочтение), вынеси это отдельной строкой с префиксом \"" + FactPrefix + "\", не более " + MaxFactsPerSummary + " и только если этого ещё нет в сохранённых. "
+                    + "Верни только этот текст без форматирования длиной менее " + (MaxSummaryLength / 2) + " символов.";
+            }
+            else if (ModLang.IsSpanish)
+            {
+                instructions = "Actualizas los recuerdos de " + companionName + ", compañero del jugador en Valheim. "
                     + "Combina los recuerdos actuales y la conversación nueva en un único texto, en primera persona y en español. "
                     + "Conserva lo que importe más adelante: relaciones, planes y anécdotas. "
                     + "Olvida lo pasajero, como la salud, el inventario o las órdenes ya cumplidas, y no cuentes como presente lo que estaba ocurriendo en ese momento, como una pelea. "
                     + "No añadas nada que no aparezca en el texto. Las líneas entre paréntesis son sucesos de la partida, no cosas que haya dicho el jugador. "
                     + "Si en la conversación nueva aparece algo que debe recordarse siempre, como un nombre, cómo quiere que le traten, una promesa o una preferencia clara, ponlo además en una línea propia que empiece por \"" + FactPrefix + "\", como mucho " + MaxFactsPerSummary + " y solo si no está ya guardado. "
-                    + "Devuelve solo eso, sin formato, en menos de " + (MaxSummaryLength / 2) + " caracteres."
-                : "You update the memories of " + companionName + ", the player's companion in Valheim. "
+                    + "Devuelve solo eso, sin formato, en menos de " + (MaxSummaryLength / 2) + " caracteres.";
+            }
+            else
+            {
+                instructions = "You update the memories of " + companionName + ", the player's companion in Valheim. "
                     + "Combine the current memories and the new conversation into a single text, in first person and in English. "
                     + "Keep what matters later on: relationships, plans, and anecdotes. "
                     + "Forget passing details like health, inventory, or completed orders, and do not describe as ongoing what was happening at that moment, such as a fight. "
                     + "Do not add anything that does not appear in the text. Lines in parentheses are in-game events, not things the player said. "
                     + "If something in the new conversation should always be remembered, such as a name, how they want to be addressed, a promise, or a clear preference, also put it on its own line starting with \"" + FactPrefix + "\", at most " + MaxFactsPerSummary + " and only if not already saved. "
                     + "Return only that, unformatted, in under " + (MaxSummaryLength / 2) + " characters.";
+            }
 
             return new List<ChatMessage>
             {

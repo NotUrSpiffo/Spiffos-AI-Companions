@@ -92,32 +92,35 @@ namespace OfflineCompanionsAI
     {
         private static readonly HashSet<string> AmmoWords = new HashSet<string>
         {
-            "flecha", "arrow", "municion", "municione", "ammo", "ammunition", "proyectil", "proyectile", "projectile", "virote", "saeta", "bolt", "dardo", "dart"
+            "flecha", "arrow", "municion", "municione", "ammo", "ammunition", "proyectil", "proyectile", "projectile", "virote", "saeta", "bolt", "dardo", "dart",
+            "стрела", "стрелы", "стрел", "боеприпасы", "патроны", "снаряды", "болт", "болты", "дротик", "дротики"
         };
 
         private static readonly HashSet<string> FoodWords = new HashSet<string>
         {
             "comida", "food", "meal", "ration", "alimento", "comestible", "provisione", "vivere", "sustento",
-            "algo de comer", "algo para comer", "de comer", "para comer", "something to eat"
+            "algo de comer", "algo para comer", "de comer", "para comer", "something to eat",
+            "еда", "пища", "провизия", "провиант", "съестное", "что нибудь поесть", "что то поесть", "поесть", "перекусить", "еды"
         };
 
         private static readonly string[][] SynonymGroups = new[]
         {
-            new[] { "seta", "hongo", "mushroom" },
-            new[] { "seta amarilla", "hongo amarillo", "yellow mushroom", "mushroomyellow" },
-            new[] { "seta azul", "seta azule", "hongo azul", "hongo azule", "blue mushroom", "mushroomblue" },
-            new[] { "silex", "pedernal", "flint" },
-            new[] { "madera noble", "madera fina", "fine wood", "finewood" },
-            new[] { "madera resistente", "madera dura", "madera de nucleo", "tronco redondo", "core wood", "roundlog" },
-            new[] { "chatarra", "chatarra de hierro", "mineral de hierro", "scrap iron", "ironscrap" },
-            new[] { "trozo de cuero", "retazo de cuero", "tira de cuero", "recorte de cuero", "leather scrap", "leatherscrap" },
-            new[] { "mora de lo pantano", "mora del pantano", "camemoro", "zarzamora", "cloudberry", "cloudberrie" },
-            new[] { "carne de luey", "carne de lox", "lox meat", "loxmeat" },
-            new[] { "cola de nixe", "cola de nix", "cola de neck", "neck tail", "necktail" },
-            new[] { "carne asada", "carne cocida", "carne cocinada", "cooked meat", "cookedmeat" },
-            new[] { "carne de ciervo", "carne de venado", "deer meat", "deermeat" },
-            new[] { "piel de ciervo", "piel de venado", "cuero de ciervo", "cuero de venado", "deer hide", "deerhide" },
-            new[] { "arandano", "mora azul", "mora azule", "blueberry", "blueberrie" }
+            new[] { "seta", "hongo", "mushroom", "гриб", "грибы" },
+            new[] { "seta amarilla", "hongo amarillo", "yellow mushroom", "mushroomyellow", "желтый гриб", "желтые грибы" },
+            new[] { "seta azul", "seta azule", "hongo azul", "hongo azule", "blue mushroom", "mushroomblue", "голубой гриб", "голубые грибы", "синий гриб" },
+            new[] { "silex", "pedernal", "flint", "кремень", "кремня" },
+            new[] { "madera noble", "madera fina", "fine wood", "finewood", "качественная древесина", "ценная древесина" },
+            new[] { "madera resistente", "madera dura", "madera de nucleo", "tronco redondo", "core wood", "roundlog", "цельная древесина", "кругляк" },
+            new[] { "chatarra", "chatarra de hierro", "mineral de hierro", "scrap iron", "ironscrap", "металлолом", "железный металлолом" },
+            new[] { "trozo de cuero", "retazo de cuero", "tira de cuero", "recorte de cuero", "leather scrap", "leatherscrap", "кожаные обрывки", "обрывки кожи" },
+            new[] { "mora de lo pantano", "mora del pantano", "camemoro", "zarzamora", "cloudberry", "cloudberrie", "морошка", "морошки" },
+            new[] { "carne de luey", "carne de lox", "lox meat", "loxmeat", "мясо быкоящера", "быкоящер" },
+            new[] { "cola de nixe", "cola de nix", "cola de neck", "neck tail", "necktail", "хвост никса", "хвосты никса" },
+            new[] { "carne asada", "carne cocida", "carne cocinada", "cooked meat", "cookedmeat", "жареное мясо", "приготовленное мясо" },
+            new[] { "carne de ciervo", "carne de venado", "deer meat", "deermeat", "оленина", "мясо оленя" },
+            new[] { "piel de ciervo", "piel de venado", "cuero de ciervo", "cuero de venado", "deer hide", "deerhide", "шкура оленя" },
+            new[] { "arandano", "mora azul", "mora azule", "blueberry", "blueberrie", "черника", "черники" },
+            new[] { "carne de jabali", "carne de puerco", "carne de cerdo", "boar meat", "кабанина", "мясо кабана" }
         };
 
         public static bool Matches(string label, string wanted)
@@ -130,8 +133,10 @@ namespace OfflineCompanionsAI
             {
                 bool hasA = false;
                 bool hasB = false;
-                foreach (string term in group)
+                foreach (string raw in group)
                 {
+                    // Igual que el texto del jugador: sin acentos, y en ruso "й" pasa a "и" y "ё" a "е".
+                    string term = OrderIntent.Normalize(raw);
                     if (a == term || a.IndexOf(term, StringComparison.Ordinal) >= 0) hasA = true;
                     if (b == term || b.IndexOf(term, StringComparison.Ordinal) >= 0) hasB = true;
                 }
@@ -144,7 +149,7 @@ namespace OfflineCompanionsAI
         public static bool IsAmmoWord(string wanted)
         {
             string stem = Stem(wanted);
-            foreach (string word in new[] { " para el arco", " para la ballesta", " para arco", " para ballesta", " for the bow", " for the crossbow", " for bow", " for crossbow" })
+            foreach (string word in new[] { " para el arco", " para la ballesta", " para arco", " para ballesta", " for the bow", " for the crossbow", " for bow", " for crossbow", " для лука", " для арбалета", " к луку", " к арбалету" })
             {
                 if (stem.EndsWith(word, StringComparison.Ordinal)) stem = stem.Substring(0, stem.Length - word.Length);
             }
@@ -224,10 +229,11 @@ namespace OfflineCompanionsAI
     {
         private static readonly string[] NamesEs = { "norte", "noreste", "este", "sureste", "sur", "suroeste", "oeste", "noroeste" };
         private static readonly string[] NamesEn = { "north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest" };
+        private static readonly string[] NamesRu = { "север", "северо-восток", "восток", "юго-восток", "юг", "юго-запад", "запад", "северо-запад" };
 
         public static string Direction(float dx, float dz)
         {
-            string[] names = ModLang.IsSpanish ? NamesEs : NamesEn;
+            string[] names = ModLang.IsSpanish ? NamesEs : (ModLang.IsRussian ? NamesRu : NamesEn);
             double degrees = Math.Atan2(dx, dz) * 180.0 / Math.PI;
             int sector = (int)Math.Round((degrees + 360.0) / 45.0) % names.Length;
             return names[sector];
@@ -240,36 +246,49 @@ namespace OfflineCompanionsAI
     /// </summary>
     public static class OrderIntent
     {
-        private static readonly HashSet<string> ComeHere = new HashSet<string>
-        {
+        private static readonly HashSet<string> ComeHere = BuildNormalizedSet(
             // Español
             "sigueme", "seguime", "sigueme por favor", "ven", "ven aqui", "ven aca", "ven conmigo", "vente", "vente conmigo", "vamonos", "vamos",
             "siguenme", "siganme", "vengan", "vengan aqui", "vengan aca", "vengan conmigo", "vuelve", "vuelve aqui", "vuelve conmigo", "regresa", "regresa aqui",
             // English
-            "follow me", "follow me please", "come", "come here", "come with me", "let s go", "lets go", "come back", "come back here", "on me"
-        };
+            "follow me", "follow me please", "come", "come here", "come with me", "let s go", "lets go", "come back", "come back here", "on me",
+            // Русский
+            "следуй за мной", "следуй за мною", "иди за мной", "иди сюда", "ко мне", "за мной", "пошли", "пойдем", "пойдём", "идем", "идём", "вернись", "вернись сюда", "возвращайся", "возвращайся сюда", "пожалуйста иди сюда", "за мной пожалуйста"
+        );
 
-        private static readonly HashSet<string> Stop = new HashSet<string>
-        {
+        private static readonly HashSet<string> Stop = BuildNormalizedSet(
             // Español
             "para", "paren", "detente", "detenganse", "alto", "cancela", "cancela eso", "deja eso",
             // English
-            "stop", "halt", "cancel", "cancel that", "drop it", "leave that", "stop that"
-        };
+            "stop", "halt", "cancel", "cancel that", "drop it", "leave that", "stop that",
+            // Русский
+            "стой", "стоп", "остановись", "остановитесь", "хватит", "отмена", "отмени", "отмени это", "брось это", "прекрати", "оставь это", "хватит это делать"
+        );
 
-        private static readonly HashSet<string> Stay = new HashSet<string>
-        {
+        private static readonly HashSet<string> Stay = BuildNormalizedSet(
             // Español
             "quedate", "quedate aqui", "quedate ahi", "quedate alli", "quieto", "quieta", "quedense", "quedense aqui", "esperame aqui", "espera aqui", "esperen aqui",
             // English
-            "stay", "stay here", "stay there", "wait here", "wait for me here", "hold position", "hold here"
-        };
+            "stay", "stay here", "stay there", "wait here", "wait for me here", "hold position", "hold here",
+            // Русский
+            "стой здесь", "останься", "останься здесь", "оставайся здесь", "жди здесь", "подожди здесь", "жди меня здесь", "держи позицию", "ни с места", "жди тут", "оставайся тут"
+        );
 
-        private static readonly HashSet<string> Everyone = new HashSet<string>
-        {
+        private static readonly HashSet<string> Everyone = BuildNormalizedSet(
             "todos", "todas", "equipo", "chicos",
-            "everyone", "all", "team", "guys", "everybody"
-        };
+            "everyone", "all", "team", "guys", "everybody",
+            "все", "всё", "всем", "команда", "ребята", "народ", "бойцы", "друзья"
+        );
+
+        private static HashSet<string> BuildNormalizedSet(params string[] items)
+        {
+            var set = new HashSet<string>();
+            foreach (string item in items)
+            {
+                set.Add(Normalize(item));
+            }
+            return set;
+        }
 
         /// <summary>Devuelve la llamada equivalente, o null si el mensaje no es solo una de estas órdenes.</summary>
         public static ToolCall Detect(string text, IEnumerable<string> names)
@@ -633,9 +652,13 @@ namespace OfflineCompanionsAI
         private static readonly string[] Articles =
         {
             "el ", "la ", "los ", "las ", "mi ", "tu ", "nuestra ", "nuestro ",
-            "the ", "my ", "your ", "our "
+            "the ", "my ", "your ", "our ",
+            "наш ", "наша ", "наше ", "наши ", "мой ", "моя ", "мое ", "моё ", "мои "
         };
-        private static readonly HashSet<string> HomeWords = new HashSet<string> { "base", "casa", "hogar", "home", "house", "camp" };
+        private static readonly HashSet<string> HomeWords = new HashSet<string> {
+            "base", "casa", "hogar", "home", "house", "camp",
+            "база", "базу", "базе", "дом", "дома", "домой", "лагерь", "жилище"
+        };
 
         public List<PlaceMark> Places = new List<PlaceMark>();
 
@@ -678,7 +701,12 @@ namespace OfflineCompanionsAI
 
         public static bool IsHomeWord(string name)
         {
-            return HomeWords.Contains(Plain(name));
+            string plain = Plain(name);
+            foreach (string word in HomeWords)
+            {
+                if (OrderIntent.Normalize(word) == plain) return true;
+            }
+            return false;
         }
 
         private static string Plain(string name)
@@ -849,61 +877,62 @@ namespace OfflineCompanionsAI
             public string Prefab;
             public string Es;
             public string En;
+            public string Ru;
         }
 
         private static readonly LandmarkEntry[] Names =
         {
-            Entry("SunkenCrypt", "una cripta hundida", "a sunken crypt"),
-            Entry("Crypt", "una cripta", "a burial chamber"),
-            Entry("TrollCave", "una cueva de trol", "a troll cave"),
-            Entry("MountainCave", "una cueva de montaña", "a frost cave"),
-            Entry("Runestone", "una piedra rúnica", "a runestone"),
-            Entry("StoneCircle", "un círculo de piedras", "a stone circle"),
-            Entry("StoneHenge", "un gran círculo de piedras", "a large stone circle"),
-            Entry("StoneTower", "una torre de piedra en ruinas", "a ruined stone tower"),
-            Entry("WoodHouse", "una casa abandonada", "an abandoned house"),
-            Entry("WoodFarm", "una granja abandonada", "an abandoned farm"),
-            Entry("WoodVillage", "una aldea abandonada", "an abandoned village"),
-            Entry("AbandonedLogCabin", "una cabaña abandonada", "an abandoned cabin"),
-            Entry("Ruin", "unas ruinas", "some ruins"),
-            Entry("Dolmen", "un dolmen", "a dolmen"),
-            Entry("Grave", "una tumba antigua", "an ancient grave"),
-            Entry("Greydwarf_camp", "un campamento de enanillos grises", "a greydwarf nest"),
-            Entry("GoblinCamp", "un campamento de fulings", "a fuling village"),
-            Entry("DrakeNest", "un nido de draco", "a drake nest"),
-            Entry("ShipWreck", "un naufragio", "a shipwreck"),
-            Entry("InfestedTree", "un árbol infestado", "an infested tree"),
-            Entry("SwampHut", "una cabaña del pantano", "a swamp hut"),
-            Entry("SwampRuin", "unas ruinas del pantano", "some swamp ruins"),
-            Entry("SwampWell", "un pozo del pantano", "a swamp well"),
-            Entry("FireHole", "un agujero de fuego", "a surtling geyser"),
-            Entry("TarPit", "un pozo de brea", "a tar pit"),
-            Entry("Mistlands_DvergrTownEntrance", "la entrada de una ciudadela", "an infested mine"),
-            Entry("Mistlands", "unas ruinas de las Tierras Brumosas", "some Mistlands ruins"),
-            Entry("Eikthyrnir", "el altar de Eikthyr", "Eikthyr's altar"),
-            Entry("GDKing", "el altar del Anciano", "The Elder's altar"),
-            Entry("Bonemass", "el altar de Masa Ósea", "Bonemass's altar"),
-            Entry("Dragonqueen", "el altar de Moder", "Moder's altar"),
-            Entry("GoblinKing", "el altar de Yagluth", "Yagluth's altar"),
-            Entry("Vendor_BlackForest", "el campamento de Haldor", "Haldor's camp"),
-            Entry("Hildir_camp", "el campamento de Hildir", "Hildir's camp"),
-            Entry("Hildir", "una guarida de los encargos de Hildir", "a Hildir quest dungeon"),
-            Entry("BogWitch", "el campamento de la Bruja del Pantano", "the Bog Witch's camp"),
+            Entry("SunkenCrypt", "una cripta hundida", "a sunken crypt", "затонувший склеп"),
+            Entry("Crypt", "una cripta", "a burial chamber", "погребальные комнаты"),
+            Entry("TrollCave", "una cueva de trol", "a troll cave", "пещера тролля"),
+            Entry("MountainCave", "una cueva de montaña", "a frost cave", "ледяная пещера"),
+            Entry("Runestone", "una piedra rúnica", "a runestone", "рунический камень"),
+            Entry("StoneCircle", "un círculo de piedras", "a stone circle", "круг камней"),
+            Entry("StoneHenge", "un gran círculo de piedras", "a large stone circle", "большой круг камней"),
+            Entry("StoneTower", "una torre de piedra en ruinas", "a ruined stone tower", "разрушенная каменная башня"),
+            Entry("WoodHouse", "una casa abandonada", "an abandoned house", "заброшенный дом"),
+            Entry("WoodFarm", "una granja abandonada", "an abandoned farm", "заброшенная ферма"),
+            Entry("WoodVillage", "una aldea abandonada", "an abandoned village", "заброшенная деревня"),
+            Entry("AbandonedLogCabin", "una cabaña abandonada", "an abandoned cabin", "заброшенная хижина"),
+            Entry("Ruin", "unas ruinas", "some ruins", "руины"),
+            Entry("Dolmen", "un dolmen", "a dolmen", "дольмен"),
+            Entry("Grave", "una tumba antigua", "an ancient grave", "древняя могила"),
+            Entry("Greydwarf_camp", "un campamento de enanillos grises", "a greydwarf nest", "гнездо грейдворфов"),
+            Entry("GoblinCamp", "un campamento de fulings", "a fuling village", "деревня фулингов"),
+            Entry("DrakeNest", "un nido de draco", "a drake nest", "гнездо дракона"),
+            Entry("ShipWreck", "un naufragio", "a shipwreck", "кораблекрушение"),
+            Entry("InfestedTree", "un árbol infestado", "an infested tree", "заражённое дерево"),
+            Entry("SwampHut", "una cabaña del pantano", "a swamp hut", "хижина на болоте"),
+            Entry("SwampRuin", "unas ruinas del pantano", "some swamp ruins", "руины на болоте"),
+            Entry("SwampWell", "un pozo del pantano", "a swamp well", "болотный колодец"),
+            Entry("FireHole", "un agujero de fuego", "a surtling geyser", "гейзер суртлингов"),
+            Entry("TarPit", "un pozo de brea", "a tar pit", "смоляная яма"),
+            Entry("Mistlands_DvergrTownEntrance", "la entrada de una ciudadela", "an infested mine", "заражённый рудник"),
+            Entry("Mistlands", "unas ruinas de las Tierras Brumosas", "some Mistlands ruins", "руины Туманных земель"),
+            Entry("Eikthyrnir", "el altar de Eikthyr", "Eikthyr's altar", "алтарь Эйктюра"),
+            Entry("GDKing", "el altar del Anciano", "The Elder's altar", "алтарь Древнего"),
+            Entry("Bonemass", "el altar de Masa Ósea", "Bonemass's altar", "алтарь Массы костей"),
+            Entry("Dragonqueen", "el altar de Moder", "Moder's altar", "алтарь Матери"),
+            Entry("GoblinKing", "el altar de Yagluth", "Yagluth's altar", "алтарь Яглута"),
+            Entry("Vendor_BlackForest", "el campamento de Haldor", "Haldor's camp", "лагерь Хальдора"),
+            Entry("Hildir_camp", "el campamento de Hildir", "Hildir's camp", "лагерь Хильдир"),
+            Entry("Hildir", "una guarida de los encargos de Hildir", "a Hildir quest dungeon", "подземелье поручений Хильдир"),
+            Entry("BogWitch", "el campamento de la Bruja del Pantano", "the Bog Witch's camp", "лагерь Болотной ведьмы"),
             // Del mod Monstrum de Therzie: solo aparecen en los mundos que lo tienen.
-            Entry("AltarAsmodeus_TW", "el altar de Asmodeus", "Asmodeus's altar"),
-            Entry("AltarSvalt_TW", "la cámara de rituales de Svält", "Svält's ritual chamber"),
-            Entry("AltarVrykolathas_TW", "el brasero de Hel de Vrykolathas", "Vrykolathas's Hel brazier"),
-            Entry("Vegvisir_location_Asmodeus_TW", "un vegvísir que señala el altar de Asmodeus", "a vegvisir pointing to Asmodeus's altar"),
-            Entry("Vegvisir_location_Svalt_TW", "un vegvísir que señala la cámara de Svält", "a vegvisir pointing to Svält's chamber"),
-            Entry("Vegvisir_location_Vrykolathas_TW", "un vegvísir que señala el brasero de Vrykolathas", "a vegvisir pointing to Vrykolathas's brazier")
+            Entry("AltarAsmodeus_TW", "el altar de Asmodeus", "Asmodeus's altar", "алтарь Асмодея"),
+            Entry("AltarSvalt_TW", "la cámara de rituales de Svält", "Svält's ritual chamber", "ритуальная комната Свельта"),
+            Entry("AltarVrykolathas_TW", "el brasero de Hel de Vrykolathas", "Vrykolathas's Hel brazier", "жаровня Хель Вриколатас"),
+            Entry("Vegvisir_location_Asmodeus_TW", "un vegvísir que señala el altar de Asmodeus", "a vegvisir pointing to Asmodeus's altar", "вегвизир, указывающий на алтарь Асмодея"),
+            Entry("Vegvisir_location_Svalt_TW", "un vegvísir que señala la cámara de Svält", "a vegvisir pointing to Svält's chamber", "вегвизир, указывающий на комнату Свельта"),
+            Entry("Vegvisir_location_Vrykolathas_TW", "un vegvísir que señala el brasero de Vrykolathas", "a vegvisir pointing to Vrykolathas's brazier", "вегвизир, указывающий на жаровню Вриколатас")
         };
 
         // Están por todas partes, o son el punto de partida: no son un hallazgo.
         private static readonly string[] Ignored = { "StartTemple", "Waymarker" };
 
-        private static LandmarkEntry Entry(string prefab, string es, string en)
+        private static LandmarkEntry Entry(string prefab, string es, string en, string ru)
         {
-            return new LandmarkEntry { Prefab = prefab, Es = es, En = en };
+            return new LandmarkEntry { Prefab = prefab, Es = es, En = en, Ru = ru };
         }
 
         /// <summary>Con artículo, para contarlo en una frase. Null si no merece la pena contarlo.</summary>
@@ -916,18 +945,18 @@ namespace OfflineCompanionsAI
             }
             foreach (LandmarkEntry name in Names)
             {
-                if (prefab.StartsWith(name.Prefab, StringComparison.OrdinalIgnoreCase)) return ModLang.Pick(name.Es, name.En);
+                if (prefab.StartsWith(name.Prefab, StringComparison.OrdinalIgnoreCase)) return ModLang.Pick(name.Es, name.En, name.Ru);
             }
-            return ModLang.Pick("un lugar fuera de lo normal", "an unusual place");
+            return ModLang.Pick("un lugar fuera de lo normal", "an unusual place", "необычное место");
         }
 
         /// <summary>Una veta que merece la pena señalar, o null si es una roca cualquiera.</summary>
         public static string Ore(string prefab)
         {
             string name = (prefab ?? "").ToLowerInvariant();
-            if (name.Contains("copper")) return ModLang.Pick("una veta de cobre", "a copper vein");
-            if (name.Contains("silver")) return ModLang.Pick("una veta de plata", "a silver vein");
-            return name.EndsWith("_tin") ? ModLang.Pick("una veta de estaño", "a tin deposit") : null;
+            if (name.Contains("copper")) return ModLang.Pick("una veta de cobre", "a copper vein", "медная жила");
+            if (name.Contains("silver")) return ModLang.Pick("una veta de plata", "a silver vein", "серебряная жила");
+            return name.EndsWith("_tin") ? ModLang.Pick("una veta de estaño", "a tin deposit", "месторождение олова") : null;
         }
 
         private static readonly string[] LeadingArticles = { "un ", "una ", "unos ", "unas ", "el ", "la ", "los ", "las ", "a ", "an ", "the ", "some " };
@@ -971,6 +1000,10 @@ namespace OfflineCompanionsAI
             if (ModLang.IsSpanish)
             {
                 return "ir a " + label + (tend ? " y encargarte de ese sitio" : " y quedarte allí") + " (a " + meters + " m" + (stalled ? ", sin avanzar" : detouring ? ", rodeando agua" : ", caminando") + ")";
+            }
+            if (ModLang.IsRussian)
+            {
+                return "идти в " + label + (tend ? " и следить за этим местом" : " и оставаться там") + " (в " + meters + " м" + (stalled ? ", без движения" : detouring ? ", обходя воду" : ", пешком") + ")";
             }
             return "go to " + label + (tend ? " and tend that place" : " and stay there") + " (" + meters + " m away" + (stalled ? ", stalled" : detouring ? ", going around water" : ", walking") + ")";
         }

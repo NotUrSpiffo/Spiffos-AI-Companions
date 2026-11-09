@@ -108,7 +108,9 @@ namespace OfflineCompanionsAI
                 "(Suceso de la partida; el jugador no ha dicho nada: " + reaction.Description
                 + " Coméntalo en voz alta con una sola frase corta y natural, sin dar órdenes ni ofrecer ayuda. No hagas como si se hubiera resuelto.)",
                 "(In-game event; the player said nothing: " + reaction.Description
-                + " Comment on it aloud in a single short, natural sentence, without giving orders or offering help. Do not act as if it has been resolved.)");
+                + " Comment on it aloud in a single short, natural sentence, without giving orders or offering help. Do not act as if it has been resolved.)",
+                "(Игровое событие; игрок ничего не сказал: " + reaction.Description
+                + " Прокомментируй это вслух одной короткой естественной фразой, не командуя и не предлагая помощь. Не веди себя так, будто всё уже разрешилось.)");
         }
 
         /// <summary>Lo que se guarda en la memoria, sin las instrucciones para la IA.</summary>
@@ -116,20 +118,21 @@ namespace OfflineCompanionsAI
         {
             return ModLang.Pick(
                 "(Suceso de la partida: " + reaction.Description + ")",
-                "(In-game event: " + reaction.Description + ")");
+                "(In-game event: " + reaction.Description + ")",
+                "(Игровое событие: " + reaction.Description + ")");
         }
 
         public static string BossName(string globalKey)
         {
             switch ((globalKey ?? "").ToLowerInvariant())
             {
-                case "defeated_eikthyr": return "Eikthyr";
-                case "defeated_gdking": return ModLang.Pick("el Anciano", "The Elder");
-                case "defeated_bonemass": return "Bonemass";
-                case "defeated_dragon": return "Moder";
-                case "defeated_goblinking": return "Yagluth";
-                case "defeated_queen": return ModLang.Pick("la Reina", "The Queen");
-                case "defeated_fader": return "Fader";
+                case "defeated_eikthyr": return ModLang.Pick("Eikthyr", "Eikthyr", "Эйктюр");
+                case "defeated_gdking": return ModLang.Pick("el Anciano", "The Elder", "Древний");
+                case "defeated_bonemass": return ModLang.Pick("Bonemass", "Bonemass", "Масса костей");
+                case "defeated_dragon": return ModLang.Pick("Moder", "Moder", "Матерь");
+                case "defeated_goblinking": return ModLang.Pick("Yagluth", "Yagluth", "Яглут");
+                case "defeated_queen": return ModLang.Pick("la Reina", "The Queen", "Королева");
+                case "defeated_fader": return ModLang.Pick("Fader", "Fader", "Прародитель");
                 default: return null;
             }
         }
@@ -138,15 +141,15 @@ namespace OfflineCompanionsAI
         {
             switch (biome)
             {
-                case "Meadows": return ModLang.Pick("las Praderas", "the Meadows");
-                case "BlackForest": return ModLang.Pick("el Bosque Negro", "the Black Forest");
-                case "Swamp": return ModLang.Pick("el Pantano", "the Swamp");
-                case "Mountain": return ModLang.Pick("las Montañas", "the Mountains");
-                case "Plains": return ModLang.Pick("las Llanuras", "the Plains");
-                case "Mistlands": return ModLang.Pick("las Tierras Brumosas", "the Mistlands");
-                case "AshLands": return ModLang.Pick("las Tierras de Ceniza", "the Ashlands");
-                case "DeepNorth": return ModLang.Pick("el Norte Profundo", "the Deep North");
-                case "Ocean": return ModLang.Pick("el océano", "the Ocean");
+                case "Meadows": return ModLang.Pick("las Praderas", "the Meadows", "Луга");
+                case "BlackForest": return ModLang.Pick("el Bosque Negro", "the Black Forest", "Чёрный лес");
+                case "Swamp": return ModLang.Pick("el Pantano", "the Swamp", "Болота");
+                case "Mountain": return ModLang.Pick("las Montañas", "the Mountains", "Горы");
+                case "Plains": return ModLang.Pick("las Llanuras", "the Plains", "Равнины");
+                case "Mistlands": return ModLang.Pick("las Tierras Brumosas", "the Mistlands", "Туманные земли");
+                case "AshLands": return ModLang.Pick("las Tierras de Ceniza", "the Ashlands", "Пепельные земли");
+                case "DeepNorth": return ModLang.Pick("el Norte Profundo", "the Deep North", "Дальний север");
+                case "Ocean": return ModLang.Pick("el océano", "the Ocean", "Океан");
                 default: return null;
             }
         }

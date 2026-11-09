@@ -116,7 +116,7 @@ namespace OfflineCompanionsAI
                 float h = Mathf.Min(900f, height - 40f);
                 _window = new Rect((width - w) / 2f, (height - h) / 2f, w, h);
             }
-            string title = ModLang.Pick("Personaje de " + _companionName, _companionName + "'s Character");
+            string title = ModLang.Pick("Personaje de " + _companionName, _companionName + "'s Character", "Персонаж: " + _companionName);
             _window = GUI.ModalWindow(GetInstanceID(), _window, DrawWindow, title);
         }
 
@@ -134,40 +134,41 @@ namespace OfflineCompanionsAI
             DrawLanguageSelector();
             string emptyHint = _emptyHintProvider != null ? _emptyHintProvider() : _emptyHint;
             _edit.Instructions = Field(
-                ModLang.Pick("Instrucciones", "Instructions"),
-                ModLang.Pick("Quién es y cómo se comporta. ", "Who they are and how they behave. ") + emptyHint,
+                ModLang.Pick("Instrucciones", "Instructions", "Инструкции"),
+                ModLang.Pick("Quién es y cómo se comporta. ", "Who they are and how they behave. ", "Кто он и как себя ведёт. ") + emptyHint,
                 _edit.Instructions,
                 170f);
             DrawPresets();
             DrawInclination();
             _edit.Lore = Field(
-                ModLang.Pick("Historia", "Backstory"),
-                ModLang.Pick("Su pasado, su familia, sus motivos...", "Their past, family, motives..."),
+                ModLang.Pick("Historia", "Backstory", "Предыстория"),
+                ModLang.Pick("Su pasado, su familia, sus motivos...", "Their past, family, motives...", "Прошлое, семья, мотивы..."),
                 _edit.Lore,
                 200f);
             _edit.Rules = Field(
-                ModLang.Pick("Reglas", "Rules"),
-                ModLang.Pick("Lo que siempre debe cumplir. Ejemplo: \"Llámame capitán\".", "What they must always follow. Example: \"Call me captain\"."),
+                ModLang.Pick("Reglas", "Rules", "Правила"),
+                ModLang.Pick("Lo que siempre debe cumplir. Ejemplo: \"Llámame capitán\".", "What they must always follow. Example: \"Call me captain\".", "Чему всегда следовать. Пример: «Зови меня капитаном»."),
                 _edit.Rules,
                 130f);
             _memories.Facts = Field(
-                ModLang.Pick("Hechos firmes", "Core Facts"),
-                ModLang.Pick("Lo que nunca debe olvidar, uno por línea. Los resúmenes no los tocan.", "What they must never forget, one per line. Summaries do not alter these."),
+                ModLang.Pick("Hechos firmes", "Core Facts", "Твёрдые факты"),
+                ModLang.Pick("Lo que nunca debe olvidar, uno por línea. Los resúmenes no los tocan.", "What they must never forget, one per line. Summaries do not alter these.", "То, что нельзя забывать, по одному на строку. Сводки их не меняют."),
                 _memories.Facts,
                 110f);
             _memories.Events = Field(
-                ModLang.Pick("Vivencias", "Experiences"),
-                ModLang.Pick("Lo que ha ocurrido de verdad en la partida, uno por línea. Se anota solo.", "What actually happened in the game, one per line. Recorded automatically."),
+                ModLang.Pick("Vivencias", "Experiences", "События"),
+                ModLang.Pick("Lo que ha ocurrido de verdad en la partida, uno por línea. Se anota solo.", "What actually happened in the game, one per line. Recorded automatically.", "Что происходило в игре, по одному на строку. Записывается само."),
                 _memories.Events,
                 110f);
             _memories.Summary = Field(
-                ModLang.Pick("Otros recuerdos", "Other Memories"),
-                ModLang.Pick("El resumen de lo que han hablado. Se reescribe solo, pero puedes corregirlo.", "Summary of your conversations. Rewritten automatically, but you can edit it."),
+                ModLang.Pick("Otros recuerdos", "Other Memories", "Прочие воспоминания"),
+                ModLang.Pick("El resumen de lo que han hablado. Se reescribe solo, pero puedes corregirlo.", "Summary of your conversations. Rewritten automatically, but you can edit it.", "Краткая сводка разговоров. Обновляется сама, но её можно править."),
                 _memories.Summary,
                 130f);
             _forget = GUILayout.Toggle(_forget, ModLang.Pick(
                 " Al guardar, borrar todos sus recuerdos y conversaciones",
-                " When saving, erase all memories and conversations"));
+                " When saving, erase all memories and conversations",
+                " При сохранении стереть все воспоминания и разговоры"));
             GUILayout.Space(10f);
             GUILayout.EndScrollView();
 
@@ -175,14 +176,15 @@ namespace OfflineCompanionsAI
             GUILayout.BeginHorizontal();
             GUILayout.Label(ModLang.Pick(
                 "Si cambias la ficha, olvida la conversación reciente. Esc cancela.",
-                "If you change the character sheet, recent conversation is forgotten. Esc cancels."), GUI.skin.label);
+                "If you change the character sheet, recent conversation is forgotten. Esc cancels.",
+                "При изменении анкеты недавний разговор забывается. Esc — отмена."), GUI.skin.label);
             GUILayout.FlexibleSpace();
-            if (GUILayout.Button(ModLang.Pick("Cancelar", "Cancel"), _button, GUILayout.Width(150f), GUILayout.Height(44f)))
+            if (GUILayout.Button(ModLang.Pick("Cancelar", "Cancel", "Отмена"), _button, GUILayout.Width(150f), GUILayout.Height(44f)))
             {
                 Close();
                 return;
             }
-            if (GUILayout.Button(ModLang.Pick("Guardar", "Save"), _button, GUILayout.Width(150f), GUILayout.Height(44f)))
+            if (GUILayout.Button(ModLang.Pick("Guardar", "Save", "Сохранить"), _button, GUILayout.Width(150f), GUILayout.Height(44f)))
             {
                 SaveHandler save = _onSave;
                 CharacterProfile result = _edit;
@@ -201,17 +203,21 @@ namespace OfflineCompanionsAI
         private void DrawLanguageSelector()
         {
             GUILayout.BeginHorizontal();
-            GUILayout.Label(ModLang.Pick("Idioma del mod:", "Mod Language:"), _label, GUILayout.Width(190f));
+            GUILayout.Label(ModLang.Pick("Idioma del mod:", "Mod Language:", "Язык мода:"), _label, GUILayout.Width(170f));
             ModLanguage current = ModLang.Current;
-            if (GUILayout.Toggle(current == ModLanguage.English, "English", _button, GUILayout.Width(140f)) && current != ModLanguage.English)
+            if (GUILayout.Toggle(current == ModLanguage.English, "English", _button, GUILayout.Width(110f)) && current != ModLanguage.English)
             {
                 SetLanguage(ModLanguage.English);
             }
-            if (GUILayout.Toggle(current == ModLanguage.Spanish, "Español", _button, GUILayout.Width(140f)) && current != ModLanguage.Spanish)
+            if (GUILayout.Toggle(current == ModLanguage.Spanish, "Español", _button, GUILayout.Width(110f)) && current != ModLanguage.Spanish)
             {
                 SetLanguage(ModLanguage.Spanish);
             }
-            if (GUILayout.Toggle(current == ModLanguage.Auto, ModLang.Pick("Automático", "Auto (Game)"), _button, GUILayout.Width(160f)) && current != ModLanguage.Auto)
+            if (GUILayout.Toggle(current == ModLanguage.Russian, "Русский", _button, GUILayout.Width(110f)) && current != ModLanguage.Russian)
+            {
+                SetLanguage(ModLanguage.Russian);
+            }
+            if (GUILayout.Toggle(current == ModLanguage.Auto, ModLang.Pick("Automático", "Auto (Game)", "Авто (игра)"), _button, GUILayout.Width(130f)) && current != ModLanguage.Auto)
             {
                 SetLanguage(ModLanguage.Auto);
             }
@@ -233,7 +239,7 @@ namespace OfflineCompanionsAI
             bool wasEnabled = GUI.enabled;
             GUI.enabled = wasEnabled && string.IsNullOrWhiteSpace(_edit.Instructions);
             GUILayout.BeginHorizontal();
-            GUILayout.Label(ModLang.Pick("Perfiles:", "Presets:"), _label, GUILayout.Width(100f));
+            GUILayout.Label(ModLang.Pick("Perfiles:", "Presets:", "Шаблоны:"), _label, GUILayout.Width(100f));
             foreach (PersonalityPreset preset in PersonalityPresets.All)
             {
                 if (GUILayout.Button(preset.Name, _button)) _edit.Instructions = preset.Text;
@@ -245,10 +251,11 @@ namespace OfflineCompanionsAI
 
         private void DrawInclination()
         {
-            GUILayout.Label(ModLang.Pick("Inclinación", "Inclination"), _label);
+            GUILayout.Label(ModLang.Pick("Inclinación", "Inclination", "Склонность"), _label);
             GUILayout.Label(ModLang.Pick(
                 "A qué tiende por su cuenta: nunca pasa por encima de tus órdenes. Automática usa la de su perfil; una ficha escrita a mano no tiene.",
-                "What they gravitate toward on their own: never overrides your orders. Automatic uses their preset's inclination; a custom-written sheet has none."));
+                "What they gravitate toward on their own: never overrides your orders. Automatic uses their preset's inclination; a custom-written sheet has none.",
+                "К чему стремится сам: никогда не отменяет твоих приказов. «Авто» берёт из шаблона; у созданной вручную анкеты её нет."));
             GUILayout.BeginHorizontal();
             string current = (_edit.Inclination ?? "").Trim();
             foreach (KeyValuePair<string, string> choice in Inclinations.Choices)

@@ -22,7 +22,7 @@ namespace OfflineCompanionsAI
         public const string PluginGuid = "OfflineCompanionsAI";
 #endif
         public const string PluginName = "Spiffo's Valheim AI Companions";
-        public const string PluginVersion = "0.26.2";
+        public const string PluginVersion = "0.26.3";
 
         private const float EmoteCooldown = 10f;
 
@@ -33,23 +33,31 @@ namespace OfflineCompanionsAI
 
         private const string BalanceCommand = "/saldo";
         private const string BalanceCommandEn = "/balance";
+        private const string BalanceCommandRu = "/баланс";
         private const string HelpCommand = "/ayuda";
         private const string HelpCommandEn = "/help";
+        private const string HelpCommandRu = "/помощь";
         private const string StatusCommand = "/estado";
         private const string StatusCommandEn = "/status";
+        private const string StatusCommandRu = "/статус";
         private const string RecallCommand = "/llamar";
         private const string RecallCommandEn = "/recall";
         private const string CallCommandEn = "/call";
+        private const string RecallCommandRu = "/позвать";
         private const string PlacesCommand = "/lugares";
         private const string PlacesCommandEn = "/places";
+        private const string PlacesCommandRu = "/места";
         private const string MarkCommand = "/marcar";
         private const string MarkCommandEn = "/mark";
+        private const string MarkCommandRu = "/отметить";
         private const string ForgetCommand = "/olvidar";
         private const string ForgetCommandEn = "/forget";
+        private const string ForgetCommandRu = "/забыть";
         private const string LanguageCommand = "/idioma";
         private const string LanguageCommandEn = "/language";
         private const string LangCommandEn = "/lang";
-        private static string HomePlaceLabel => ModLang.Pick("su hogar", "their home");
+        private const string LanguageCommandRu = "/язык";
+        private static string HomePlaceLabel => ModLang.Pick("su hogar", "their home", "свой дом");
         private const float MarkAboveGround = 0.2f;
         private const float PinRemoveRadius = 1f;
         private const float HintDelay = 8f;
@@ -66,13 +74,13 @@ namespace OfflineCompanionsAI
         private const float TendFollowGraceSeconds = 3f;
         private const float TendLeashMargin = 10f;
         private const float TendWarnAgainShare = 0.8f;
-        private static string TendHereLabel => ModLang.Pick("este sitio", "this place");
+        private static string TendHereLabel => ModLang.Pick("este sitio", "this place", "это место");
         private const float HuntSweepCell = 40f;
         private const float HuntSweepStep = 45f;
         private const float HuntSweepCheckSeconds = 2f;
         private const float HuntSweepWaitSeconds = 5f;
         private const float HuntSweepDangerSeconds = 30f;
-        private static string ExploreStayLabel => ModLang.Pick("donde estaba explorando", "where they were exploring");
+        private static string ExploreStayLabel => ModLang.Pick("donde estaba explorando", "where they were exploring", "где шло исследование");
         private const float ExploreLookSeconds = 3f;
         private const float ExploreFindMeters = 50f;
         private const float ExploreSameFindMeters = 40f;
@@ -106,9 +114,11 @@ namespace OfflineCompanionsAI
         private const int MaxToolRounds = 3;
         private const string EditCommand = "/personaje";
         private const string EditCommandEn = "/character";
+        private const string EditCommandRu = "/персонаж";
         private const string AutonomyCommand = "/autonomia";
         private const string AutonomyCommandAccented = "/autonomía";
         private const string AutonomyCommandEn = "/autonomy";
+        private const string AutonomyCommandRu = "/автономия";
         private const float InitiativeCheckInterval = 5f;
         private const float InitiativeDangerRange = 15f;
         private const float StrongEnemyCheckInterval = 1f;
@@ -127,16 +137,16 @@ namespace OfflineCompanionsAI
         private const float PlayerIdleSeconds = 300f;
         private static readonly string[] Commands =
         {
-            HelpCommand, HelpCommandEn,
-            StatusCommand, StatusCommandEn,
-            RecallCommand, RecallCommandEn, CallCommandEn,
-            BalanceCommand, BalanceCommandEn,
-            EditCommand, EditCommandEn,
-            AutonomyCommand, AutonomyCommandAccented, AutonomyCommandEn,
-            PlacesCommand, PlacesCommandEn,
-            MarkCommand, MarkCommandEn,
-            ForgetCommand, ForgetCommandEn,
-            LanguageCommand, LanguageCommandEn, LangCommandEn
+            HelpCommand, HelpCommandEn, HelpCommandRu,
+            StatusCommand, StatusCommandEn, StatusCommandRu,
+            RecallCommand, RecallCommandEn, CallCommandEn, RecallCommandRu,
+            BalanceCommand, BalanceCommandEn, BalanceCommandRu,
+            EditCommand, EditCommandEn, EditCommandRu,
+            AutonomyCommand, AutonomyCommandAccented, AutonomyCommandEn, AutonomyCommandRu,
+            PlacesCommand, PlacesCommandEn, PlacesCommandRu,
+            MarkCommand, MarkCommandEn, MarkCommandRu,
+            ForgetCommand, ForgetCommandEn, ForgetCommandRu,
+            LanguageCommand, LanguageCommandEn, LangCommandEn, LanguageCommandRu
         };
         private static readonly FieldInfo ChatHideTimer = AccessTools.Field(typeof(Chat), "m_hideTimer");
 
@@ -390,7 +400,8 @@ namespace OfflineCompanionsAI
                 CompanionBridge.StopGathering(companion);
                 string notice = ModLang.Pick(
                     name + " deja lo que hacía y vuelve contigo: hay " + group.Count + " " + group.Label + " cerca.",
-                    name + " leaves what they were doing and returns to you: there are " + group.Count + " " + group.Label + " nearby.");
+                    name + " leaves what they were doing and returns to you: there are " + group.Count + " " + group.Label + " nearby.",
+                    name + " бросает начатое и возвращается к тебе: рядом " + group.Count + " " + group.Label + ".");
                 Notify(notice);
                 AddToChat(name, notice);
                 Log.LogInfo("[Amenaza] " + notice);
@@ -405,7 +416,8 @@ namespace OfflineCompanionsAI
                 Speaker = companion,
                 Description = ModLang.Pick(
                     "Has visto " + group.Count + " " + group.Label + " y son demasiado fuertes para el equipo que llevan. No irás a por ellos salvo que ataquen de cerca o el jugador lo ordene." + (leftTask ? " Has dejado lo que hacías y vuelves con él." : ""),
-                    "You saw " + group.Count + " " + group.Label + " and they are too strong for your current gear. You will not engage them unless they attack at close range or the player orders it." + (leftTask ? " You left what you were doing and are returning to the player." : ""))
+                    "You saw " + group.Count + " " + group.Label + " and they are too strong for your current gear. You will not engage them unless they attack at close range or the player orders it." + (leftTask ? " You left what you were doing and are returning to the player." : ""),
+                    "Ты видишь врагов (" + group.Count + " " + group.Label + "), и они слишком сильны для твоего снаряжения. Не атакуй их, если они не нападут в упор или игрок не прикажет." + (leftTask ? " Ты бросаешь начатое и возвращаешься к игроку." : ""))
             }, Time.time);
         }
 
@@ -496,12 +508,13 @@ namespace OfflineCompanionsAI
             _hintAt = float.MaxValue;
             Notify(ModLang.Pick(
                 "Compañeros: " + TalkKeys() + " para hablar, " + _settings.VoiceKey.Value + " para voz. Escribe /ayuda para ver más.",
-                "Companions: " + TalkKeys() + " to talk, " + _settings.VoiceKey.Value + " for voice. Type /help for more."));
+                "Companions: " + TalkKeys() + " to talk, " + _settings.VoiceKey.Value + " for voice. Type /help for more.",
+                "Спутники: " + TalkKeys() + " — говорить, " + _settings.VoiceKey.Value + " — голос. Введи /помощь для справки."));
         }
 
         private string TalkKeys()
         {
-            return (_settings.TalkInGameChat.Value ? ModLang.Pick("chat del juego o ", "in-game chat or ") : "") + _settings.TalkKey.Value;
+            return (_settings.TalkInGameChat.Value ? ModLang.Pick("chat del juego o ", "in-game chat or ", "чат игры или ") : "") + _settings.TalkKey.Value;
         }
 
         private void ShowHelp()
@@ -509,7 +522,7 @@ namespace OfflineCompanionsAI
             if (ModLang.IsEnglish)
             {
                 AddLine("Talk: " + TalkKeys() + " | Shout so they hear you from farther away: /s message | Voice: hold " + _settings.VoiceKey.Value + " | Character: " + _settings.EditModifier.Value + " + " + _settings.TalkKey.Value);
-                AddLine("Commands: /help, /status, /recall, /balance, /character, /autonomy, /places, /mark name, /forget name, /language [en|es|auto]");
+                AddLine("Commands: /help, /status, /recall, /balance, /character, /autonomy, /places, /mark name, /forget name, /language [en|es|ru|auto]");
                 AddLine("Ask & remember: what's nearby?, what's in the chests?, remember my base is to the north");
                 AddLine("Move: follow me, come here, go there, go to the chest, go there and stay, stay here, stop");
                 AddLine("Places: mark base here, mark mine there, go back to base, go to base and tend it, forget mine");
@@ -525,8 +538,27 @@ namespace OfflineCompanionsAI
                 AddLine("Emotes: performs them automatically when fitting, or when you ask them to dance or wave");
                 return;
             }
+            if (ModLang.IsRussian)
+            {
+                AddLine("Разговор: " + TalkKeys() + " | Крикнуть дальше: /s сообщение | Голос: удерживай " + _settings.VoiceKey.Value + " | Анкета: " + _settings.EditModifier.Value + " + " + _settings.TalkKey.Value);
+                AddLine("Команды: /помощь (/help), /статус (/status), /позвать (/recall), /баланс (/balance), /персонаж (/character), /автономия (/autonomy), /места (/places), /отметить имя (/mark), /забыть имя (/forget), /язык [en|es|ru|auto]");
+                AddLine("Вопросы и память: что рядом?, что в сундуках?, помни: база на севере");
+                AddLine("Движение: за мной, иди сюда, иди туда, иди к сундуку, оставайся там, стой здесь, стоп");
+                AddLine("Места: отметь здесь базу, отметь там шахту, вернись на базу, иди на базу и следи за ней, забудь шахту");
+                AddLine("Исследование: разведай окрестности, посмотри что вокруг (идёт по новой земле, ставит метки на карту и возвращается)");
+                AddLine("По взгляду: атакуй его, сруби это дерево, открой эту дверь, садись в эту лодку");
+                AddLine("Задания: добудь 10 камня, приготовь 3 жареного мяса, переплавь медь, охоться, лови рыбу, разложи по сундукам");
+                AddLine("Уход за базой: почини постройки, добавь топлива в огни, собери мёд, сложи материалы в кучи");
+                AddLine("Отряд спутников: где Бьёрн?, кто лучше ловит рыбу?, все ко мне где бы вы ни были");
+                AddLine("Предметы: подними тот топор, дай то что выпало, дай 5 древесины, брось древесину, возьми древесину из сундука");
+                AddLine("Снаряжение: поешь, выпей медовухи, возьми лук, почини снаряжение");
+                AddLine("Бой: охраняй эту зону, перейди в пассивную стойку, отступай если меньше половины здоровья");
+                AddLine("Группа: все, за мной | Бьёрн, руби дерево | Твоё имя будет Сейбер");
+                AddLine("Эмоции: выражает автоматически к месту, или по просьбе станцевать или помахать рукой");
+                return;
+            }
             AddLine("Hablar: " + TalkKeys() + " | Gritar, para que te oiga de más lejos: /s mensaje | Voz: mantén " + _settings.VoiceKey.Value + " | Personaje: " + _settings.EditModifier.Value + " + " + _settings.TalkKey.Value);
-            AddLine("Comandos: /ayuda, /estado, /llamar, /saldo, /personaje, /autonomia, /lugares, /marcar nombre, /olvidar nombre, /idioma [en|es|auto]");
+            AddLine("Comandos: /ayuda, /estado, /llamar, /saldo, /personaje, /autonomia, /lugares, /marcar nombre, /olvidar nombre, /idioma [en|es|ru|auto]");
             AddLine("Saber y recordar: ¿qué hay cerca?, ¿qué hay en los cofres?, recuerda que mi base está al norte");
             AddLine("Moverse: sígueme, ven aquí, ve allí, ve al cofre, ve allí y quédate, quédate aquí, para");
             AddLine("Lugares: marca aquí la base, marca allí la mina, vuelve a la base, ve a la base y encárgate, olvida la mina");
@@ -547,7 +579,7 @@ namespace OfflineCompanionsAI
             Player player = Player.m_localPlayer;
             if (player == null) return;
             List<Component> all = new List<Component>(CompanionBridge.MyCompanions());
-            if (all.Count == 0) AddLine(ModLang.Pick("No hay compañeros tuyos cargados cerca.", "None of your companions are loaded nearby."));
+            if (all.Count == 0) AddLine(ModLang.Pick("No hay compañeros tuyos cargados cerca.", "None of your companions are loaded nearby.", "Поблизости нет загруженных спутников."));
             foreach (Component companion in all)
             {
                 int distance = Mathf.RoundToInt(Vector3.Distance(player.transform.position, companion.transform.position));
@@ -556,31 +588,33 @@ namespace OfflineCompanionsAI
                 string stance = CompanionActions.StanceName(CompanionBridge.CombatStance(companion));
                 string id = CompanionBridge.PermanentId(companion);
                 Inclination inclination = InclinationOf(id);
-                string leaning = inclination == Inclination.Ninguna ? "" : ModLang.Pick(", inclinación ", ", inclination ") + Inclinations.Name(inclination);
+                string leaning = inclination == Inclination.Ninguna ? "" : ModLang.Pick(", inclinación ", ", inclination ", ", склонность ") + Inclinations.Name(inclination);
                 AddLine(CompanionBridge.Name(companion)
-                    + ModLang.Pick(" (a " + distance + " m, postura " + stance + leaning + "): ", " (" + distance + " m away, " + stance + " stance" + leaning + "): ")
-                    + (string.IsNullOrEmpty(status) ? ModLang.Pick("sin actividad", "idle") : status)
+                    + ModLang.Pick(" (a " + distance + " m, postura " + stance + leaning + "): ", " (" + distance + " m away, " + stance + " stance" + leaning + "): ", " (в " + distance + " м, стойка " + stance + leaning + "): ")
+                    + (string.IsNullOrEmpty(status) ? ModLang.Pick("sin actividad", "idle", "без дела") : status)
                     + (tasks.Length > 0 ? " | " + tasks : ""));
             }
 
             List<string> roster = CompanionBridge.RosterLines(StayOf);
-            if (roster.Count > 0) AddLine(ModLang.Pick("En este mundo: ", "In this world: ") + string.Join("; ", roster.ToArray()));
+            if (roster.Count > 0) AddLine(ModLang.Pick("En este mundo: ", "In this world: ", "В этом мире: ") + string.Join("; ", roster.ToArray()));
             AddLine(ModLang.Pick(
                 "Modo: " + (_settings.Autonomy.Value == AutonomyMode.Autonomo ? "autónomo" : "normal") + " (" + AutonomyCommand + " para cambiarlo)",
-                "Mode: " + (_settings.Autonomy.Value == AutonomyMode.Autonomo ? "autonomous" : "normal") + " (" + AutonomyCommandEn + " to toggle)"));
+                "Mode: " + (_settings.Autonomy.Value == AutonomyMode.Autonomo ? "autonomous" : "normal") + " (" + AutonomyCommandEn + " to toggle)",
+                "Режим: " + (_settings.Autonomy.Value == AutonomyMode.Autonomo ? "автономный" : "обычный") + " (" + AutonomyCommandRu + " для переключения)"));
         }
 
         private void ShowBalance()
         {
             AddLine(ModLang.Pick(
                 "Peticiones de IA desde que abriste el juego: " + _client.RequestsThisRun,
-                "AI requests since game launch: " + _client.RequestsThisRun));
+                "AI requests since game launch: " + _client.RequestsThisRun,
+                "Запросов к ИИ с запуска игры: " + _client.RequestsThisRun));
             if (_settings.Provider.Value != AiProvider.Player2 && !_settings.VoiceEnabled.Value) return;
             StartCoroutine(_client.FetchJoules(joules =>
             {
                 AddLine(joules.HasValue
-                    ? ModLang.Pick("Saldo de Player2: " + joules.Value + " joules", "Player2 balance: " + joules.Value + " joules")
-                    : ModLang.Pick("No se pudo consultar el saldo de Player2.", "Could not check Player2 balance."));
+                    ? ModLang.Pick("Saldo de Player2: " + joules.Value + " joules", "Player2 balance: " + joules.Value + " joules", "Баланс Player2: " + joules.Value + " джоулей")
+                    : ModLang.Pick("No se pudo consultar el saldo de Player2.", "Could not check Player2 balance.", "Не удалось проверить баланс Player2."));
             }));
         }
 
@@ -660,7 +694,7 @@ namespace OfflineCompanionsAI
         {
             if (_waiting)
             {
-                Notify(ModLang.Pick("Tu compañero todavía está pensando...", "Your companion is still thinking..."));
+                Notify(ModLang.Pick("Tu compañero todavía está pensando...", "Your companion is still thinking...", "Твой спутник всё ещё думает..."));
                 return;
             }
             if (Time.time < _nextTalkAt || FindTargetOrNotify(player) == null) return;
@@ -676,7 +710,7 @@ namespace OfflineCompanionsAI
                 {
                     _voiceState = VoiceState.Listening;
                     _voiceStartedAt = Time.unscaledTime;
-                    if (!_voiceReleased) Notify(ModLang.Pick("Escuchando... suelta la tecla para enviar.", "Listening... release the key to send."));
+                    if (!_voiceReleased) Notify(ModLang.Pick("Escuchando... suelta la tecla para enviar.", "Listening... release the key to send.", "Слушаю... отпусти клавишу для отправки."));
                 },
                 error =>
                 {
@@ -699,7 +733,7 @@ namespace OfflineCompanionsAI
                     if (ignore) return;
                     if (text == null)
                     {
-                        Notify(ModLang.Pick("No he entendido lo que has dicho.", "I couldn't understand what you said."));
+                        Notify(ModLang.Pick("No he entendido lo que has dicho.", "I couldn't understand what you said.", "Я не понял, что ты сказал."));
                         return;
                     }
                     // Se busca ahora: el jugador puede haberse movido mientras se reconocía.
@@ -873,7 +907,8 @@ namespace OfflineCompanionsAI
                     Log.LogInfo("[Equipo] " + CompanionBridge.Name(companion) + ": sin munición, va a por " + text);
                     AddOrderLine(ModLang.Pick(
                         "Por iniciativa propia, " + CompanionBridge.Name(companion) + " va a sacar de un cofre: " + text,
-                        "On their own initiative, " + CompanionBridge.Name(companion) + " goes to take from a chest: " + text));
+                        "On their own initiative, " + CompanionBridge.Name(companion) + " goes to take from a chest: " + text,
+                        "По собственной инициативе " + CompanionBridge.Name(companion) + " идёт взять из сундука: " + text));
                 }
                 else if (CompanionBridge.HungryWithoutFood(companion) && StartTakingFood(companion, 0) == null)
                 {
@@ -881,7 +916,8 @@ namespace OfflineCompanionsAI
                     Log.LogInfo("[Equipo] " + CompanionBridge.Name(companion) + ": tiene hambre y no lleva comida, va a por ella");
                     AddOrderLine(ModLang.Pick(
                         "Por iniciativa propia, " + CompanionBridge.Name(companion) + " va a buscar comida a los cofres.",
-                        "On their own initiative, " + CompanionBridge.Name(companion) + " goes to look for food in the chests."));
+                        "On their own initiative, " + CompanionBridge.Name(companion) + " goes to look for food in the chests.",
+                        "По собственной инициативе " + CompanionBridge.Name(companion) + " идёт искать еду в сундуках."));
                 }
             }
         }
@@ -896,10 +932,12 @@ namespace OfflineCompanionsAI
             AddLine(enable
                 ? ModLang.Pick(
                     "Modo autónomo: tus compañeros hablarán y harán cosas útiles por su cuenta, hasta " + _settings.AutonomyPerHour.Value + " veces por hora. Cada vez gasta saldo. Vuelve a escribir " + AutonomyCommand + " para desactivarlo.",
-                    "Autonomous mode: your companions will talk and do useful tasks on their own, up to " + _settings.AutonomyPerHour.Value + " times per hour. Each time uses AI credits. Type " + AutonomyCommandEn + " again to disable it.")
+                    "Autonomous mode: your companions will talk and do useful tasks on their own, up to " + _settings.AutonomyPerHour.Value + " times per hour. Each time uses AI credits. Type " + AutonomyCommandEn + " again to disable it.",
+                    "Автономный режим: спутники будут общаться и делать полезные дела сами до " + _settings.AutonomyPerHour.Value + " раз в час. Каждый раз тратится баланс. Напиши " + AutonomyCommandRu + " ещё раз, чтобы отключить.")
                 : ModLang.Pick(
                     "Modo normal: tus compañeros solo harán lo que les pidas.",
-                    "Normal mode: your companions will only do what you ask."));
+                    "Normal mode: your companions will only do what you ask.",
+                    "Обычный режим: спутники делают только то, о чём ты просишь."));
         }
 
         private static bool CanOpenInput()
@@ -919,7 +957,7 @@ namespace OfflineCompanionsAI
         {
             if (_waiting)
             {
-                Notify(ModLang.Pick("Tu compañero todavía está pensando...", "Your companion is still thinking..."));
+                Notify(ModLang.Pick("Tu compañero todavía está pensando...", "Your companion is still thinking...", "Твой спутник всё ещё думает..."));
                 return;
             }
             if (Time.time < _nextTalkAt) return;
@@ -928,10 +966,11 @@ namespace OfflineCompanionsAI
             Component target = CompanionBridge.FindTarget(player, _settings.TalkRange.Value);
             _pendingTarget = target;
             string title = target != null
-                ? ModLang.Pick("Hablar con ", "Talk to ") + CompanionBridge.Name(target)
+                ? ModLang.Pick("Hablar con ", "Talk to ", "Поговорить с ") + CompanionBridge.Name(target)
                 : ModLang.Pick(
                     "Ningún compañero cerca. Comandos: " + StatusCommand + ", " + RecallCommand + ", " + HelpCommand,
-                    "No companion nearby. Commands: " + StatusCommandEn + ", " + RecallCommandEn + ", " + HelpCommandEn);
+                    "No companion nearby. Commands: " + StatusCommandEn + ", " + RecallCommandEn + ", " + HelpCommandEn,
+                    "Нет спутников поблизости. Команды: " + StatusCommandRu + ", " + RecallCommandRu + ", " + HelpCommandRu);
             TextInput.instance.RequestText(this, title, InputLimit);
         }
 
@@ -947,8 +986,8 @@ namespace OfflineCompanionsAI
             string id = CompanionBridge.PermanentId(target);
             CompanionMemory memory = MemoryOf(id);
             string emptyHint = PersonalityPresets.HasCommonPersonality(_settings.Personality.Value)
-                ? ModLang.Pick("Si lo dejas vacío, usa la personalidad común.", "If left empty, uses the shared personality.")
-                : ModLang.Pick("Si lo dejas vacío, usa su perfil: ", "If left empty, uses their preset: ") + PersonalityPresets.For(id).Name + ".";
+                ? ModLang.Pick("Si lo dejas vacío, usa la personalidad común.", "If left empty, uses the shared personality.", "Если оставить пустым, используется общая личность.")
+                : ModLang.Pick("Si lo dejas vacío, usa su perfil: ", "If left empty, uses their preset: ", "Если оставить пустым, используется шаблон: ") + PersonalityPresets.For(id).Name + ".";
             CharacterProfile before = LoadProfile(id);
             _editor.Open(target, name, before, memory.Texts(), emptyHint, (edited, profileChanged, memories, memoriesChanged, forgetAll) =>
             {
@@ -971,18 +1010,18 @@ namespace OfflineCompanionsAI
                 catch (System.Exception ex) when (ex is IOException || ex is System.UnauthorizedAccessException)
                 {
                     Log.LogError("[Personaje] No se pudo guardar: " + ex.Message);
-                    Notify(ModLang.Pick("No se pudo guardar. Revisa el registro.", "Could not save. Check the log."));
+                    Notify(ModLang.Pick("No se pudo guardar. Revisa el registro.", "Could not save. Check the log.", "Не удалось сохранить. Проверь журнал."));
                     return;
                 }
                 Log.LogInfo("[Personaje] Guardado " + name + ": ficha=" + profileChanged + ", recuerdos=" + memoriesChanged + ", olvidar=" + forgetAll);
-                Notify(ModLang.Pick("Personaje de " + name + " guardado.", name + "'s character saved."));
+                Notify(ModLang.Pick("Personaje de " + name + " guardado.", name + "'s character saved.", "Персонаж " + name + " сохранён."));
             });
         }
 
         private Component FindTargetOrNotify(Player player)
         {
             Component target = CompanionBridge.FindTarget(player, _settings.TalkRange.Value);
-            if (target == null) Notify(ModLang.Pick("No hay ningún compañero tuyo cerca.", "None of your companions are nearby."));
+            if (target == null) Notify(ModLang.Pick("No hay ningún compañero tuyo cerca.", "None of your companions are nearby.", "Поблизости нет твоих спутников."));
             return target;
         }
 
@@ -997,7 +1036,7 @@ namespace OfflineCompanionsAI
             if (problem != null)
             {
                 Log.LogWarning("[Personaje] " + problem);
-                Notify(ModLang.Pick("La ficha de este compañero estaba dañada. Revisa el registro.", "This companion's profile was corrupted. Check the log."));
+                Notify(ModLang.Pick("La ficha de este compañero estaba dañada. Revisa el registro.", "This companion's profile was corrupted. Check the log.", "Файл персонажа этого спутника был повреждён. Проверь журнал."));
             }
             return profile;
         }
@@ -1013,7 +1052,7 @@ namespace OfflineCompanionsAI
                 if (problem != null)
                 {
                     Log.LogWarning("[Memoria] " + problem);
-                    Notify(ModLang.Pick("La memoria de este compañero estaba dañada. Revisa el registro.", "This companion's memory was corrupted. Check the log."));
+                    Notify(ModLang.Pick("La memoria de este compañero estaba dañada. Revisa el registro.", "This companion's memory was corrupted. Check the log.", "Память этого спутника была повреждена. Проверь журнал."));
                 }
             }
             _memories[id] = memory;
@@ -1063,7 +1102,9 @@ namespace OfflineCompanionsAI
             text = text?.Trim();
             if (string.IsNullOrEmpty(text) || Player.m_localPlayer == null) return;
 
-            if (string.Equals(text, "/help", System.StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(text, "/help", System.StringComparison.OrdinalIgnoreCase)
+                || string.Equals(text, "/ayuda", System.StringComparison.OrdinalIgnoreCase)
+                || string.Equals(text, "/помощь", System.StringComparison.OrdinalIgnoreCase))
             {
                 ShowHelp();
                 return;
@@ -1079,7 +1120,7 @@ namespace OfflineCompanionsAI
             }
             if (target == null)
             {
-                Notify(OutOfEarshot(Player.m_localPlayer, shouted) ?? ModLang.Pick("No hay ningún compañero tuyo cerca.", "None of your companions are nearby."));
+                Notify(OutOfEarshot(Player.m_localPlayer, shouted) ?? ModLang.Pick("No hay ningún compañero tuyo cerca.", "None of your companions are nearby.", "Рядом нет ни одного твоего спутника."));
                 return;
             }
             Send(Player.m_localPlayer, target, text, hearing: hearing);
@@ -1103,6 +1144,13 @@ namespace OfflineCompanionsAI
                     ? name + " is " + dist + " m away and cannot hear you even shouting. To call them all, use " + RecallCommandEn + "."
                     : name + " is " + dist + " m away and cannot hear you. To reach farther, shout: /s message";
             }
+            if (ModLang.IsRussian)
+            {
+                string whereRu = name + " находится в " + dist + " м";
+                return shouted
+                    ? whereRu + " и не слышит тебя даже с криком. Чтобы позвать всех, используй " + RecallCommandRu + "."
+                    : whereRu + " и не слышит тебя. Чтобы крикнуть дальше: /s сообщение";
+            }
             string where = name + " está a " + dist + " m";
             return shouted
                 ? where + " y no te oye ni gritando. Para llamarlos a todos, usa " + RecallCommand + "."
@@ -1112,9 +1160,9 @@ namespace OfflineCompanionsAI
         private static bool IsCommand(string text)
         {
             return System.Array.Exists(Commands, command => string.Equals(text, command, System.StringComparison.OrdinalIgnoreCase))
-                || HasArgument(text, MarkCommand) || HasArgument(text, MarkCommandEn)
-                || HasArgument(text, ForgetCommand) || HasArgument(text, ForgetCommandEn)
-                || HasArgument(text, LanguageCommand) || HasArgument(text, LanguageCommandEn) || HasArgument(text, LangCommandEn);
+                || HasArgument(text, MarkCommand) || HasArgument(text, MarkCommandEn) || HasArgument(text, MarkCommandRu)
+                || HasArgument(text, ForgetCommand) || HasArgument(text, ForgetCommandEn) || HasArgument(text, ForgetCommandRu)
+                || HasArgument(text, LanguageCommand) || HasArgument(text, LanguageCommandEn) || HasArgument(text, LangCommandEn) || HasArgument(text, LanguageCommandRu);
         }
 
         private static bool HasArgument(string text, string command)
@@ -1124,28 +1172,27 @@ namespace OfflineCompanionsAI
 
         private void ChangeLanguageFromCommand(string arg)
         {
-            string a = (arg ?? "").Trim().ToLowerInvariant();
+            ModLanguage? parsed = ModLang.Parse(arg);
             ModLanguage next;
-            if (a == "en" || a == "eng" || a == "english" || a == "ingles" || a == "inglés")
+            if (parsed.HasValue)
             {
-                next = ModLanguage.English;
-            }
-            else if (a == "es" || a == "esp" || a == "spanish" || a == "espanol" || a == "español")
-            {
-                next = ModLanguage.Spanish;
-            }
-            else if (a == "auto" || a == "game" || a == "juego")
-            {
-                next = ModLanguage.Auto;
+                next = parsed.Value;
             }
             else
             {
-                next = _settings.Language.Value == ModLanguage.English ? ModLanguage.Spanish : ModLanguage.English;
+                ModLanguage eff = _settings.Language.Value == ModLanguage.Auto ? ModLang.Effective : _settings.Language.Value;
+                switch (eff)
+                {
+                    case ModLanguage.English: next = ModLanguage.Spanish; break;
+                    case ModLanguage.Spanish: next = ModLanguage.Russian; break;
+                    default: next = ModLanguage.English; break;
+                }
             }
             _settings.Language.Value = next;
             AddLine(ModLang.Pick(
-                "Idioma del mod cambiado a: Español (" + next + "). Usa /idioma [en|es|auto] para cambiarlo.",
-                "Mod language set to: English (" + next + "). Use /language [en|es|auto] to change it."));
+                "Idioma del mod cambiado a: " + ModLang.DisplayName(next) + " (" + next + "). Usa /idioma [en|es|ru|auto] para cambiarlo.",
+                "Mod language set to: " + ModLang.DisplayName(next) + " (" + next + "). Use /language [en|es|ru|auto] to change it.",
+                "Язык мода изменён на: " + ModLang.DisplayName(next) + " (" + next + "). Введи /язык [en|es|ru|auto] для смены."));
         }
 
         /// <summary>Estos comandos no pasan por la IA, así que no gastan saldo.</summary>
@@ -1155,21 +1202,24 @@ namespace OfflineCompanionsAI
             string command = text.ToLowerInvariant();
             if (command.StartsWith(MarkCommand + " ")) AddLine(MarkFromCommand(text.Substring(MarkCommand.Length).Trim()));
             else if (command.StartsWith(MarkCommandEn + " ")) AddLine(MarkFromCommand(text.Substring(MarkCommandEn.Length).Trim()));
-            else if (command == MarkCommand || command == MarkCommandEn) AddLine(MarkFromCommand(""));
+            else if (command.StartsWith(MarkCommandRu + " ")) AddLine(MarkFromCommand(text.Substring(MarkCommandRu.Length).Trim()));
+            else if (command == MarkCommand || command == MarkCommandEn || command == MarkCommandRu) AddLine(MarkFromCommand(""));
             else if (command.StartsWith(ForgetCommand + " ")) AddLine(ForgetFromCommand(text.Substring(ForgetCommand.Length).Trim()));
             else if (command.StartsWith(ForgetCommandEn + " ")) AddLine(ForgetFromCommand(text.Substring(ForgetCommandEn.Length).Trim()));
-            else if (command == ForgetCommand || command == ForgetCommandEn) AddLine(ForgetFromCommand(""));
-            else if (command == LanguageCommand || command == LanguageCommandEn || command == LangCommandEn) ChangeLanguageFromCommand("");
+            else if (command.StartsWith(ForgetCommandRu + " ")) AddLine(ForgetFromCommand(text.Substring(ForgetCommandRu.Length).Trim()));
+            else if (command == ForgetCommand || command == ForgetCommandEn || command == ForgetCommandRu) AddLine(ForgetFromCommand(""));
+            else if (command == LanguageCommand || command == LanguageCommandEn || command == LangCommandEn || command == LanguageCommandRu) ChangeLanguageFromCommand("");
             else if (command.StartsWith(LanguageCommand + " ")) ChangeLanguageFromCommand(text.Substring(LanguageCommand.Length).Trim());
             else if (command.StartsWith(LanguageCommandEn + " ")) ChangeLanguageFromCommand(text.Substring(LanguageCommandEn.Length).Trim());
             else if (command.StartsWith(LangCommandEn + " ")) ChangeLanguageFromCommand(text.Substring(LangCommandEn.Length).Trim());
-            else if (command == PlacesCommand || command == PlacesCommandEn) AddLine(ListPlaces(Player.m_localPlayer));
-            else if (command == RecallCommand || command == RecallCommandEn || command == CallCommandEn) AddLine(RecallEveryone());
-            else if (command == HelpCommand || command == HelpCommandEn) ShowHelp();
-            else if (command == StatusCommand || command == StatusCommandEn) ShowStatus();
-            else if (command == BalanceCommand || command == BalanceCommandEn) ShowBalance();
-            else if (command == AutonomyCommand || command == AutonomyCommandAccented || command == AutonomyCommandEn) ToggleAutonomy();
-            else if (target == null) Notify(ModLang.Pick("No hay ningún compañero tuyo cerca.", "None of your companions are nearby."));
+            else if (command.StartsWith(LanguageCommandRu + " ")) ChangeLanguageFromCommand(text.Substring(LanguageCommandRu.Length).Trim());
+            else if (command == PlacesCommand || command == PlacesCommandEn || command == PlacesCommandRu) AddLine(ListPlaces(Player.m_localPlayer));
+            else if (command == RecallCommand || command == RecallCommandEn || command == CallCommandEn || command == RecallCommandRu) AddLine(RecallEveryone());
+            else if (command == HelpCommand || command == HelpCommandEn || command == HelpCommandRu) ShowHelp();
+            else if (command == StatusCommand || command == StatusCommandEn || command == StatusCommandRu) ShowStatus();
+            else if (command == BalanceCommand || command == BalanceCommandEn || command == BalanceCommandRu) ShowBalance();
+            else if (command == AutonomyCommand || command == AutonomyCommandAccented || command == AutonomyCommandEn || command == AutonomyCommandRu) ToggleAutonomy();
+            else if (target == null) Notify(ModLang.Pick("No hay ningún compañero tuyo cerca.", "None of your companions are nearby.", "Рядом нет ни одного твоего спутника."));
             else OpenEditorFor(target);
             return true;
         }
@@ -1216,8 +1266,8 @@ namespace OfflineCompanionsAI
                 if (reason != null) Notify(reason);
                 return;
             }
-            if (_waiting) Notify(ModLang.Pick("Tu compañero todavía está pensando...", "Your companion is still thinking..."));
-            else if (Time.time < _nextTalkAt) Notify(ModLang.Pick("Espera un momento antes de volver a hablarle.", "Wait a moment before talking to them again."));
+            if (_waiting) Notify(ModLang.Pick("Tu compañero todavía está pensando...", "Your companion is still thinking...", "Твой спутник всё ещё думает..."));
+            else if (Time.time < _nextTalkAt) Notify(ModLang.Pick("Espera un momento antes de volver a hablarle.", "Wait a moment before talking to them again.", "Подожди немного, прежде чем снова заговорить."));
             else Send(player, target, text, echo: false, hearing: hearing);
         }
 
@@ -1241,7 +1291,8 @@ namespace OfflineCompanionsAI
             {
                 request.Add(new ChatMessage("system", ModLang.Pick(
                     "Recordatorio: las órdenes de mensajes anteriores ya se atendieron; no las repitas. Atiende solo el siguiente mensaje: si es una orden, usa la herramienta de esa orden, porque tus frases no hacen nada en el juego. Si no es una orden, responde sin herramientas.",
-                    "Reminder: orders from previous messages have already been handled; do not repeat them. Handle only the next message: if it is an order, call the tool for that order, because your words alone do nothing in the game. If it is not an order, reply without tools.")));
+                    "Reminder: orders from previous messages have already been handled; do not repeat them. Handle only the next message: if it is an order, call the tool for that order, because your words alone do nothing in the game. If it is not an order, reply without tools.",
+                    "Напоминание: приказы из предыдущих сообщений уже выполнены, не повторяй их. Реагируй только на следующее сообщение: если это приказ, вызови соответствующий инструмент, так как одни лишь слова не выполняют действий в игре. Если это не приказ, ответь без инструментов.")));
             }
             request.Add(new ChatMessage("user", message));
             return request;
@@ -1264,7 +1315,7 @@ namespace OfflineCompanionsAI
             _waiting = true;
             _nextTalkAt = Time.time + _settings.Cooldown.Value;
             if (echo) AddToChat(player.GetPlayerName(), text);
-            Notify(name + ModLang.Pick(" está pensando...", " is thinking..."));
+            Notify(name + ModLang.Pick(" está pensando...", " is thinking...", " думает..."));
 
             JArray tools = _settings.AllowActions.Value ? CompanionActions.ToolDefinitions() : null;
             StartCoroutine(_client.Complete(
@@ -1325,7 +1376,7 @@ namespace OfflineCompanionsAI
                 string result;
                 if (state.Executed >= MaxActionsPerMessage)
                 {
-                    result = ModLang.Pick("No aplicada: demasiadas órdenes a la vez.", "Not applied: too many orders at once.");
+                    result = ModLang.Pick("No aplicada: demasiadas órdenes a la vez.", "Not applied: too many orders at once.", "Не принято: слишком много приказов одновременно.");
                 }
                 else
                 {
@@ -1340,7 +1391,7 @@ namespace OfflineCompanionsAI
             JArray tools = state.Round >= MaxToolRounds ? null : state.Initiative ? state.OnOwnTools : CompanionActions.ToolDefinitions();
 
             // La orden ya se aplicó, así que un fallo de esta petición no debe parecer que no se hizo.
-            string fallback = response.Text ?? (state.Initiative ? "" : state.Done.Count > 0 ? ModLang.Pick("Entendido.", "Understood.") : ModLang.Pick("No he podido hacer eso.", "I couldn't do that."));
+            string fallback = response.Text ?? (state.Initiative ? "" : state.Done.Count > 0 ? ModLang.Pick("Entendido.", "Understood.", "Понятно.") : ModLang.Pick("No he podido hacer eso.", "I couldn't do that.", "Не удалось это сделать."));
             StartCoroutine(_client.Complete(
                 followUp,
                 tools,
@@ -1384,7 +1435,7 @@ namespace OfflineCompanionsAI
             }
 
             Player player = Player.m_localPlayer;
-            if (player == null || speaker == null) return ModLang.Pick("Error: El compañero ya no está disponible.", "Error: The companion is no longer available.");
+            if (player == null || speaker == null) return ModLang.Pick("Error: El compañero ya no está disponible.", "Error: The companion is no longer available.", "Ошибка: спутник больше недоступен.");
 
             if (state.Initiative)
             {
@@ -1405,8 +1456,8 @@ namespace OfflineCompanionsAI
             List<Component> nearby = CompanionBridge.Nearby(player, speaker, state.OrderRange);
             List<string> names = nearby.ConvertAll(c => CompanionBridge.Name(c));
             List<int> chosen = Recipients.Resolve(CompanionActions.IsWorldWide(action.Kind) ? null : action.Who, names, out string unknown);
-            if (unknown != null) return ModLang.Pick("Error: No hay ningún compañero llamado " + unknown + " cerca.", "Error: No companion named " + unknown + " is nearby.");
-            if (chosen.Count == 0) return ModLang.Pick("Error: No hay compañeros cerca.", "Error: No companions nearby.");
+            if (unknown != null) return ModLang.Pick("Error: No hay ningún compañero llamado " + unknown + " cerca.", "Error: No companion named " + unknown + " is nearby.", "Ошибка: поблизости нет спутника по имени " + unknown + ".");
+            if (chosen.Count == 0) return ModLang.Pick("Error: No hay compañeros cerca.", "Error: No companions nearby.", "Ошибка: поблизости нет спутников.");
 
             List<Component> group = chosen.ConvertAll(i => nearby[i]);
 
@@ -1415,7 +1466,7 @@ namespace OfflineCompanionsAI
             {
                 string shared = ApplyToCompanion(group[0], group, look, action, state);
                 if (!shared.StartsWith("Error:")) state.Done.Add(action.Description);
-                return ModLang.Pick("Para " + group.Count + " compañero(s): " + shared, "For " + group.Count + " companion(s): " + shared);
+                return ModLang.Pick("Para " + group.Count + " compañero(s): " + shared, "For " + group.Count + " companion(s): " + shared, "Для " + group.Count + " спутн.: " + shared);
             }
 
             var results = new List<string>();
@@ -1485,7 +1536,7 @@ namespace OfflineCompanionsAI
                 else if (action.Kind == ActionKind.CompanionsStatus)
                 {
                     List<string> roster = CompanionBridge.RosterLines(StayOf);
-                    note = roster.Count == 0 ? ModLang.Pick("No se pudo consultar la lista de compañeros.", "Could not check the companion roster.") : string.Join("; ", roster.ToArray()) + ".";
+                    note = roster.Count == 0 ? ModLang.Pick("No se pudo consultar la lista de compañeros.", "Could not check the companion roster.", "Не удалось проверить список спутников.") : string.Join("; ", roster.ToArray()) + ".";
                     failure = null;
                 }
                 else if (action.Kind == ActionKind.CheckSkills)
@@ -1502,7 +1553,7 @@ namespace OfflineCompanionsAI
                 {
                     string memoryId = CompanionBridge.PermanentId(companion);
                     CompanionMemory memory = MemoryOf(memoryId);
-                    failure = memory.RememberFact(action.Item) ? null : ModLang.Pick("No cabe más en sus recuerdos, o ya lo recordaba.", "No more room in their memory, or they already remembered that.");
+                    failure = memory.RememberFact(action.Item) ? null : ModLang.Pick("No cabe más en sus recuerdos, o ya lo recordaba.", "No more room in their memory, or they already remembered that.", "В памяти нет места или спутник уже помнит это.");
                     if (failure == null) SaveMemory(memoryId, memory);
                 }
                 else
@@ -1516,7 +1567,8 @@ namespace OfflineCompanionsAI
                 // Un trabajo sin cantidad nunca termina, así que la tarea se haría antes y no después.
                 return ModLang.Pick(
                     "Error: Esta tarea no se ha iniciado porque el trabajo pedido antes no termina nunca. Para hacerlas en ese orden, usa gather con una cantidad y después esta tarea.",
-                    "Error: This task was not started because the open-ended job requested earlier never finishes on its own. To run them in sequence, use gather with an amount first and then this task.");
+                    "Error: This task was not started because the open-ended job requested earlier never finishes on its own. To run them in sequence, use gather with an amount first and then this task.",
+                    "Ошибка: задача не начата, так как предыдущая бессрочная работа никогда не завершается сама. Чтобы выполнить их по очереди, сначала укажи количество для сбора, а затем эту задачу.");
             }
             else if (CompanionActions.ClearsQueue(action.Kind) || state.TaskStarted.Add(companion))
             {
@@ -1538,25 +1590,25 @@ namespace OfflineCompanionsAI
                 if (chain.Pending == 0) chain.StepStarted(Time.time);
                 bool queued = chain.Enqueue(new QueuedOrder { Action = action, Look = look, Group = group });
                 Log.LogInfo("[Cadena] " + name + ": " + action.Kind + (queued ? " en cola" : " rechazada: cola llena"));
-                if (queued) AddOrderLine(ModLang.Pick("En cola para " + name + ": " + action.Description, "Queued for " + name + ": " + action.Description));
+                if (queued) AddOrderLine(ModLang.Pick("En cola para " + name + ": " + action.Description, "Queued for " + name + ": " + action.Description, "В очереди для " + name + ": " + action.Description));
                 return queued
-                    ? ModLang.Pick("Orden en cola: " + action.Description + ".", "Order queued: " + action.Description + ".")
-                    : ModLang.Pick("Error: Tiene demasiadas tareas pendientes.", "Error: Has too many pending tasks.");
+                    ? ModLang.Pick("Orden en cola: " + action.Description + ".", "Order queued: " + action.Description + ".", "Приказ добавлен в очередь: " + action.Description + ".")
+                    : ModLang.Pick("Error: Tiene demasiadas tareas pendientes.", "Error: Has too many pending tasks.", "Ошибка: слишком много задач в очереди.");
             }
 
             if (failure != null)
             {
                 Log.LogWarning("[Acciones] " + name + ": " + action.Kind + " rechazada: " + failure);
-                AddOrderLine(ModLang.Pick("Orden rechazada para " + name + ": " + failure, "Order rejected for " + name + ": " + failure));
+                AddOrderLine(ModLang.Pick("Orden rechazada para " + name + ": " + failure, "Order rejected for " + name + ": " + failure, "Приказ отклонён для " + name + ": " + failure));
                 return "Error: " + failure;
             }
             Log.LogInfo("[Acciones] " + name + ": " + action.Kind + " = " + action.Value + (action.Amount > 0 ? ", cantidad " + action.Amount : "") + (note == null ? "" : " (" + note + ")"));
             bool forReply = CompanionActions.ReplyNeedsNote(action.Kind);
             AddOrderLine((state.Initiative
-                ? ModLang.Pick("Por iniciativa propia, " + name + " va a ", "On their own initiative, " + name + " goes to ")
-                : ModLang.Pick("Orden para " + name + ": ", "Order for " + name + ": "))
+                ? ModLang.Pick("Por iniciativa propia, " + name + " va a ", "On their own initiative, " + name + " goes to ", "По собственной инициативе " + name + " собирается ")
+                : ModLang.Pick("Orden para " + name + ": ", "Order for " + name + ": ", "Приказ для " + name + ": "))
                 + action.Description + (note == null || forReply ? "" : ". " + note));
-            return ModLang.Pick("Orden aceptada: ", "Order accepted: ") + action.Description + "." + (note == null || !forReply ? "" : " " + note);
+            return ModLang.Pick("Orden aceptada: ", "Order accepted: ", "Приказ принят: ") + action.Description + "." + (note == null || !forReply ? "" : " " + note);
         }
 
         private string StartTask(Component companion, IList<Component> group, LookTarget look, ActionRequest action, out string note)
@@ -1699,7 +1751,8 @@ namespace OfflineCompanionsAI
                     {
                         AddToChat(name, ModLang.Pick(
                             name + " no encuentra presas a su alcance. Si te mueves, seguirá buscando contigo cerca.",
-                            name + " cannot find any prey within reach. If you move, they will keep searching near you."));
+                            name + " cannot find any prey within reach. If you move, they will keep searching near you.",
+                            name + " не находит добычи поблизости. Если пойдёшь дальше, продолжит поиск рядом с тобой."));
                     }
                 }
             }
@@ -1734,7 +1787,8 @@ namespace OfflineCompanionsAI
             var task = new ExploreTask { Goal = new ExploreGoal(Time.time), MemoryId = CompanionBridge.PermanentId(companion) };
             note = ModLang.Pick(
                 "Explorará hasta unos " + Mathf.RoundToInt(reach * ExploreGoal.ReachShare) + " m de ti: más lejos el juego lo congelaría. Si caminas, va contigo.",
-                "Will explore up to about " + Mathf.RoundToInt(reach * ExploreGoal.ReachShare) + " m from you: farther away the game would freeze them. If you walk, they move with you.");
+                "Will explore up to about " + Mathf.RoundToInt(reach * ExploreGoal.ReachShare) + " m from you: farther away the game would freeze them. If you walk, they move with you.",
+                "Разведка в радиусе около " + Mathf.RoundToInt(reach * ExploreGoal.ReachShare) + " м от тебя: дальше игра его заморозит. Если пойдёшь, он последует за тобой.");
             task.LastSeenAt = companion.transform.position;
             task.Plan.MarkSeen(task.LastSeenAt.x, task.LastSeenAt.z);
             if (!PickExploreWaypoint(companion, player, task, reach))
@@ -1742,7 +1796,8 @@ namespace OfflineCompanionsAI
                 note = null;
                 return ModLang.Pick(
                     "No ve por dónde explorar desde aquí: hay agua, un barranco o ya se ha alejado todo lo que puede.",
-                    "Cannot see where to explore from here: blocked by water, a cliff, or already as far as they can go.");
+                    "Cannot see where to explore from here: blocked by water, a cliff, or already as far as they can go.",
+                    "Не видит пути для разведки отсюда: мешает вода, обрыв или достигнут предел расстояния.");
             }
 
             CompanionBridge.NextStep(companion, task.Waypoint, TravelGoal.StepDistance, ref task.Side, out Vector3 step, out bool _);
@@ -1796,12 +1851,12 @@ namespace OfflineCompanionsAI
                 task.LastSeenAt = here;
                 if (FlatDistance(here, player.transform.position) >= reach * ExploreGoal.LeaveShare)
                 {
-                    FinishExploring(companion, task, ModLang.Pick("te has alejado demasiado", "you moved too far away"));
+                    FinishExploring(companion, task, ModLang.Pick("te has alejado demasiado", "you moved too far away", "ты отошёл слишком далеко"));
                     continue;
                 }
                 if (self.GetHealthPercentage() < Initiative.BadlyHurtShare)
                 {
-                    FinishExploring(companion, task, ModLang.Pick("está malherido", "they are badly hurt"));
+                    FinishExploring(companion, task, ModLang.Pick("está malherido", "they are badly hurt", "тяжело ранен"));
                     continue;
                 }
                 if (CompanionBridge.InCombat(companion))
@@ -1821,7 +1876,7 @@ namespace OfflineCompanionsAI
                 ExploreStep step = task.Goal.Update(FlatDistance(here, task.Waypoint), Time.time);
                 if (step == ExploreStep.OutOfTime)
                 {
-                    FinishExploring(companion, task, ModLang.Pick("ya lleva un buen rato", "they have been out for a while"));
+                    FinishExploring(companion, task, ModLang.Pick("ya lleva un buen rato", "they have been out for a while", "разведка длится уже долго"));
                     continue;
                 }
                 if (step == ExploreStep.Blocked) task.Plan.MarkSeen(task.Waypoint.x, task.Waypoint.z);
@@ -1829,7 +1884,7 @@ namespace OfflineCompanionsAI
                 {
                     if (!PickExploreWaypoint(companion, player, task, reach))
                     {
-                        FinishExploring(companion, task, ModLang.Pick("no queda terreno nuevo a su alcance", "no new ground left within reach"));
+                        FinishExploring(companion, task, ModLang.Pick("no queda terreno nuevo a su alcance", "no new ground left within reach", "поблизости не осталось неизведанных мест"));
                         continue;
                     }
                     task.Goal.NewWaypoint(Time.time);
@@ -1856,7 +1911,8 @@ namespace OfflineCompanionsAI
                 Vector3 from = player.transform.position;
                 string message = ModLang.Pick(
                     name + " ha encontrado " + thing.Key + " al " + Compass.Direction(at.x - from.x, at.z - from.z) + " de ti, a " + Mathf.RoundToInt(FlatDistance(at, from)) + " m. Lo marca en el mapa.",
-                    name + " found " + thing.Key + " to the " + Compass.Direction(at.x - from.x, at.z - from.z) + " of you, " + Mathf.RoundToInt(FlatDistance(at, from)) + " m away. Marked on the map.");
+                    name + " found " + thing.Key + " to the " + Compass.Direction(at.x - from.x, at.z - from.z) + " of you, " + Mathf.RoundToInt(FlatDistance(at, from)) + " m away. Marked on the map.",
+                    name + " находит объект (" + thing.Key + ") в " + Mathf.RoundToInt(FlatDistance(at, from)) + " м от тебя, направление: " + Compass.Direction(at.x - from.x, at.z - from.z) + ". Отмечено на карте.");
                 Log.LogInfo("[Explorar] " + message);
                 Notify(message);
                 AddToChat(name, message);
@@ -1871,7 +1927,8 @@ namespace OfflineCompanionsAI
             string found = string.Join(", ", task.Found.ToArray());
             string message = ModLang.Pick(
                 name + " deja de explorar y vuelve contigo: " + why + "." + (task.Found.Count == 0 ? " No ha encontrado nada nuevo." : " Ha encontrado " + found + "."),
-                name + " stops exploring and returns to you: " + why + "." + (task.Found.Count == 0 ? " Found nothing new." : " Found " + found + "."));
+                name + " stops exploring and returns to you: " + why + "." + (task.Found.Count == 0 ? " Found nothing new." : " Found " + found + "."),
+                name + " прекращает разведку и возвращается к тебе: " + why + "." + (task.Found.Count == 0 ? " Ничего нового не найдено." : " Найдено: " + found + ".") );
             Log.LogInfo("[Explorar] " + message);
             AddToChat(name, message);
 
@@ -1882,13 +1939,15 @@ namespace OfflineCompanionsAI
                 {
                     Description = ModLang.Pick(
                         "explorar los alrededores" + (task.Found.Count == 0 ? ", sin encontrar nada nuevo" : ", donde encontraste " + found + " y lo marcaste en el mapa"),
-                        "exploring the surroundings" + (task.Found.Count == 0 ? ", without finding anything new" : ", where you found " + found + " and marked it on the map"))
+                        "exploring the surroundings" + (task.Found.Count == 0 ? ", without finding anything new" : ", where you found " + found + " and marked it on the map"),
+                        "разведка окрестностей" + (task.Found.Count == 0 ? ", без новых находок" : ", где удалось найти " + found + " и отметить на карте"))
                 };
             }
-            if (task.Found.Count > 0) RememberEvent(companion, MemoryWeight.Visit, ModLang.Pick("Explorando encontró ", "While exploring, found ") + found, false);
+            if (task.Found.Count > 0) RememberEvent(companion, MemoryWeight.Visit, ModLang.Pick("Explorando encontró ", "While exploring, found ", "На разведке найдено ") + found, false);
             FinishedCommentary(companion, ModLang.Pick(
                 "Has terminado de explorar y vuelves con el jugador" + (task.Found.Count == 0 ? ": no has encontrado nada nuevo." : ". Has encontrado " + found + ", y lo has marcado en su mapa."),
-                "You finished exploring and are returning to the player" + (task.Found.Count == 0 ? ": you found nothing new." : ". You found " + found + " and marked it on their map.")));
+                "You finished exploring and are returning to the player" + (task.Found.Count == 0 ? ": you found nothing new." : ". You found " + found + " and marked it on their map."),
+                "Ты завершаешь разведку и возвращаешься к игроку" + (task.Found.Count == 0 ? ": ничего нового не найдено." : ". Удалось найти " + found + " и отметить на его карте.")));
         }
 
         private sealed class HuntTask
@@ -1912,7 +1971,8 @@ namespace OfflineCompanionsAI
             return stamina < OutOfBreathShare
                 ? ModLang.Pick(
                     "Está sin aliento (" + Mathf.RoundToInt(stamina * 100f) + " % de aguante), así que puede tardar en atacar.",
-                    "Out of breath (" + Mathf.RoundToInt(stamina * 100f) + "% stamina), so they may take a moment to attack.")
+                    "Out of breath (" + Mathf.RoundToInt(stamina * 100f) + "% stamina), so they may take a moment to attack.",
+                    "Спутник выбился из сил (" + Mathf.RoundToInt(stamina * 100f) + " % выносливости), атака может занять время.")
                 : null;
         }
 
@@ -1938,29 +1998,29 @@ namespace OfflineCompanionsAI
                 string id = CompanionBridge.PermanentId(companion);
                 if (state == HuntState.Done)
                 {
-                    _lastTask[id] = new TaskRecord { Description = ModLang.Pick("cazar ", "hunting ") + task.Label };
+                    _lastTask[id] = new TaskRecord { Description = ModLang.Pick("cazar ", "hunting ", "охота: ") + task.Label };
                     Log.LogInfo("[Caza] " + name + ": ha acabado con " + task.Label);
-                    AddToChat(name, ModLang.Pick(name + " ha acabado con " + task.Label + ".", name + " took down " + task.Label + "."));
+                    AddToChat(name, ModLang.Pick(name + " ha acabado con " + task.Label + ".", name + " took down " + task.Label + ".", name + " одолевает цель: " + task.Label + "."));
                     continue;
                 }
 
                 float stamina = CompanionBridge.StaminaShare(companion);
                 float distance = alive ? Vector3.Distance(at, task.Prey.transform.position) : 0f;
                 Log.LogInfo("[Caza] " + name + ": " + state + " con " + task.Label + "; aguante " + Mathf.RoundToInt(stamina * 100f) + " %, a " + Mathf.RoundToInt(distance) + " m, arma " + CompanionBridge.WeaponInHand(companion) + ", estado: " + CompanionBridge.Status(companion));
-                _lastTask[id] = new TaskRecord { Description = ModLang.Pick("cazar " + task.Label + ", sin conseguirlo", "hunting " + task.Label + ", without success") };
+                _lastTask[id] = new TaskRecord { Description = ModLang.Pick("cazar " + task.Label + ", sin conseguirlo", "hunting " + task.Label + ", without success", "охота на " + task.Label + ", безуспешно") };
 
                 bool tired = stamina < OutOfBreathResume;
                 string reason = state == HuntState.Lost
-                    ? ModLang.Pick("ha dejado de perseguirlo: seguramente ha huido o está demasiado lejos.", "stopped chasing it: it probably fled or is too far away.")
+                    ? ModLang.Pick("ha dejado de perseguirlo: seguramente ha huido o está demasiado lejos.", "stopped chasing it: it probably fled or is too far away.", "преследование прекращено: добыча сбежала или слишком далеко.")
                     : tired
-                        ? ModLang.Pick("se ha quedado sin aliento (" + Mathf.RoundToInt(stamina * 100f) + " % de aguante) y lo deja por ahora.", "ran out of breath (" + Mathf.RoundToInt(stamina * 100f) + "% stamina) and gave up for now.")
-                        : ModLang.Pick("no consigue acercarse ni dispararle, así que lo deja.", "cannot get close or land a shot, so they gave up.");
-                string message = ModLang.Pick(name + " no ha podido con " + task.Label + ": " + reason, name + " could not hunt " + task.Label + ": " + reason);
+                        ? ModLang.Pick("se ha quedado sin aliento (" + Mathf.RoundToInt(stamina * 100f) + " % de aguante) y lo deja por ahora.", "ran out of breath (" + Mathf.RoundToInt(stamina * 100f) + "% stamina) and gave up for now.", "не хватает выносливости (" + Mathf.RoundToInt(stamina * 100f) + " %) — охота пока прекращена.")
+                        : ModLang.Pick("no consigue acercarse ni dispararle, así que lo deja.", "cannot get close or land a shot, so they gave up.", "не удаётся подойти или выстрелить — преследование прекращено.");
+                string message = ModLang.Pick(name + " no ha podido con " + task.Label + ": " + reason, name + " could not hunt " + task.Label + ": " + reason, name + " не может одолеть " + task.Label + ": " + reason);
                 if (state == HuntState.Stalled) CompanionBridge.StopFighting(companion, player);
                 Notify(message);
                 AddToChat(name, message);
                 _chains.Remove(companion);
-                FinishedCommentary(companion, ModLang.Pick("No has podido cazar a " + task.Label + ": " + reason, "You could not hunt " + task.Label + ": " + reason));
+                FinishedCommentary(companion, ModLang.Pick("No has podido cazar a " + task.Label + ": " + reason, "You could not hunt " + task.Label + ": " + reason, "Не удалось поймать " + task.Label + ": " + reason));
             }
         }
 
@@ -1986,11 +2046,12 @@ namespace OfflineCompanionsAI
             if (!_workers.TryGetValue(companion, out Worker worker)) return;
             _workers.Remove(companion);
             _diedAtWork.Add(worker.Id);
-            _lastTask[worker.Id] = new TaskRecord { Description = task + ModLang.Pick(", sin terminar porque moriste", ", unfinished because you died") };
+            _lastTask[worker.Id] = new TaskRecord { Description = task + ModLang.Pick(", sin terminar porque moriste", ", unfinished because you died", ", не завершено из-за твоей гибели") };
 
             string message = ModLang.Pick(
                 worker.Name + " ha muerto y no seguirá con su encargo: " + task + ".",
-                worker.Name + " died and will not continue their task: " + task + ".");
+                worker.Name + " died and will not continue their task: " + task + ".",
+                worker.Name + " погибает и не может продолжить поручение: " + task + ".");
             Log.LogInfo("[Meta] " + message);
             Notify(message);
             AddToChat(worker.Name, message);
@@ -2028,7 +2089,7 @@ namespace OfflineCompanionsAI
         private string StartCooking(Component companion, ActionRequest action, out string note)
         {
             note = null;
-            if (!BehaviorOverrides.CookAvailable) return ModLang.Pick("Cocinar una comida concreta no está disponible.", "Cooking a specific food is not available.");
+            if (!BehaviorOverrides.CookAvailable) return ModLang.Pick("Cocinar una comida concreta no está disponible.", "Cooking a specific food is not available.", "Приготовление конкретного блюда недоступно.");
 
             Dictionary<string, string> foods = CompanionBridge.CookableFoods();
             string food = CompanionBridge.FindFood(action.Item, foods);
@@ -2036,13 +2097,15 @@ namespace OfflineCompanionsAI
             {
                 return ModLang.Pick(
                     "No sabe cocinar " + action.Item + ". Comidas posibles: " + string.Join(", ", new List<string>(foods.Values).ToArray()) + ".",
-                    "Does not know how to cook " + action.Item + ". Possible foods: " + string.Join(", ", new List<string>(foods.Values).ToArray()) + ".");
+                    "Does not know how to cook " + action.Item + ". Possible foods: " + string.Join(", ", new List<string>(foods.Values).ToArray()) + ".",
+                    "Не умеет готовить " + action.Item + ". Возможные блюда: " + string.Join(", ", new List<string>(foods.Values).ToArray()) + ".");
             }
             if (BehaviorOverrides.CookFood != null && BehaviorOverrides.CookFood != food)
             {
                 return ModLang.Pick(
                     "Otro compañero está con un encargo de cocina distinto. Debe esperar a que termine.",
-                    "Another companion is working on a different cooking task. Must wait until they finish.");
+                    "Another companion is working on a different cooking task. Must wait until they finish.",
+                    "Другой спутник уже готовит другое блюдо. Нужно дождаться окончания.");
             }
 
             int stock = CompanionBridge.CookStock(companion, food);
@@ -2060,7 +2123,8 @@ namespace OfflineCompanionsAI
             _cooks[companion] = new GatherGoal(food, label, action.Amount, stock, Time.time, CookStuckSeconds, CookStuckSeconds);
             note = ModLang.Pick(
                 "Necesita conocer la receta y tener cerca la estación y los ingredientes.",
-                "Needs to know the recipe and have the station and ingredients nearby.");
+                "Needs to know the recipe and have the station and ingredients nearby.",
+                "Нужно знать рецепт, а также иметь рядом кулинарную стойку и ингредиенты.");
             return null;
         }
 
@@ -2071,7 +2135,7 @@ namespace OfflineCompanionsAI
             {
                 if (companion == null || companion.GetComponent<Character>().GetHealth() <= 0f)
                 {
-                    AbandonOnDeath(companion, ModLang.Pick("cocinar " + _cooks[companion].Amount + " de " + _cooks[companion].Label, "cooking " + _cooks[companion].Amount + " " + _cooks[companion].Label));
+                    AbandonOnDeath(companion, ModLang.Pick("cocinar " + _cooks[companion].Amount + " de " + _cooks[companion].Label, "cooking " + _cooks[companion].Amount + " " + _cooks[companion].Label, "готовка: " + _cooks[companion].Amount + " шт. " + _cooks[companion].Label));
                     EndCook(companion);
                     continue;
                 }
@@ -2085,20 +2149,21 @@ namespace OfflineCompanionsAI
                 EndCook(companion);
                 CompanionBridge.StopGathering(companion);
                 string name = CompanionBridge.Name(companion);
-                string progress = ModLang.Pick(goal.Gained + " de " + goal.Amount + " de " + goal.Label, goal.Gained + " of " + goal.Amount + " " + goal.Label);
-                _lastTask[CompanionBridge.PermanentId(companion)] = new TaskRecord { Description = ModLang.Pick("cocinar ", "cooking ") + progress };
+                string progress = ModLang.Pick(goal.Gained + " de " + goal.Amount + " de " + goal.Label, goal.Gained + " of " + goal.Amount + " " + goal.Label, goal.Gained + " из " + goal.Amount + " " + goal.Label);
+                _lastTask[CompanionBridge.PermanentId(companion)] = new TaskRecord { Description = ModLang.Pick("cocinar ", "cooking ", "готовка: ") + progress };
                 Log.LogInfo("[Meta] " + name + ": cocina " + state + " con " + progress + (reason == null ? "" : " (" + reason + ")"));
 
                 string message = state == GoalState.Reached
-                    ? ModLang.Pick(name + " ha cocinado " + progress + ".", name + " cooked " + progress + ".")
+                    ? ModLang.Pick(name + " ha cocinado " + progress + ".", name + " cooked " + progress + ".", name + " готовит " + progress + ".")
                     : ModLang.Pick(
                         name + " no ha podido terminar de cocinar: lleva " + progress + (string.IsNullOrEmpty(reason) ? "." : ". " + reason),
-                        name + " could not finish cooking: has " + progress + (string.IsNullOrEmpty(reason) ? "." : ". " + reason));
+                        name + " could not finish cooking: has " + progress + (string.IsNullOrEmpty(reason) ? "." : ". " + reason),
+                        name + " не удаётся закончить готовку: готово " + progress + (string.IsNullOrEmpty(reason) ? "." : ". " + reason));
                 Notify(message);
                 AddToChat(name, message);
                 FinishedCommentary(companion, state == GoalState.Reached
-                    ? ModLang.Pick("Has terminado de cocinar " + progress + ".", "You finished cooking " + progress + ".")
-                    : ModLang.Pick("No has podido terminar de cocinar: llevas " + progress + ".", "You could not finish cooking: you have " + progress + "."));
+                    ? ModLang.Pick("Has terminado de cocinar " + progress + ".", "You finished cooking " + progress + ".", "Ты завершаешь готовку: готово " + progress + ".")
+                    : ModLang.Pick("No has podido terminar de cocinar: llevas " + progress + ".", "You could not finish cooking: you have " + progress + ".", "Не удалось завершить готовку: готово " + progress + "."));
                 if (state != GoalState.Reached && goal.Gained == 0) _chains.Remove(companion);
             }
         }
@@ -2136,10 +2201,11 @@ namespace OfflineCompanionsAI
             }
             List<string> outOfReach = CompanionBridge.RecallEveryone(Player.m_localPlayer);
             return outOfReach.Count == 0
-                ? ModLang.Pick("Vienen todos los que están con vida.", "All living companions are on their way.")
+                ? ModLang.Pick("Vienen todos los que están con vida.", "All living companions are on their way.", "Идут все живые спутники.")
                 : ModLang.Pick(
                     "No pueden oír la llamada porque el juego tiene su zona sin cargar: " + string.Join("; ", outOfReach.ToArray()) + ". Hay que acercarse a ellos.",
-                    "Cannot hear the call because the game has their zone unloaded: " + string.Join("; ", outOfReach.ToArray()) + ". You need to get closer to them.");
+                    "Cannot hear the call because the game has their zone unloaded: " + string.Join("; ", outOfReach.ToArray()) + ". You need to get closer to them.",
+                    "Не слышат зов, так как их зона выгружена из памяти игры: " + string.Join("; ", outOfReach.ToArray()) + ". Нужно подойти ближе к ним.");
         }
 
         private sealed class SmeltTask
@@ -2154,22 +2220,24 @@ namespace OfflineCompanionsAI
         private string StartSmelting(Component companion, ActionRequest action, out string note)
         {
             note = null;
-            if (!BehaviorOverrides.SmeltAvailable) return ModLang.Pick("Fundir un material concreto no está disponible.", "Smelting a specific material is not available.");
+            if (!BehaviorOverrides.SmeltAvailable) return ModLang.Pick("Fundir un material concreto no está disponible.", "Smelting a specific material is not available.", "Плавка конкретного материала недоступна.");
 
             Dictionary<string, string> items = CompanionBridge.SmeltableNearby(companion);
-            if (items.Count == 0) return ModLang.Pick("No hay ningún horno a menos de 25 m.", "No smelter or kiln within 25 m.");
+            if (items.Count == 0) return ModLang.Pick("No hay ningún horno a menos de 25 m.", "No smelter or kiln within 25 m.", "Поблизости нет плавильни или печи в радиусе 25 м.");
             string item = CompanionBridge.FindFood(action.Item, items);
             if (item == null)
             {
                 return ModLang.Pick(
                     "Los hornos cercanos no aceptan " + action.Item + ". Aceptan: " + string.Join(", ", new List<string>(items.Values).ToArray()) + ". Para que los rellene con lo que haya, también de combustible, usa set_job con smelt.",
-                    "Nearby smelters do not accept " + action.Item + ". They accept: " + string.Join(", ", new List<string>(items.Values).ToArray()) + ". To have them filled with whatever is available, fuel included, use set_job with smelt.");
+                    "Nearby smelters do not accept " + action.Item + ". They accept: " + string.Join(", ", new List<string>(items.Values).ToArray()) + ". To have them filled with whatever is available, fuel included, use set_job with smelt.",
+                    "Печи поблизости не принимают " + action.Item + ". Доступно: " + string.Join(", ", new List<string>(items.Values).ToArray()) + ". Чтобы заполнить всем подходящим сырьём и топливом, используй set_job со smelt.");
             }
             if (BehaviorOverrides.SmeltItem != null && BehaviorOverrides.SmeltItem != item)
             {
                 return ModLang.Pick(
                     "Otro compañero está fundiendo un material distinto. Debe esperar a que termine.",
-                    "Another companion is smelting a different material. Must wait until they finish.");
+                    "Another companion is smelting a different material. Must wait until they finish.",
+                    "Другой спутник уже плавит другой материал. Нужно дождаться окончания.");
             }
 
             string label = items[item];
@@ -2192,7 +2260,8 @@ namespace OfflineCompanionsAI
             };
             note = ModLang.Pick(
                 "Usa lo que haya en su mochila, los cofres y las pilas cercanas, también el combustible. Puede tardar varios minutos.",
-                "Uses what is in their pack, nearby chests, and stacks, including fuel. May take several minutes.");
+                "Uses what is in their pack, nearby chests, and stacks, including fuel. May take several minutes.",
+                "Использует ресурсы из инвентаря, сундуков и ближайших куч, включая топливо. Может занять несколько минут.");
             return null;
         }
 
@@ -2205,7 +2274,7 @@ namespace OfflineCompanionsAI
             {
                 if (companion == null || companion.GetComponent<Character>().GetHealth() <= 0f)
                 {
-                    AbandonOnDeath(companion, ModLang.Pick("fundir ", "smelting ") + _smelts[companion].Label);
+                    AbandonOnDeath(companion, ModLang.Pick("fundir ", "smelting ", "плавка: ") + _smelts[companion].Label);
                     EndSmelt(companion);
                     continue;
                 }
@@ -2232,25 +2301,27 @@ namespace OfflineCompanionsAI
                 EndSmelt(companion);
                 CompanionBridge.StopGathering(companion);
                 string name = CompanionBridge.Name(companion);
-                _lastTask[CompanionBridge.PermanentId(companion)] = new TaskRecord { Description = ModLang.Pick("fundir ", "smelting ") + task.Label };
+                _lastTask[CompanionBridge.PermanentId(companion)] = new TaskRecord { Description = ModLang.Pick("fundir ", "smelting ", "плавка: ") + task.Label };
                 Log.LogInfo("[Meta] " + name + ": fundir " + task.Label + " " + state + ", había material: " + task.FoundWork + (reason == null ? "" : " (" + reason + ")"));
 
                 string message = finished
-                    ? ModLang.Pick(name + " ha terminado de fundir " + task.Label + ".", name + " finished smelting " + task.Label + ".")
+                    ? ModLang.Pick(name + " ha terminado de fundir " + task.Label + ".", name + " finished smelting " + task.Label + ".", name + " завершает плавку (" + task.Label + ").")
                     : !task.FoundWork
                         ? ModLang.Pick(
                             name + " no ha encontrado " + task.Label + " en su mochila, en los cofres ni en las pilas cercanas.",
-                            name + " did not find any " + task.Label + " in their pack, chests, or nearby stacks.")
+                            name + " did not find any " + task.Label + " in their pack, chests, or nearby stacks.",
+                            name + " не находит " + task.Label + " ни в инвентаре, ни в сундуках, ни в ближайших кучах.")
                         : ModLang.Pick(
                             name + " ha dejado de fundir " + task.Label + (string.IsNullOrEmpty(reason) ? "." : ". " + reason),
-                            name + " stopped smelting " + task.Label + (string.IsNullOrEmpty(reason) ? "." : ". " + reason));
+                            name + " stopped smelting " + task.Label + (string.IsNullOrEmpty(reason) ? "." : ". " + reason),
+                            name + " прекращает плавку (" + task.Label + ")" + (string.IsNullOrEmpty(reason) ? "." : ". " + reason));
                 Notify(message);
                 AddToChat(name, message);
                 FinishedCommentary(companion, finished
-                    ? ModLang.Pick("Has terminado de fundir " + task.Label + ".", "You finished smelting " + task.Label + ".")
+                    ? ModLang.Pick("Has terminado de fundir " + task.Label + ".", "You finished smelting " + task.Label + ".", "Ты завершаешь плавку (" + task.Label + ").")
                     : !task.FoundWork
-                        ? ModLang.Pick("No has encontrado " + task.Label + " que fundir.", "You found no " + task.Label + " to smelt.")
-                        : ModLang.Pick("Has dejado de fundir " + task.Label + " sin acabar.", "You stopped smelting " + task.Label + " before finishing."));
+                        ? ModLang.Pick("No has encontrado " + task.Label + " que fundir.", "You found no " + task.Label + " to smelt.", "Не найдено сырья для плавки: " + task.Label + ".")
+                        : ModLang.Pick("Has dejado de fundir " + task.Label + " sin acabar.", "You stopped smelting " + task.Label + " before finishing.", "Ты прекращаешь плавку (" + task.Label + "), не закончив."));
                 if (!finished) _chains.Remove(companion);
             }
         }
@@ -2271,7 +2342,7 @@ namespace OfflineCompanionsAI
         private string StartUpkeepTask(Component companion, string plan, string label, out string note)
         {
             note = null;
-            if (!BehaviorOverrides.UpkeepAvailable) return ModLang.Pick("Las tareas de mantenimiento sueltas no están disponibles.", "Standalone upkeep tasks are not available.");
+            if (!BehaviorOverrides.UpkeepAvailable) return ModLang.Pick("Las tareas de mantenimiento sueltas no están disponibles.", "Standalone upkeep tasks are not available.", "Отдельные задачи обслуживания недоступны.");
             // Offline Companions va solo por el martillo a un cofre con este trabajo. Si no puede, no encontraría nada que hacer y parecería que ya estaba todo hecho.
             bool needsHammer = CompanionActions.NeedsHammer(plan);
             if (needsHammer)
@@ -2293,10 +2364,12 @@ namespace OfflineCompanionsAI
             note = plan == CompanionActions.SortPlan
                 ? ModLang.Pick(
                     "No mueve armas, armaduras ni herramientas, y solo usa los cofres que puede abrir.",
-                    "Does not move weapons, armor, or tools, and only uses chests they can open.")
-                : (fetchesHammer ? ModLang.Pick("Primero irá por un martillo a un cofre y al acabar lo devolverá. ", "They will first fetch a hammer from a chest and put it back when done. ") : "") + ModLang.Pick(
+                    "Does not move weapons, armor, or tools, and only uses chests they can open.",
+                    "Не трогает оружие, броню и инструменты, и использует только открываемые сундуки.")
+                : (fetchesHammer ? ModLang.Pick("Primero irá por un martillo a un cofre y al acabar lo devolverá. ", "They will first fetch a hammer from a chest and put it back when done. ", "Сначала возьмёт молот из сундука, а закончив — вернёт его на место. ") : "") + ModLang.Pick(
                     "Trabaja alrededor de su hogar si está cerca o, si no, a unos 30 m. Si no hay nada que hacer, terminará enseguida.",
-                    "Works around their home point if nearby, or within 30 m otherwise. If there is nothing to do, they will finish right away.");
+                    "Works around their home point if nearby, or within 30 m otherwise. If there is nothing to do, they will finish right away.",
+                    "Работает около базы, если она рядом, или в радиусе 30 м. Если дел нет, быстро завершит работу.");
             return null;
         }
 
@@ -2325,17 +2398,17 @@ namespace OfflineCompanionsAI
                 _lastTask[id] = new TaskRecord { Description = task.Label };
                 Log.LogInfo("[Meta] " + name + ": " + task.Label + " " + state + (noHammer ? ", sin martillo" : ""));
                 string message = noHammer
-                    ? ModLang.Pick(name + " no ha podido " + task.Label + ": no consiguió un martillo.", name + " could not complete task (" + task.Label + "): could not get a hammer.")
+                    ? ModLang.Pick(name + " no ha podido " + task.Label + ": no consiguió un martillo.", name + " could not complete task (" + task.Label + "): could not get a hammer.", name + " не может выполнить задачу (" + task.Label + "): не удалось достать молот.")
                     : state == GoalState.Reached
-                    ? ModLang.Pick(name + " ha terminado de " + task.Label + ".", name + " finished task: " + task.Label + ".")
-                    : ModLang.Pick(name + " ha dejado de " + task.Label + ": se agotó el tiempo.", name + " stopped task (" + task.Label + "): timed out.");
+                    ? ModLang.Pick(name + " ha terminado de " + task.Label + ".", name + " finished task: " + task.Label + ".", name + " завершает: " + task.Label + ".")
+                    : ModLang.Pick(name + " ha dejado de " + task.Label + ": se agotó el tiempo.", name + " stopped task (" + task.Label + "): timed out.", name + " прекращает (" + task.Label + "): время вышло.");
                 Notify(message);
                 AddToChat(name, message);
                 FinishedCommentary(companion, noHammer
-                    ? ModLang.Pick("No has podido " + task.Label + " porque no conseguiste un martillo.", "You could not complete (" + task.Label + ") because you could not get a hammer.")
+                    ? ModLang.Pick("No has podido " + task.Label + " porque no conseguiste un martillo.", "You could not complete (" + task.Label + ") because you could not get a hammer.", "Не удалось выполнить (" + task.Label + "): не удалось достать молот.")
                     : state == GoalState.Reached
-                    ? ModLang.Pick("Has terminado de " + task.Label + ".", "You finished: " + task.Label + ".")
-                    : ModLang.Pick("Has dejado de " + task.Label + " porque se agotó el tiempo.", "You stopped (" + task.Label + ") because it timed out."));
+                    ? ModLang.Pick("Has terminado de " + task.Label + ".", "You finished: " + task.Label + ".", "Ты завершаешь: " + task.Label + ".")
+                    : ModLang.Pick("Has dejado de " + task.Label + " porque se agotó el tiempo.", "You stopped (" + task.Label + ") because it timed out.", "Ты прекращаешь (" + task.Label + "): время вышло."));
                 if (noHammer) _chains.Remove(companion);
             }
         }
@@ -2405,7 +2478,7 @@ namespace OfflineCompanionsAI
                 return;
             }
             int stored = goal.StartUnits - StorePlanner.Units(left);
-            string chests = goal.ChestsUsed == 1 ? ModLang.Pick("1 cofre", "1 chest") : goal.ChestsUsed + ModLang.Pick(" cofres", " chests");
+            string chests = goal.ChestsUsed == 1 ? ModLang.Pick("1 cofre", "1 chest", "1 сундук") : goal.ChestsUsed + ModLang.Pick(" cofres", " chests", " сундуков");
             string remaining = left.Count == 0 ? "" : CompanionBridge.DescribeStacks(left);
 
             string message;
@@ -2414,32 +2487,38 @@ namespace OfflineCompanionsAI
             {
                 message = ModLang.Pick(
                     name + " no ha podido guardar nada: " + remaining + " no cabe en los cofres cercanos o no puede abrirlos.",
-                    name + " could not store anything: " + remaining + " does not fit in nearby chests or they cannot open them.");
+                    name + " could not store anything: " + remaining + " does not fit in nearby chests or they cannot open them.",
+                    name + " не может сложить вещи: " + remaining + " не помещается в сундуки рядом или их нельзя открыть.");
                 commentary = ModLang.Pick(
                     "No has podido guardar nada: no cabe en los cofres cercanos o no puedes abrirlos. Sigues llevando " + remaining + ".",
-                    "You could not store anything: it does not fit in nearby chests or you cannot open them. You are still carrying " + remaining + ".");
+                    "You could not store anything: it does not fit in nearby chests or you cannot open them. You are still carrying " + remaining + ".",
+                    "Не удалось сложить вещи: они не помещаются в сундуки рядом или их нельзя открыть. У тебя остаётся " + remaining + ".");
                 _chains.Remove(companion);
             }
             else if (left.Count > 0)
             {
                 message = ModLang.Pick(
                     name + " ha guardado parte de sus cosas en " + chests + ", pero no hay sitio para el resto: " + remaining + ".",
-                    name + " stored some of their items in " + chests + ", but there is no room for the rest: " + remaining + ".");
+                    name + " stored some of their items in " + chests + ", but there is no room for the rest: " + remaining + ".",
+                    name + " складывает часть вещей в " + chests + ", но для остального нет места: " + remaining + ".");
                 commentary = ModLang.Pick(
                     "Has guardado parte de tus cosas en " + chests + ", pero no hay sitio para el resto. Sigues llevando " + remaining + ".",
-                    "You stored some of your items in " + chests + ", but there is no room for the rest. You are still carrying " + remaining + ".");
+                    "You stored some of your items in " + chests + ", but there is no room for the rest. You are still carrying " + remaining + ".",
+                    "Ты складываешь часть вещей в " + chests + ", но для остального нет места. У тебя остаётся " + remaining + ".");
             }
             else
             {
                 message = ModLang.Pick(
                     name + " ha guardado sus cosas en " + chests + ".",
-                    name + " stored their items in " + chests + ".");
+                    name + " stored their items in " + chests + ".",
+                    name + " складывает вещи в " + chests + ".");
                 commentary = ModLang.Pick(
                     "Has guardado tus cosas en " + chests + ".",
-                    "You stored your items in " + chests + ".");
+                    "You stored your items in " + chests + ".",
+                    "Ты складываешь вещи в " + chests + ".");
             }
 
-            _lastTask[CompanionBridge.PermanentId(companion)] = new TaskRecord { Description = ModLang.Pick("guardar sus cosas en los cofres", "storing their items in the chests") };
+            _lastTask[CompanionBridge.PermanentId(companion)] = new TaskRecord { Description = ModLang.Pick("guardar sus cosas en los cofres", "storing their items in the chests", "складывание вещей в сундуки") };
             Log.LogInfo("[Meta] " + message);
             Notify(message);
             AddToChat(name, message);
@@ -2501,10 +2580,11 @@ namespace OfflineCompanionsAI
             if (drop == null)
             {
                 return string.IsNullOrEmpty(action.Item)
-                    ? ModLang.Pick("El jugador no está mirando ningún objeto suelto.", "The player is not looking at any loose item.")
+                    ? ModLang.Pick("El jugador no está mirando ningún objeto suelto.", "The player is not looking at any loose item.", "Игрок не смотрит на лежащий предмет.")
                     : ModLang.Pick(
                         "No hay ningún objeto suelto llamado " + action.Item + " a menos de " + Mathf.RoundToInt(GatherSearchRange) + " m.",
-                        "No loose item named " + action.Item + " within " + Mathf.RoundToInt(GatherSearchRange) + " m.");
+                        "No loose item named " + action.Item + " within " + Mathf.RoundToInt(GatherSearchRange) + " m.",
+                        "На земле нет предмета '" + action.Item + "' в радиусе " + Mathf.RoundToInt(GatherSearchRange) + " м.");
             }
             _pickups[companion] = new PickupTask { Goal = new GiveGoal(Time.time), Drop = drop, Prefab = Utils.GetPrefabName(drop.gameObject), Label = CompanionBridge.DroppedLabel(drop), Broken = CompanionBridge.IsBroken(drop) };
             return null;
@@ -2536,22 +2616,25 @@ namespace OfflineCompanionsAI
                     _chains.Remove(companion);
                     AddToChat(name, ModLang.Pick(
                         name + " ya no encuentra " + task.Label + ": alguien lo tomó o desapareció.",
-                        name + " can no longer find " + task.Label + ": someone picked it up or it disappeared."));
+                        name + " can no longer find " + task.Label + ": someone picked it up or it disappeared.",
+                        name + " больше не видит " + task.Label + ": предмет подобрали или он исчез."));
                 }
                 else if (task.Goal.InReach(Vector3.Distance(companion.transform.position, task.Drop.transform.position)) && CompanionBridge.PickUp(companion, task.Drop))
                 {
                     _pickups.Remove(companion);
                     CompanionBridge.KeepGear(companion, new[] { task.Prefab });
-                    _lastTask[CompanionBridge.PermanentId(companion)] = new TaskRecord { Description = ModLang.Pick("recoger del suelo ", "picking up ") + task.Label };
+                    _lastTask[CompanionBridge.PermanentId(companion)] = new TaskRecord { Description = ModLang.Pick("recoger del suelo ", "picking up ", "подбор с земли: ") + task.Label };
                     Log.LogInfo("[Meta] " + name + ": recoge del suelo " + task.Label + (task.Broken ? " (rota)" : ""));
                     string done = ModLang.Pick(
                         name + " ha recogido " + task.Label + "." + (task.Broken ? " Está rota: hay que repararla para poder usarla." : ""),
-                        name + " picked up " + task.Label + "." + (task.Broken ? " It is broken: it must be repaired before use." : ""));
+                        name + " picked up " + task.Label + "." + (task.Broken ? " It is broken: it must be repaired before use." : ""),
+                        name + " подбирает " + task.Label + "." + (task.Broken ? " Предмет сломан: его нужно починить перед использованием." : ""));
                     Notify(done);
                     AddToChat(name, done);
                     FinishedCommentary(companion, ModLang.Pick(
                         "Has recogido del suelo " + task.Label + "." + (task.Broken ? " Está rota y no podrás usarla hasta repararla." : ""),
-                        "You picked up " + task.Label + " from the ground." + (task.Broken ? " It is broken and cannot be used until repaired." : "")));
+                        "You picked up " + task.Label + " from the ground." + (task.Broken ? " It is broken and cannot be used until repaired." : ""),
+                        "Ты подбираешь с земли " + task.Label + "." + (task.Broken ? " Предмет сломан и не может использоваться до починки." : "")));
                 }
                 else if (task.Goal.TimedOut(Time.time))
                 {
@@ -2559,7 +2642,8 @@ namespace OfflineCompanionsAI
                     _chains.Remove(companion);
                     string problem = ModLang.Pick(
                         name + " no ha podido recoger " + task.Label + ": no llega hasta allí o no le cabe.",
-                        name + " could not pick up " + task.Label + ": cannot reach it or has no room.");
+                        name + " could not pick up " + task.Label + ": cannot reach it or has no room.",
+                        name + " не может подобрать " + task.Label + ": не достать или нет места в инвентаре.");
                     Log.LogWarning("[Meta] " + problem);
                     Notify(problem);
                     AddToChat(name, problem);
@@ -2588,7 +2672,7 @@ namespace OfflineCompanionsAI
             Container chest = ItemNames.IsAmmoWord(action.Item)
                 ? CompanionBridge.FindChestWithAmmo(companion, CompanionBridge.LauncherAmmoType(companion), action.Amount, out items)
                 : CompanionBridge.FindChestWith(companion, action.Item, action.Amount, out items);
-            if (chest == null) return ModLang.Pick("No hay ningún cofre utilizable cerca con " + action.Item + ".", "No usable chest nearby with " + action.Item + ".");
+            if (chest == null) return ModLang.Pick("No hay ningún cofre utilizable cerca con " + action.Item + ".", "No usable chest nearby with " + action.Item + ".", "Рядом нет доступного сундука с " + action.Item + ".");
             if (action.Amount <= 0) CompanionBridge.LimitFoodToShare(companion, items);
             _takes[companion] = new TakeTask { Goal = new GiveGoal(Time.time), Chest = chest, Items = items };
             return null;
@@ -2600,8 +2684,8 @@ namespace OfflineCompanionsAI
             if (stops.Count == 0)
             {
                 return CompanionBridge.CarriesFood(companion)
-                    ? ModLang.Pick("Ya lleva comida suficiente y no necesita tomar más.", "Already carrying enough food and does not need to take more.")
-                    : ModLang.Pick("No hay comida en ningún cofre utilizable cerca.", "No food in any usable chest nearby.");
+                    ? ModLang.Pick("Ya lleva comida suficiente y no necesita tomar más.", "Already carrying enough food and does not need to take more.", "Еды с собой уже достаточно, брать ещё не требуется.")
+                    : ModLang.Pick("No hay comida en ningún cofre utilizable cerca.", "No food in any usable chest nearby.", "В доступных сундуках поблизости нет еды.");
             }
             var task = new TakeTask { Goal = new GiveGoal(Time.time), Chest = stops[0].Key, Items = stops[0].Value };
             for (int i = 1; i < stops.Count; i++) task.Next.Enqueue(stops[i]);
@@ -2658,18 +2742,18 @@ namespace OfflineCompanionsAI
                     {
                         _chains.Remove(companion);
                         string problem = arrived
-                            ? ModLang.Pick(name + " no pudo sacar eso del cofre: está en uso, no le cabe o ya no está.", name + " could not take that from the chest: it is in use, does not fit, or is gone.")
-                            : ModLang.Pick(name + " no ha llegado hasta el cofre.", name + " did not reach the chest.");
+                            ? ModLang.Pick(name + " no pudo sacar eso del cofre: está en uso, no le cabe o ya no está.", name + " could not take that from the chest: it is in use, does not fit, or is gone.", name + " не может взять это из сундука: сундук занят, нет места или предмет пропал.")
+                            : ModLang.Pick(name + " no ha llegado hasta el cofre.", name + " did not reach the chest.", name + " не добирается до сундука.");
                         Log.LogWarning("[Meta] " + problem);
                         Notify(problem);
                         AddToChat(name, problem);
                         continue;
                     }
                     string text = CompanionBridge.DescribeItems(task.Taken);
-                    _lastTask[CompanionBridge.PermanentId(companion)] = new TaskRecord { Description = ModLang.Pick("sacar cosas de un cofre", "taking items from a chest"), Gained = task.Taken };
+                    _lastTask[CompanionBridge.PermanentId(companion)] = new TaskRecord { Description = ModLang.Pick("sacar cosas de un cofre", "taking items from a chest", "извлечение предметов из сундука"), Gained = task.Taken };
                     Log.LogInfo("[Meta] " + name + ": saca del cofre " + text);
-                    Notify(ModLang.Pick(name + " sacó " + text + ".", name + " took " + text + "."));
-                    AddToChat(name, ModLang.Pick("sacó " + text + " del cofre.", "took " + text + " from the chest."));
+                    Notify(ModLang.Pick(name + " sacó " + text + ".", name + " took " + text + ".", name + " достаёт: " + text + "."));
+                    AddToChat(name, ModLang.Pick("sacó " + text + " del cofre.", "took " + text + " from the chest.", "достаёт " + text + " из сундука."));
                 }
                 else if (task.Goal.ShouldWalk(Time.time))
                 {
@@ -2682,12 +2766,13 @@ namespace OfflineCompanionsAI
         {
             note = ModLang.Pick(
                 "Solo pelea con enemigos a unos 35 m de ti: si te alejas mucho, no defenderá la zona.",
-                "Only fights enemies within about 35 m of you: if you move far away, they won't defend the area.");
+                "Only fights enemies within about 35 m of you: if you move far away, they won't defend the area.",
+                "Сражается только с врагами в пределах 35 м от тебя: если отойдёшь далеко, защита зоны прекратится.");
             Player player = Player.m_localPlayer;
             Vector3 anchor = companion.transform.position;
             if (action.Value == CompanionActions.PlaceLookedAt)
             {
-                if (look?.Collider == null) return ModLang.Pick("El jugador no está mirando a ningún lugar concreto.", "The player is not looking at any specific place.");
+                if (look?.Collider == null) return ModLang.Pick("El jugador no está mirando a ningún lugar concreto.", "The player is not looking at any specific place.", "Игрок не смотрит ни на какую точку.");
                 anchor = look.Point;
             }
 
@@ -2706,7 +2791,7 @@ namespace OfflineCompanionsAI
             {
                 if (companion == null)
                 {
-                    AbandonOnDeath(companion, ModLang.Pick("proteger una zona", "guarding an area"));
+                    AbandonOnDeath(companion, ModLang.Pick("proteger una zona", "guarding an area", "охрана территории"));
                     _guards.Remove(companion);
                     continue;
                 }
@@ -2752,7 +2837,7 @@ namespace OfflineCompanionsAI
                 string failure = CompanionBridge.Execute(companion, null, player, null, new ActionRequest { Kind = ActionKind.ComeHere }, out string _);
                 string name = CompanionBridge.Name(companion);
                 Log.LogInfo("[Meta] " + name + ": se retira" + (failure == null ? "" : " (falló: " + failure + ")"));
-                if (failure == null) Notify(ModLang.Pick(name + " se retira: tiene poca salud.", name + " retreats: low on health."));
+                if (failure == null) Notify(ModLang.Pick(name + " se retira: tiene poca salud.", name + " retreats: low on health.", name + " отступает: мало здоровья."));
             }
         }
 
@@ -2765,14 +2850,14 @@ namespace OfflineCompanionsAI
                 {
                     return new Dictionary<string, int>(record.Gained);
                 }
-                failure = ModLang.Pick("No le queda nada ganado en su última tarea.", "Has nothing left from their last task.");
+                failure = ModLang.Pick("No le queda nada ganado en su última tarea.", "Has nothing left from their last task.", "От прошлой задачи ничего не осталось.");
                 return null;
             }
 
             Dictionary<string, int> items = CompanionBridge.FindInPack(companion, action.Item, action.Amount);
             if (items.Count == 0)
             {
-                failure = ModLang.Pick("No lleva " + action.Item + " en la mochila, o lo lleva equipado.", "Not carrying " + action.Item + " in the pack, or wearing it equipped.");
+                failure = ModLang.Pick("No lleva " + action.Item + " en la mochila, o lo lleva equipado.", "Not carrying " + action.Item + " in the pack, or wearing it equipped.", "В инвентаре нет '" + action.Item + "' или предмет надет.");
                 return null;
             }
             return items;
@@ -2793,16 +2878,16 @@ namespace OfflineCompanionsAI
             if (items == null) return failure;
 
             Dictionary<string, int> dropped = CompanionBridge.DropToGround(companion, items);
-            if (dropped.Count == 0) return ModLang.Pick("No ha podido soltar nada.", "Could not drop anything.");
+            if (dropped.Count == 0) return ModLang.Pick("No ha podido soltar nada.", "Could not drop anything.", "Не удалось ничего выбросить.");
 
             string text = CompanionBridge.DescribeItems(dropped);
             string name = CompanionBridge.Name(companion);
             // Ya soltado, no debe poder entregarse otra vez como "lo de la última tarea".
-            _lastTask[CompanionBridge.PermanentId(companion)] = new TaskRecord { Description = ModLang.Pick("soltaste al suelo " + text, "you dropped " + text + " on the ground") };
+            _lastTask[CompanionBridge.PermanentId(companion)] = new TaskRecord { Description = ModLang.Pick("soltaste al suelo " + text, "you dropped " + text + " on the ground", "ты сбрасываешь на землю: " + text) };
             Log.LogInfo("[Meta] " + name + ": suelta " + text);
-            Notify(ModLang.Pick(name + " ha soltado " + text + ".", name + " dropped " + text + "."));
-            AddToChat(name, ModLang.Pick("ha soltado " + text + ".", "dropped " + text + "."));
-            note = ModLang.Pick("Soltaste " + text + ".", "You dropped " + text + ".");
+            Notify(ModLang.Pick(name + " ha soltado " + text + ".", name + " dropped " + text + ".", name + " сбрасывает на землю: " + text + "."));
+            AddToChat(name, ModLang.Pick("ha soltado " + text + ".", "dropped " + text + ".", "сбрасывает на землю: " + text + "."));
+            note = ModLang.Pick("Soltaste " + text + ".", "You dropped " + text + ".", "Ты сбрасываешь на землю: " + text + ".");
             return null;
         }
 
@@ -2840,23 +2925,25 @@ namespace OfflineCompanionsAI
                         _chains.Remove(companion);
                         string full = ModLang.Pick(
                             name + " no te ha podido dar nada: no te cabe o ya no lo lleva.",
-                            name + " could not give you anything: you have no room or they no longer have it.");
+                            name + " could not give you anything: you have no room or they no longer have it.",
+                            name + " не может передать тебе предметы: у тебя нет места или у спутника их уже нет.");
                         Log.LogWarning("[Meta] " + full);
                         Notify(full);
                         AddToChat(name, full);
                         FinishedCommentary(companion, ModLang.Pick(
                             "No has podido entregarle nada al jugador: no le cabe o ya no lo llevas.",
-                            "You could not hand anything to the player: they have no room or you no longer carry it."));
+                            "You could not hand anything to the player: they have no room or you no longer carry it.",
+                            "Не удалось передать вещи игроку: у него нет места или у тебя их уже нет."));
                         continue;
                     }
                     string text = CompanionBridge.DescribeItems(given);
                     // Ya entregado, no debe poder darse otra vez como "lo de la última tarea".
-                    _lastTask[id] = new TaskRecord { Description = ModLang.Pick("le diste al jugador " + text, "you gave the player " + text) };
+                    _lastTask[id] = new TaskRecord { Description = ModLang.Pick("le diste al jugador " + text, "you gave the player " + text, "ты передаёшь игроку: " + text) };
                     Log.LogInfo("[Meta] " + name + ": entrega " + text);
-                    string done = ModLang.Pick(name + " te ha dado " + text + ".", name + " gave you " + text + ".");
+                    string done = ModLang.Pick(name + " te ha dado " + text + ".", name + " gave you " + text + ".", name + " передаёт тебе: " + text + ".");
                     Notify(done);
                     AddToChat(name, done);
-                    FinishedCommentary(companion, ModLang.Pick("Acabas de darle al jugador " + text + ".", "You just gave the player " + text + "."));
+                    FinishedCommentary(companion, ModLang.Pick("Acabas de darle al jugador " + text + ".", "You just gave the player " + text + ".", "Ты только что передаёшь игроку: " + text + "."));
                 }
                 else if (task.Goal.TimedOut(Time.time))
                 {
@@ -2864,7 +2951,8 @@ namespace OfflineCompanionsAI
                     _chains.Remove(companion);
                     string late = ModLang.Pick(
                         name + " no ha llegado hasta ti para darte las cosas.",
-                        name + " did not reach you in time to hand over the items.");
+                        name + " did not reach you in time to hand over the items.",
+                        name + " не успевает подойти к тебе, чтобы передать вещи.");
                     Log.LogWarning("[Meta] " + late);
                     Notify(late);
                     AddToChat(name, late);
@@ -2877,7 +2965,7 @@ namespace OfflineCompanionsAI
                     {
                         _gives.Remove(companion);
                         _chains.Remove(companion);
-                        Notify(ModLang.Pick(name + " no ha podido ir hasta ti: " + failure, name + " could not come to you: " + failure));
+                        Notify(ModLang.Pick(name + " no ha podido ir hasta ti: " + failure, name + " could not come to you: " + failure, name + " не может подойти к тебе: " + failure));
                     }
                 }
             }
@@ -2900,7 +2988,8 @@ namespace OfflineCompanionsAI
             {
                 RememberEvent(companion, MemoryWeight.Job, ModLang.Pick(
                     "Trabajé en " + description + " y conseguí " + gained + ".",
-                    "Worked on " + description + " and got " + gained + "."), false);
+                    "Worked on " + description + " and got " + gained + ".",
+                    "Работа над задачей '" + description + "', добыто: " + gained + "."), false);
             }
             return gained;
         }
@@ -2914,55 +3003,59 @@ namespace OfflineCompanionsAI
                 : _explores.TryGetValue(companion, out ExploreTask exploring)
                     ? ModLang.Pick(
                         "explorar los alrededores (" + (exploring.Found.Count == 0 ? "sin hallazgos por ahora" : "encontrado: " + string.Join(", ", exploring.Found.ToArray())) + ")",
-                        "exploring the surroundings (" + (exploring.Found.Count == 0 ? "nothing found yet" : "found: " + string.Join(", ", exploring.Found.ToArray())) + ")")
-                : _gives.ContainsKey(companion) ? ModLang.Pick("ir a darle objetos al jugador", "going to hand items to the player")
-                : _pickups.TryGetValue(companion, out PickupTask pickup) ? ModLang.Pick("ir a recoger del suelo ", "going to pick up ") + pickup.Label
-                : _stores.ContainsKey(companion) ? ModLang.Pick("guardar tus cosas en los cofres", "storing your items in the chests")
-                : _takes.ContainsKey(companion) ? ModLang.Pick("ir a sacar algo de un cofre", "going to take something from a chest")
-                : _hunts.TryGetValue(companion, out HuntTask hunt) ? ModLang.Pick("cazar ", "hunting ") + hunt.Label
-                : _guards.ContainsKey(companion) ? ModLang.Pick("proteger una zona", "guarding an area")
+                        "exploring the surroundings (" + (exploring.Found.Count == 0 ? "nothing found yet" : "found: " + string.Join(", ", exploring.Found.ToArray())) + ")",
+                        "разведка окрестностей (" + (exploring.Found.Count == 0 ? "пока ничего не найдено" : "найдено: " + string.Join(", ", exploring.Found.ToArray())) + ")")
+                : _gives.ContainsKey(companion) ? ModLang.Pick("ir a darle objetos al jugador", "going to hand items to the player", "подойти и передать вещи игроку")
+                : _pickups.TryGetValue(companion, out PickupTask pickup) ? ModLang.Pick("ir a recoger del suelo ", "going to pick up ", "подойти и подобрать с земли: ") + pickup.Label
+                : _stores.ContainsKey(companion) ? ModLang.Pick("guardar tus cosas en los cofres", "storing your items in the chests", "сложить вещи в сундуки")
+                : _takes.ContainsKey(companion) ? ModLang.Pick("ir a sacar algo de un cofre", "going to take something from a chest", "подойти и взять вещи из сундука")
+                : _hunts.TryGetValue(companion, out HuntTask hunt) ? ModLang.Pick("cazar ", "hunting ", "охота: ") + hunt.Label
+                : _guards.ContainsKey(companion) ? ModLang.Pick("proteger una zona", "guarding an area", "охрана территории")
                 : _organizing.TryGetValue(companion, out UpkeepTask upkeep) ? upkeep.Label
-                : _smelts.TryGetValue(companion, out SmeltTask smelting) ? ModLang.Pick("fundir ", "smelting ") + smelting.Label
-                : _cooks.TryGetValue(companion, out GatherGoal cooking) ? ModLang.Pick("cocinar " + cooking.Amount + " de " + cooking.Label + " (llevas " + cooking.Gained + ")", "cooking " + cooking.Amount + " " + cooking.Label + " (have " + cooking.Gained + ")")
-                : _plants.ContainsKey(companion) ? ModLang.Pick("romper una planta", "breaking a plant")
-                : _trees.ContainsKey(companion) ? ModLang.Pick("talar un árbol hasta acabar el tronco", "chopping a tree and its logs")
-                : _goals.TryGetValue(companion, out GatherGoal goal) ? ModLang.Pick("conseguir " + goal.Amount + " de " + goal.Label + " (llevas " + goal.Gained + ")", "gathering " + goal.Amount + " " + goal.Label + " (have " + goal.Gained + ")")
+                : _smelts.TryGetValue(companion, out SmeltTask smelting) ? ModLang.Pick("fundir ", "smelting ", "плавка: ") + smelting.Label
+                : _cooks.TryGetValue(companion, out GatherGoal cooking) ? ModLang.Pick("cocinar " + cooking.Amount + " de " + cooking.Label + " (llevas " + cooking.Gained + ")", "cooking " + cooking.Amount + " " + cooking.Label + " (have " + cooking.Gained + ")", "готовка: " + cooking.Amount + " шт. " + cooking.Label + " (готово " + cooking.Gained + ")")
+                : _plants.ContainsKey(companion) ? ModLang.Pick("romper una planta", "breaking a plant", "сбор растения")
+                : _trees.ContainsKey(companion) ? ModLang.Pick("talar un árbol hasta acabar el tronco", "chopping a tree and its logs", "рубка дерева вместе с пнями и брёвнами")
+                : _goals.TryGetValue(companion, out GatherGoal goal) ? ModLang.Pick("conseguir " + goal.Amount + " de " + goal.Label + " (llevas " + goal.Gained + ")", "gathering " + goal.Amount + " " + goal.Label + " (have " + goal.Gained + ")", "добыча: " + goal.Amount + " шт. " + goal.Label + " (собрано " + goal.Gained + ")")
                 : _huntSweeps.TryGetValue(companion, out HuntSweep sweep)
                     ? (sweep.Exhausted
-                        ? ModLang.Pick("cazar, sin presas a tu alcance", "hunting, no prey within reach")
-                        : ModLang.Pick("cazar, buscando presas por la zona", "hunting, searching for prey in the area"))
+                        ? ModLang.Pick("cazar, sin presas a tu alcance", "hunting, no prey within reach", "охота: добычи поблизости нет")
+                        : ModLang.Pick("cazar, buscando presas por la zona", "hunting, searching for prey in the area", "охота: поиск добычи в окрестностях"))
                 : null;
-            if (current != null) text += ModLang.Pick("\nTarea en curso: ", "\nCurrent task: ") + current;
+            if (current != null) text += ModLang.Pick("\nTarea en curso: ", "\nCurrent task: ", "\nТекущая задача: ") + current;
             if (_tends.TryGetValue(companion, out TendTask tend))
             {
                 text += forPlayer
-                    ? ModLang.Pick("\nSe encarga de " + tend.Label + ": ", "\nTending " + tend.Label + ": ") + TendActivity(companion, tend)
+                    ? ModLang.Pick("\nSe encarga de " + tend.Label + ": ", "\nTending " + tend.Label + ": ", "\nПрисмотр за " + tend.Label + ": ") + TendActivity(companion, tend)
                     : ModLang.Pick(
                         "\nTe encargas de " + tend.Label + " por tu cuenta, sin irte de allí hasta nueva orden. Ahora: " + TendActivity(companion, tend),
-                        "\nYou are tending " + tend.Label + " on your own, staying there until ordered otherwise. Right now: " + TendActivity(companion, tend));
+                        "\nYou are tending " + tend.Label + " on your own, staying there until ordered otherwise. Right now: " + TendActivity(companion, tend),
+                        "\nТы присматриваешь за " + tend.Label + " самостоятельно, оставаясь на месте до нового приказа. Сейчас: " + TendActivity(companion, tend));
             }
             else if (current == null && !_guards.ContainsKey(companion) && !string.IsNullOrEmpty(CompanionBridge.PermanentId(companion)) && MemoryOf(CompanionBridge.PermanentId(companion)).StayLabel is string waiting)
             {
                 text += forPlayer
-                    ? ModLang.Pick("\nEsperando en ", "\nWaiting at ") + waiting
-                    : ModLang.Pick("\nEstás esperando en " + waiting + ", donde te dijo el jugador", "\nYou are waiting at " + waiting + ", where the player told you to stay");
+                    ? ModLang.Pick("\nEsperando en ", "\nWaiting at ", "\nОжидание в: ") + waiting
+                    : ModLang.Pick("\nEstás esperando en " + waiting + ", donde te dijo el jugador", "\nYou are waiting at " + waiting + ", where the player told you to stay", "\nТы ждёшь в точке '" + waiting + "', как велел игрок");
             }
             if (_retreats.TryGetValue(companion, out int retreat))
             {
                 text += ModLang.Pick(
                     "\nTe retiras de las peleas con menos del " + retreat + " % de salud",
-                    "\nYou retreat from fights below " + retreat + "% health");
+                    "\nYou retreat from fights below " + retreat + "% health",
+                    "\nТы отступаешь из боя, если здоровье ниже " + retreat + " %");
             }
 
             if (_lastTask.TryGetValue(CompanionBridge.PermanentId(companion), out TaskRecord last))
             {
-                text += ModLang.Pick("\nTu última tarea, ya terminada: ", "\nYour last completed task: ") + last.Description;
-                if (last.Gained.Count > 0) text += ModLang.Pick(". Ganaste ", ". You got ") + CompanionBridge.DescribeItems(last.Gained);
+                text += ModLang.Pick("\nTu última tarea, ya terminada: ", "\nYour last completed task: ", "\nТвоя последняя выполненная задача: ") + last.Description;
+                if (last.Gained.Count > 0) text += ModLang.Pick(". Ganaste ", ". You got ", ". Добыто: ") + CompanionBridge.DescribeItems(last.Gained);
                 if (current == null && !forPlayer)
                 {
                     text += ModLang.Pick(
                         ". Si el jugador pregunta por ella, cuéntale cómo fue o dale lo que lleves, pero no la repitas salvo que te lo pida",
-                        ". If the player asks about it, tell them how it went or hand over what you carry, but do not repeat it unless asked");
+                        ". If the player asks about it, tell them how it went or hand over what you carry, but do not repeat it unless asked",
+                        ". Если игрок спросит о ней, расскажи как прошло или отдай собранное, но не повторяй без его просьбы");
                 }
             }
             return text;
@@ -3046,26 +3139,27 @@ namespace OfflineCompanionsAI
             {
                 warnings.Add(ModLang.Pick(
                     "Estás a " + Mathf.RoundToInt(away) + " m de " + label + ": solo trabajará allí mientras estés a menos de " + Mathf.RoundToInt(reach) + " m.",
-                    "You are " + Mathf.RoundToInt(away) + " m from " + label + ": they will only work there while you are within " + Mathf.RoundToInt(reach) + " m."));
+                    "You are " + Mathf.RoundToInt(away) + " m from " + label + ": they will only work there while you are within " + Mathf.RoundToInt(reach) + " m.",
+                    "Ты в " + Mathf.RoundToInt(away) + " м от точки '" + label + "': спутник работает там, только пока ты ближе " + Mathf.RoundToInt(reach) + " м."));
             }
             string hammer = CompanionBridge.HammerProblem(companion);
-            if (hammer != null) warnings.Add(hammer + ModLang.Pick(" No reparará hasta tener uno.", " They will not repair until they have one."));
+            if (hammer != null) warnings.Add(hammer + ModLang.Pick(" No reparará hasta tener uno.", " They will not repair until they have one.", " Ремонт не начнётся без молота."));
             return warnings.Count == 0 ? null : string.Join(" ", warnings.ToArray());
         }
 
         private string TendActivity(Component companion, TendTask tend)
         {
             float away = FlatDistance(Player.m_localPlayer.transform.position, tend.Point);
-            if (away >= CompanionBridge.LoadedReach()) return ModLang.Pick("parado porque estás lejos, a " + Mathf.RoundToInt(away) + " m", "paused because you are far away, at " + Mathf.RoundToInt(away) + " m");
+            if (away >= CompanionBridge.LoadedReach()) return ModLang.Pick("parado porque estás lejos, a " + Mathf.RoundToInt(away) + " m", "paused because you are far away, at " + Mathf.RoundToInt(away) + " m", "на паузе: ты слишком далеко (" + Mathf.RoundToInt(away) + " м)");
             if (tend.Chore != null)
             {
                 return _stores.ContainsKey(companion)
-                    ? ModLang.Pick("guardando lo recogido", "storing gathered items")
+                    ? ModLang.Pick("guardando lo recogido", "storing gathered items", "складывание собранного")
                     : CompanionActions.JobForItem(tend.Chore) == CompanionActions.JobHunt
-                        ? ModLang.Pick("cazando cerca", "hunting nearby")
-                        : ModLang.Pick("recogiendo cerca", "gathering nearby");
+                        ? ModLang.Pick("cazando cerca", "hunting nearby", "охота поблизости")
+                        : ModLang.Pick("recogiendo cerca", "gathering nearby", "сбор поблизости");
             }
-            return CompanionBridge.IsOrganizing(companion) ? ModLang.Pick("manteniendo el sitio", "tending the area") : ModLang.Pick("todo en orden", "all in order");
+            return CompanionBridge.IsOrganizing(companion) ? ModLang.Pick("manteniendo el sitio", "tending the area", "присмотр за территорией") : ModLang.Pick("todo en orden", "all in order", "всё в порядке");
         }
 
         private void BackToUpkeep(Component companion, TendTask tend)
@@ -3134,7 +3228,8 @@ namespace OfflineCompanionsAI
                     CompanionBridge.StopGathering(companion);
                     Notify(ModLang.Pick(
                         name + " deja de encargarse de " + tend.Label + " y te sigue.",
-                        name + " stops tending " + tend.Label + " and follows you."));
+                        name + " stops tending " + tend.Label + " and follows you.",
+                        name + " прекращает присматривать за " + tend.Label + " и следует за тобой."));
                     continue;
                 }
                 tend.FollowingSince = -1f;
@@ -3145,7 +3240,8 @@ namespace OfflineCompanionsAI
                     tend.WarnedFar = true;
                     string far = ModLang.Pick(
                         "Te has alejado de " + tend.Label + ": " + name + " no hará nada allí hasta que vuelvas.",
-                        "You moved far from " + tend.Label + ": " + name + " will not do anything there until you return.");
+                        "You moved far from " + tend.Label + ": " + name + " will not do anything there until you return.",
+                        "Ты отходишь далеко от " + tend.Label + ": " + name + " приостанавливает работу, пока ты не вернёшься.");
                     Notify(far);
                     AddToChat(name, far);
                 }
@@ -3317,7 +3413,7 @@ namespace OfflineCompanionsAI
                 Character character = companion != null ? companion.GetComponent<Character>() : null;
                 if (character == null || character.GetHealth() <= 0f)
                 {
-                    AbandonOnDeath(companion, ModLang.Pick("romper una planta", "breaking a plant"));
+                    AbandonOnDeath(companion, ModLang.Pick("romper una planta", "breaking a plant", "сбор растения"));
                     _plants.Remove(companion);
                     continue;
                 }
@@ -3329,16 +3425,16 @@ namespace OfflineCompanionsAI
                 {
                     if (Time.time - task.BrokenAt < PlantPickupSeconds) continue;
                     _plants.Remove(companion);
-                    string gained = RecordTask(companion, ModLang.Pick("romper una planta", "breaking a plant"));
+                    string gained = RecordTask(companion, ModLang.Pick("romper una planta", "breaking a plant", "сбор растения"));
                     Log.LogInfo("[Meta] " + name + ": planta rota" + (gained.Length > 0 ? ", gana " + gained : ""));
                     string summary = name + (gained.Length > 0
-                        ? ModLang.Pick(" ha conseguido " + gained + ".", " got " + gained + ".")
-                        : ModLang.Pick(" ha roto la planta, pero no ha recogido nada.", " broke the plant, but picked up nothing."));
+                        ? ModLang.Pick(" ha conseguido " + gained + ".", " got " + gained + ".", " добывает " + gained + ".")
+                        : ModLang.Pick(" ha roto la planta, pero no ha recogido nada.", " broke the plant, but picked up nothing.", " срывает растение, но ничего не подобрано."));
                     Notify(summary);
                     AddToChat(name, summary);
                     FinishedCommentary(companion, gained.Length > 0
-                        ? ModLang.Pick("Has roto la planta y has conseguido " + gained + ".", "You broke the plant and got " + gained + ".")
-                        : ModLang.Pick("Has roto la planta, pero no has recogido nada.", "You broke the plant, but picked up nothing."));
+                        ? ModLang.Pick("Has roto la planta y has conseguido " + gained + ".", "You broke the plant and got " + gained + ".", "Ты срываешь растение и получаешь: " + gained + ".")
+                        : ModLang.Pick("Has roto la planta, pero no has recogido nada.", "You broke the plant, but picked up nothing.", "Ты срываешь растение, но ничего не подобрано."));
                     continue;
                 }
 
@@ -3372,7 +3468,7 @@ namespace OfflineCompanionsAI
                         {
                             _plants.Remove(companion);
                             _chains.Remove(companion);
-                            Notify(ModLang.Pick(name + " no ha podido volver a la planta: " + problem, name + " could not return to the plant: " + problem));
+                            Notify(ModLang.Pick(name + " no ha podido volver a la planta: " + problem, name + " could not return to the plant: " + problem, name + " не может вернуться к растению: " + problem));
                             continue;
                         }
                         Log.LogInfo("[Meta] " + name + ": retoma la planta tras la interrupción");
@@ -3396,7 +3492,7 @@ namespace OfflineCompanionsAI
                     _plants.Remove(companion);
                     _chains.Remove(companion);
                     Log.LogWarning("[Meta] " + name + ": no pudo romper la planta");
-                    string problem = ModLang.Pick(name + " no ha podido romper esa planta.", name + " could not break that plant.");
+                    string problem = ModLang.Pick(name + " no ha podido romper esa planta.", name + " could not break that plant.", name + " не может сорвать это растение.");
                     Notify(problem);
                     AddToChat(name, problem);
                 }
@@ -3420,7 +3516,7 @@ namespace OfflineCompanionsAI
             {
                 if (companion == null || companion.GetComponent<Character>().GetHealth() <= 0f)
                 {
-                    AbandonOnDeath(companion, ModLang.Pick("talar un árbol", "chopping a tree"));
+                    AbandonOnDeath(companion, ModLang.Pick("talar un árbol", "chopping a tree", "рубка дерева"));
                     _trees.Remove(companion);
                     continue;
                 }
@@ -3445,27 +3541,30 @@ namespace OfflineCompanionsAI
                 CompanionBridge.StopGathering(companion);
                 string name = CompanionBridge.Name(companion);
                 Log.LogInfo("[Meta] " + name + ": árbol " + state);
-                string gained = RecordTask(companion, ModLang.Pick("talar un árbol", "chopping a tree"));
+                string gained = RecordTask(companion, ModLang.Pick("talar un árbol", "chopping a tree", "рубка дерева"));
                 if (state == GoalState.Reached)
                 {
                     string summary = ModLang.Pick(
                         name + " ha terminado de talar" + (gained.Length > 0 ? " y ha conseguido " + gained + "." : "."),
-                        name + " finished chopping" + (gained.Length > 0 ? " and got " + gained + "." : "."));
+                        name + " finished chopping" + (gained.Length > 0 ? " and got " + gained + "." : "."),
+                        name + " завершает рубку" + (gained.Length > 0 ? " и получает: " + gained + "." : "."));
                     Notify(summary);
                     AddToChat(name, summary);
                     FinishedCommentary(companion, ModLang.Pick(
                         "Has terminado de talar el árbol, incluido el tronco, y vuelves con el jugador." + (gained.Length > 0 ? " Has conseguido " + gained + "." : ""),
-                        "You finished chopping the tree, including the logs, and are returning to the player." + (gained.Length > 0 ? " You got " + gained + "." : "")));
+                        "You finished chopping the tree, including the logs, and are returning to the player." + (gained.Length > 0 ? " You got " + gained + "." : ""),
+                        "Ты срубаешь дерево вместе с брёвнами и возвращаешься к игроку." + (gained.Length > 0 ? " Добыто: " + gained + "." : "")));
                 }
                 else
                 {
-                    string problem = ModLang.Pick(name + " no ha podido terminar de talar ese árbol.", name + " could not finish chopping that tree.");
+                    string problem = ModLang.Pick(name + " no ha podido terminar de talar ese árbol.", name + " could not finish chopping that tree.", name + " не может закончить рубку этого дерева.");
                     Notify(problem);
                     AddToChat(name, problem);
                     _chains.Remove(companion);
                     FinishedCommentary(companion, ModLang.Pick(
                         "No has podido terminar de talar el árbol y vuelves con el jugador.",
-                        "You could not finish chopping the tree and are returning to the player."));
+                        "You could not finish chopping the tree and are returning to the player.",
+                        "Не удалось закончить рубку дерева, возвращаешься к игроку."));
                 }
             }
         }
@@ -3544,7 +3643,8 @@ namespace OfflineCompanionsAI
                     Log.LogInfo("[Agua] " + name + ": ha vuelto agotado " + WaterTrapWatch.RetreatsToLongRest + " veces, no nada durante " + WaterTrapWatch.LongRestSeconds.ToString("F0") + " s");
                     Notify(ModLang.Pick(
                         name + " está agotado de nadar y esperará un rato en la orilla.",
-                        name + " is exhausted from swimming and will wait on shore for a while."));
+                        name + " is exhausted from swimming and will wait on shore for a while.",
+                        name + " выбивается из сил от плавания и передохнёт на берегу."));
                 }
 
                 if (!trapped) continue;
@@ -3561,7 +3661,8 @@ namespace OfflineCompanionsAI
                 Log.LogInfo("[Agua] " + name + ": atrapado nadando, aguante " + stamina.ToString("P0") + "; " + report);
                 Notify(ModLang.Pick(
                     name + " no conseguía salir del agua y ha aparecido en tierra.",
-                    name + " could not get out of the water and appeared on dry land."));
+                    name + " could not get out of the water and appeared on dry land.",
+                    name + " не мог выбраться из воды и перенесён на сушу."));
             }
         }
 
@@ -3599,7 +3700,8 @@ namespace OfflineCompanionsAI
                 Log.LogWarning("[Lugares] No se pudieron guardar: " + ex.Message);
                 return ModLang.Pick(
                     "No se ha podido guardar en el disco, así que se perderá al salir del mundo.",
-                    "Could not save to disk, so it will be lost when leaving the world.");
+                    "Could not save to disk, so it will be lost when leaving the world.",
+                    "Не удалось сохранить на диск, изменения пропадут при выходе из мира.");
             }
         }
 
@@ -3612,7 +3714,8 @@ namespace OfflineCompanionsAI
             {
                 return ModLang.Pick(
                     "Ya hay " + PlaceBook.MaxPlaces + " lugares marcados: hay que borrar alguno antes.",
-                    "There are already " + PlaceBook.MaxPlaces + " marked places: delete one first.");
+                    "There are already " + PlaceBook.MaxPlaces + " marked places: delete one first.",
+                    "Уже отмечено максимум мест (" + PlaceBook.MaxPlaces + "): сначала удали ненужные.");
             }
             Minimap.instance?.AddPin(point, Minimap.PinType.Icon3, name, true, false);
             Log.LogInfo("[Lugares] Marcado " + name + " en " + point.ToString("F1"));
@@ -3622,7 +3725,7 @@ namespace OfflineCompanionsAI
         private string MarkOrdered(LookTarget look, ActionRequest action)
         {
             if (action.Value != CompanionActions.MarkLookedAt) return MarkPlace(action.Item, Player.m_localPlayer.transform.position);
-            if (look?.Collider == null) return ModLang.Pick("El jugador no está mirando a ningún lugar concreto.", "The player is not looking at any specific place.");
+            if (look?.Collider == null) return ModLang.Pick("El jugador no está mirando a ningún lugar concreto.", "The player is not looking at any specific place.", "Игрок не смотрит ни на какую точку.");
             return MarkPlace(action.Item, look.Point);
         }
 
@@ -3630,7 +3733,7 @@ namespace OfflineCompanionsAI
         {
             PlaceBook book = Places();
             PlaceMark place = book.Find(name);
-            if (place == null) return ModLang.Pick("No hay ningún lugar marcado que se llame " + name + ".", "No marked place named " + name + ".");
+            if (place == null) return ModLang.Pick("No hay ningún lugar marcado que se llame " + name + ".", "No marked place named " + name + ".", "Нет отмеченного места с именем '" + name + "'.");
             book.Places.Remove(place);
             Minimap.instance?.RemovePin(new Vector3(place.X, place.Y, place.Z), PinRemoveRadius);
             Log.LogInfo("[Lugares] Borrado " + place.Name);
@@ -3643,15 +3746,16 @@ namespace OfflineCompanionsAI
             {
                 return ModLang.Pick(
                     "Escribe " + MarkCommand + " y un nombre corto, solo con letras, números y espacios.",
-                    "Type " + MarkCommandEn + " followed by a short name using only letters, numbers, and spaces.");
+                    "Type " + MarkCommandEn + " followed by a short name using only letters, numbers, and spaces.",
+                    "Напиши " + MarkCommandRu + " и короткое имя (буквы, цифры и пробелы).");
             }
-            return MarkPlace(name, Player.m_localPlayer.transform.position) ?? ModLang.Pick("Lugar marcado aquí: " + name, "Marked place here: " + name);
+            return MarkPlace(name, Player.m_localPlayer.transform.position) ?? ModLang.Pick("Lugar marcado aquí: " + name, "Marked place here: " + name, "Место отмечено здесь: " + name);
         }
 
         private string ForgetFromCommand(string name)
         {
-            if (name.Length == 0) return ModLang.Pick("Escribe " + ForgetCommand + " y el nombre del lugar.", "Type " + ForgetCommandEn + " followed by the place name.");
-            return ForgetPlace(name) ?? ModLang.Pick("Lugar borrado: " + name, "Removed place: " + name);
+            if (name.Length == 0) return ModLang.Pick("Escribe " + ForgetCommand + " y el nombre del lugar.", "Type " + ForgetCommandEn + " followed by the place name.", "Напиши " + ForgetCommandRu + " и название места.");
+            return ForgetPlace(name) ?? ModLang.Pick("Lugar borrado: " + name, "Removed place: " + name, "Место удалено: " + name);
         }
 
         private string ListPlaces(Player player)
@@ -3661,10 +3765,11 @@ namespace OfflineCompanionsAI
             {
                 return ModLang.Pick(
                     "No hay lugares marcados. Para marcar uno: " + MarkCommand + " nombre",
-                    "No marked places. To mark one: " + MarkCommandEn + " name");
+                    "No marked places. To mark one: " + MarkCommandEn + " name",
+                    "Нет отмеченных мест. Чтобы отметить: " + MarkCommandRu + " имя");
             }
-            return ModLang.Pick("Lugares marcados: ", "Marked places: ")
-                + string.Join(", ", places.ConvertAll(place => place.Name + ModLang.Pick(" (a " + DistanceTo(player, place) + " m)", " (" + DistanceTo(player, place) + " m away)")).ToArray());
+            return ModLang.Pick("Lugares marcados: ", "Marked places: ", "Отмеченные места: ")
+                + string.Join(", ", places.ConvertAll(place => place.Name + ModLang.Pick(" (a " + DistanceTo(player, place) + " m)", " (" + DistanceTo(player, place) + " m away)", " (в " + DistanceTo(player, place) + " м)")).ToArray());
         }
 
         private static int DistanceTo(Player player, PlaceMark place)
@@ -3681,15 +3786,16 @@ namespace OfflineCompanionsAI
         /// <summary>Solo aparece si hay algo a donde ir, para no gastar saldo en cada mensaje.</summary>
         private string PlacesSummary(Component companion)
         {
-            var parts = Places().Places.ConvertAll(place => place.Name + ModLang.Pick(" (a " + DistanceTo(Player.m_localPlayer, place) + " m)", " (" + DistanceTo(Player.m_localPlayer, place) + " m away)"));
+            var parts = Places().Places.ConvertAll(place => place.Name + ModLang.Pick(" (a " + DistanceTo(Player.m_localPlayer, place) + " m)", " (" + DistanceTo(Player.m_localPlayer, place) + " m away)", " (в " + DistanceTo(Player.m_localPlayer, place) + " м)"));
             if (CompanionBridge.HomePosition(companion, out Vector3 home))
             {
                 int homeDist = Mathf.RoundToInt(FlatDistance(Player.m_localPlayer.transform.position, home));
                 parts.Add(ModLang.Pick(
                     HomePlaceLabel + ", basta con decir hogar (a " + homeDist + " m)",
-                    HomePlaceLabel + ", can just say home (" + homeDist + " m away)"));
+                    HomePlaceLabel + ", can just say home (" + homeDist + " m away)",
+                    HomePlaceLabel + ", можно просто сказать дом (в " + homeDist + " м)"));
             }
-            return parts.Count == 0 ? "" : ModLang.Pick("\nLugares marcados: ", "\nMarked places: ") + string.Join(", ", parts.ToArray());
+            return parts.Count == 0 ? "" : ModLang.Pick("\nLugares marcados: ", "\nMarked places: ", "\nОтмеченные места: ") + string.Join(", ", parts.ToArray());
         }
 
         private bool FindPlace(Component companion, string name, out string label, out Vector3 point)
@@ -3720,7 +3826,8 @@ namespace OfflineCompanionsAI
             {
                 return ModLang.Pick(
                     "No conoce ningún lugar llamado " + action.Item + ". " + ListPlaces(Player.m_localPlayer),
-                    "Does not know any place named " + action.Item + ". " + ListPlaces(Player.m_localPlayer));
+                    "Does not know any place named " + action.Item + ". " + ListPlaces(Player.m_localPlayer),
+                    "Неизвестное место '" + action.Item + "'. " + ListPlaces(Player.m_localPlayer));
             }
             if (action.Tend)
             {
@@ -3788,13 +3895,15 @@ namespace OfflineCompanionsAI
                     else RememberStay(companion, task.Point, task.Label, false);
                     string arrived = ModLang.Pick(
                         name + " ha llegado a " + task.Label + (task.Tend ? " y se encarga del sitio." : "."),
-                        name + " arrived at " + task.Label + (task.Tend ? " and is tending the area." : "."));
+                        name + " arrived at " + task.Label + (task.Tend ? " and is tending the area." : "."),
+                        name + " прибывает в точку '" + task.Label + "'" + (task.Tend ? " и присматривает за местом." : "."));
                     Log.LogInfo("[Viaje] " + arrived);
                     Notify(arrived);
                     AddToChat(name, arrived);
                     FinishedCommentary(companion, ModLang.Pick(
                         "Has llegado a " + task.Label + (task.Tend ? " y te encargas del sitio por tu cuenta." : " y te quedas allí."),
-                        "You arrived at " + task.Label + (task.Tend ? " and are tending the area on your own." : " and are staying there.")));
+                        "You arrived at " + task.Label + (task.Tend ? " and are tending the area on your own." : " and are staying there."),
+                        "Ты приходишь в точку '" + task.Label + "'" + (task.Tend ? " и самостоятельно присматриваешь за местом." : " и остаёшься там.")));
                 }
                 else if (step == TravelStep.Jump)
                 {
@@ -3807,7 +3916,8 @@ namespace OfflineCompanionsAI
                     bool pending = _chains.TryGetValue(companion, out OrderSequence<QueuedOrder> chain) && chain.Pending > 0;
                     string gone = ModLang.Pick(
                         name + " se adelanta" + (task.Tend ? " y se encargará de " + task.Label + (staysLoaded ? "." : " cuando estés cerca.") : " y te esperará en " + task.Label + ".") + (pending && !staysLoaded ? " Lo demás que le pediste se queda sin hacer." : ""),
-                        name + " goes ahead" + (task.Tend ? " and will tend " + task.Label + (staysLoaded ? "." : " when you are nearby.") : " and will wait for you at " + task.Label + ".") + (pending && !staysLoaded ? " The rest of your queued orders were skipped." : ""));
+                        name + " goes ahead" + (task.Tend ? " and will tend " + task.Label + (staysLoaded ? "." : " when you are nearby.") : " and will wait for you at " + task.Label + ".") + (pending && !staysLoaded ? " The rest of your queued orders were skipped." : ""),
+                        name + " выдвигается вперёд" + (task.Tend ? " и будет присматривать за '" + task.Label + "'" + (staysLoaded ? "." : ", когда ты будешь рядом.") : " и подождёт тебя в точке '" + task.Label + "'.") + (pending && !staysLoaded ? " Остальные поручения из очереди пропущены." : ""));
                     if (!staysLoaded) _chains.Remove(companion);
                     Notify(gone);
                     AddToChat(name, gone);
@@ -3826,7 +3936,8 @@ namespace OfflineCompanionsAI
                 {
                     AbandonOnDeath(companion, ModLang.Pick(
                         "conseguir " + goal.Amount + " de " + goal.Label + " (llevaba " + goal.Gained + ")",
-                        "gathering " + goal.Amount + " " + goal.Label + " (had " + goal.Gained + ")"));
+                        "gathering " + goal.Amount + " " + goal.Label + " (had " + goal.Gained + ")",
+                        "добыча: " + goal.Amount + " шт. " + goal.Label + " (было " + goal.Gained + ")"));
                     _goals.Remove(companion);
                     continue;
                 }
@@ -3846,31 +3957,34 @@ namespace OfflineCompanionsAI
                 }
                 CompanionBridge.StopGathering(companion);
                 string name = CompanionBridge.Name(companion);
-                RecordTask(companion, ModLang.Pick("conseguir " + goal.Amount + " de " + goal.Label, "gathering " + goal.Amount + " " + goal.Label));
-                string progress = ModLang.Pick(goal.Gained + " de " + goal.Amount + " de " + goal.Label, goal.Gained + " of " + goal.Amount + " " + goal.Label);
+                RecordTask(companion, ModLang.Pick("conseguir " + goal.Amount + " de " + goal.Label, "gathering " + goal.Amount + " " + goal.Label, "добыча: " + goal.Amount + " шт. " + goal.Label));
+                string progress = ModLang.Pick(goal.Gained + " de " + goal.Amount + " de " + goal.Label, goal.Gained + " of " + goal.Amount + " " + goal.Label, goal.Gained + " из " + goal.Amount + " " + goal.Label);
                 Log.LogInfo("[Meta] " + name + ": " + state + " con " + progress);
                 bool onGround = CompanionActions.OnlyOnGround(goal.Item);
                 string missingTool = onGround ? null : CompanionBridge.MissingTool(companion, CompanionActions.JobForItem(goal.Item));
                 string stuckReason = missingTool != null
-                    ? ModLang.Pick(" y le falta " + missingTool + ".", " and is missing " + missingTool + ".")
+                    ? ModLang.Pick(" y le falta " + missingTool + ".", " and is missing " + missingTool + ".", " и не хватает инструмента: " + missingTool + ".")
                     : onGround
-                        ? ModLang.Pick(" y no encuentra más por el suelo a su alcance: suele estar cerca del agua.", " and cannot find any more on the ground within reach: usually found near water.")
-                        : ModLang.Pick(" y no encuentra más cerca.", " and cannot find any more nearby.");
+                        ? ModLang.Pick(" y no encuentra más por el suelo a su alcance: suele estar cerca del agua.", " and cannot find any more on the ground within reach: usually found near water.", " и больше не находит на земле поблизости: обычно встречается у воды.")
+                        : ModLang.Pick(" y no encuentra más cerca.", " and cannot find any more nearby.", " и больше не находит поблизости.");
                 string message = state == GoalState.Reached
                     ? ModLang.Pick(
                         name + " ha conseguido " + progress + "." + (missingTool != null ? " Solo pudo recoger lo que estaba suelto: le falta " + missingTool + "." : ""),
-                        name + " gathered " + progress + "." + (missingTool != null ? " Could only pick up loose items: missing " + missingTool + "." : ""))
+                        name + " gathered " + progress + "." + (missingTool != null ? " Could only pick up loose items: missing " + missingTool + "." : ""),
+                        name + " собирает " + progress + "." + (missingTool != null ? " Удалось собрать только лежащее на земле: не хватает инструмента (" + missingTool + ")." : ""))
                     : ModLang.Pick(
                         name + " no ha podido terminar: lleva " + progress + (state == GoalState.Stuck ? stuckReason : " y se agotó el tiempo." + (missingTool != null ? " Le falta " + missingTool + "." : "")),
-                        name + " could not finish: has " + progress + (state == GoalState.Stuck ? stuckReason : " and ran out of time." + (missingTool != null ? " Missing " + missingTool + "." : "")));
+                        name + " could not finish: has " + progress + (state == GoalState.Stuck ? stuckReason : " and ran out of time." + (missingTool != null ? " Missing " + missingTool + "." : "")),
+                        name + " не может завершить сбор: собрано " + progress + (state == GoalState.Stuck ? stuckReason : " и вышло время." + (missingTool != null ? " Не хватает инструмента (" + missingTool + ")." : "")));
                 Notify(message);
                 AddToChat(name, message);
 
                 FinishedCommentary(companion, state == GoalState.Reached
-                    ? ModLang.Pick("Has conseguido " + progress + " y vuelves con el jugador.", "You gathered " + progress + " and are returning to the player.")
+                    ? ModLang.Pick("Has conseguido " + progress + " y vuelves con el jugador.", "You gathered " + progress + " and are returning to the player.", "Собрано " + progress + ", возвращаешься к игроку.")
                     : ModLang.Pick(
                         "No has podido terminar el encargo: llevas " + progress + (state != GoalState.Stuck ? " y se te ha agotado el tiempo." : missingTool != null ? " porque te falta " + missingTool + "." : onGround ? " porque no encuentras más por el suelo a tu alcance; suele estar cerca del agua." : " porque no encuentras más cerca."),
-                        "You could not finish the task: you have " + progress + (state != GoalState.Stuck ? " and ran out of time." : missingTool != null ? " because you are missing " + missingTool + "." : onGround ? " because you cannot find any more on the ground within reach; usually near water." : " because you cannot find any more nearby.")),
+                        "You could not finish the task: you have " + progress + (state != GoalState.Stuck ? " and ran out of time." : missingTool != null ? " because you are missing " + missingTool + "." : onGround ? " because you cannot find any more on the ground within reach; usually near water." : " because you cannot find any more nearby."),
+                        "Не удалось завершить поручение: собрано " + progress + (state != GoalState.Stuck ? " и вышло время." : missingTool != null ? ", так как не хватает инструмента (" + missingTool + ")." : onGround ? ", так как больше ничего не лежит на земле поблизости (обычно ищется у воды)." : ", так как больше ничего нет поблизости.")),
                     state != GoalState.Reached);
 
                 // Sin haber conseguido nada, lo pendiente ("tráemelas") ya no tiene sentido; con algo, sigue con lo que tenga.
@@ -3885,11 +3999,11 @@ namespace OfflineCompanionsAI
 
         private string WhyNoEmote(Component companion)
         {
-            if (companion == null) return ModLang.Pick("no está disponible", "not available");
-            if (_emotes.ContainsKey(companion)) return ModLang.Pick("ya está haciendo uno", "already doing one");
-            if (_nextEmoteAt.TryGetValue(companion, out float next) && Time.time < next) return ModLang.Pick("acaba de hacer otro", "just did another");
-            if (HasGoal(companion) || _guards.ContainsKey(companion)) return ModLang.Pick("tiene un encargo", "working on a task");
-            if (_chains.TryGetValue(companion, out OrderSequence<QueuedOrder> chain) && chain.Pending > 0) return ModLang.Pick("tiene tareas pendientes", "has pending tasks");
+            if (companion == null) return ModLang.Pick("no está disponible", "not available", "недоступно");
+            if (_emotes.ContainsKey(companion)) return ModLang.Pick("ya está haciendo uno", "already doing one", "уже выполняет задачу");
+            if (_nextEmoteAt.TryGetValue(companion, out float next) && Time.time < next) return ModLang.Pick("acaba de hacer otro", "just did another", "только что закончил другое дело");
+            if (HasGoal(companion) || _guards.ContainsKey(companion)) return ModLang.Pick("tiene un encargo", "working on a task", "занят поручением");
+            if (_chains.TryGetValue(companion, out OrderSequence<QueuedOrder> chain) && chain.Pending > 0) return ModLang.Pick("tiene tareas pendientes", "has pending tasks", "есть задачи в очереди");
             return CompanionBridge.WhyNoEmote(companion);
         }
 
@@ -3995,7 +4109,7 @@ namespace OfflineCompanionsAI
                 if (step == SequenceStep.TimedOut)
                 {
                     Log.LogWarning("[Cadena] " + name + ": tardó demasiado; se cancelan " + chain.Pending + " tareas.");
-                    Notify(ModLang.Pick(name + " no ha podido seguir con sus tareas pendientes.", name + " could not continue with their pending tasks."));
+                    Notify(ModLang.Pick(name + " no ha podido seguir con sus tareas pendientes.", name + " could not continue with their pending tasks.", name + " не может продолжить задачи из очереди."));
                     _chains.Remove(companion);
                 }
                 else if (step == SequenceStep.StartNext)
@@ -4006,12 +4120,12 @@ namespace OfflineCompanionsAI
                     {
                         chain.StepStarted(Time.time);
                         Log.LogInfo("[Cadena] " + name + ": empieza " + next.Action.Kind + (note == null ? "" : " (" + note + ")"));
-                        AddOrderLine(ModLang.Pick("Siguiente tarea de " + name + ": " + next.Action.Description, "Next task for " + name + ": " + next.Action.Description));
+                        AddOrderLine(ModLang.Pick("Siguiente tarea de " + name + ": " + next.Action.Description, "Next task for " + name + ": " + next.Action.Description, "Следующая задача для " + name + ": " + next.Action.Description));
                     }
                     else
                     {
                         Log.LogWarning("[Cadena] " + name + ": " + next.Action.Kind + " falló: " + failure);
-                        Notify(ModLang.Pick(name + " no ha podido " + next.Action.Description + ": " + failure, name + " could not complete (" + next.Action.Description + "): " + failure));
+                        Notify(ModLang.Pick(name + " no ha podido " + next.Action.Description + ": " + failure, name + " could not complete (" + next.Action.Description + "): " + failure, name + " не может выполнить (" + next.Action.Description + "): " + failure));
                         _chains.Remove(companion);
                     }
                 }
@@ -4025,11 +4139,11 @@ namespace OfflineCompanionsAI
             {
                 if (c != speaker) others.Add(CompanionBridge.Name(c));
             }
-            string text = ModLang.Pick("\nOtros compañeros cerca: ", "\nOther companions nearby: ")
-                + (others.Count == 0 ? ModLang.Pick("ninguno", "none") : string.Join(", ", others.ToArray()));
+            string text = ModLang.Pick("\nOtros compañeros cerca: ", "\nOther companions nearby: ", "\nДругие спутники рядом: ")
+                + (others.Count == 0 ? ModLang.Pick("ninguno", "none", "нет") : string.Join(", ", others.ToArray()));
             if (_chains.TryGetValue(speaker, out OrderSequence<QueuedOrder> chain) && chain.Pending > 0)
             {
-                text += ModLang.Pick("\nTareas pendientes en tu cola: ", "\nPending tasks in your queue: ") + chain.Pending;
+                text += ModLang.Pick("\nTareas pendientes en tu cola: ", "\nPending tasks in your queue: ", "\nЗадачи в твоей очереди: ") + chain.Pending;
             }
             return text;
         }

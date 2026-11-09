@@ -14,7 +14,7 @@ Cierra Valheim antes.
 1. Valheim necesita BepInEx. Si BepInEx ya está instalado, no sustituyas sus archivos.
 2. Copia install/BepInEx/plugins/SpiffoAiCompanions.dll a la carpeta del juego BepInEx/plugins/. Si actualizas este mismo mod, sustituye solo esa DLL.
 3. No instales también Offline Companions Reborn. Reborn 1.5.8 ya va dentro de esta DLL. Si el registro dice que hay otra copia de Offline Companions Reborn, borra ese otro archivo con Valheim cerrado. No borres SpiffoAiCompanions.dll.
-4. Menús de Reborn en español, opcional: copia la carpeta Translations de install/BepInEx/plugins/OfflineCompanionsReborn/ a la carpeta del juego BepInEx/plugins/OfflineCompanionsReborn/. Esa copia no sustituye la DLL. Deja el nombre Spanish.json como está. El juego lee ese nombre.
+4. Menús de Reborn en español o ruso, opcional: copia la carpeta Translations de install/BepInEx/plugins/OfflineCompanionsReborn/ a la carpeta del juego BepInEx/plugins/OfflineCompanionsReborn/. Esa copia no sustituye la DLL. Deja los nombres Spanish.json y Russian.json como están. El juego lee esos nombres.
 
 PLAYER2
 

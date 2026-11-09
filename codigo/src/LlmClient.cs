@@ -60,7 +60,8 @@ namespace OfflineCompanionsAI
                     Plugin.Log.LogWarning("[AI] Response without text or actions.");
                     onError(ModLang.Pick(
                         "La IA no devolvió texto. Si usas MaxTokens, prueba a subirlo o a ponerlo en 0.",
-                        "The AI returned no text. If you use MaxTokens, try raising it or setting it to 0."));
+                        "The AI returned no text. If you use MaxTokens, try raising it or setting it to 0.",
+                        "ИИ не вернул текст. Если используется MaxTokens, попробуй увеличить его или установить в 0."));
                     yield break;
                 }
                 Plugin.Log.LogInfo("[AI] Response received: " + (response.Text?.Length ?? 0) + " chars, " + response.ToolCalls.Count + " actions.");

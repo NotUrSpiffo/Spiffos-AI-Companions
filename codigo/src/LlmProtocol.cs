@@ -110,23 +110,29 @@ namespace OfflineCompanionsAI
         {
             if (status == 0) return ModLang.Pick(
                 "No se pudo conectar con la IA. Comprueba que el servicio esté abierto.",
-                "Could not connect to the AI. Check that the service is running.");
+                "Could not connect to the AI. Check that the service is running.",
+                "Не удалось подключиться к ИИ. Проверь, запущен ли сервис.");
             bool noCredits = body != null && body.IndexOf("insufficient_credits", System.StringComparison.OrdinalIgnoreCase) >= 0;
             if (noCredits) return ModLang.Pick(
                 "Tu cuenta de IA no tiene saldo suficiente.",
-                "Your AI account does not have enough balance.");
+                "Your AI account does not have enough balance.",
+                "На твоём аккаунте ИИ недостаточно средств.");
             if (status == 401 || status == 403) return ModLang.Pick(
                 "La IA rechazó la autenticación. Revisa la clave o la sesión.",
-                "The AI rejected authentication. Check your API key or session.");
+                "The AI rejected authentication. Check your API key or session.",
+                "ИИ отклонил авторизацию. Проверь API-ключ или сессию.");
             if (status == 429) return ModLang.Pick(
                 "Demasiadas peticiones a la IA. Espera un momento.",
-                "Too many requests to the AI. Wait a moment.");
+                "Too many requests to the AI. Wait a moment.",
+                "Слишком много запросов к ИИ. Подожди немного.");
             if (status >= 500) return ModLang.Pick(
                 "El servicio de IA ha fallado. Inténtalo de nuevo.",
-                "The AI service failed. Please try again.");
+                "The AI service failed. Please try again.",
+                "Сбой в работе сервиса ИИ. Попробуй ещё раз.");
             return ModLang.Pick(
                 "La IA rechazó la petición (HTTP " + status + ").",
-                "The AI rejected the request (HTTP " + status + ").");
+                "The AI rejected the request (HTTP " + status + ").",
+                "ИИ отклонил запрос (HTTP " + status + ").");
         }
 
         /// <summary>El saldo de la respuesta de Player2, o null si no se puede leer.</summary>

@@ -632,7 +632,10 @@ namespace OfflineCompanionsAI
                 {
                     if (!__result) return;
                     Plugin.Log.LogInfo("[Picar] " + name + ": no llega a golpear " + target.name + "; la sección más cercana está a " + (float.IsInfinity(distance) ? "ninguna parte" : distance.ToString("F1") + " m"));
-                    MessageHud.instance?.ShowMessage(MessageHud.MessageType.TopLeft, name + ModLang.Pick(" no consigue golpear esa roca desde donde está.", " cannot hit that rock from there."));
+                    MessageHud.instance?.ShowMessage(MessageHud.MessageType.TopLeft, name + ModLang.Pick(
+                        " no consigue golpear esa roca desde donde está.",
+                        " cannot hit that rock from there.",
+                        " не может достать до этого камня оттуда, где стоит."));
                     return;
                 }
 
@@ -888,7 +891,10 @@ namespace OfflineCompanionsAI
                 int count = CompanionsInWorld();
                 if (count < MaxCompanionsPerWorld) return true;
                 Plugin.Log.LogInfo("[Compañeros] No se crea otro: ya hay " + count + " en este mundo (máximo " + MaxCompanionsPerWorld + ").");
-                MessageHud.instance?.ShowMessage(MessageHud.MessageType.Center, ModLang.Pick("Ya tienes " + MaxCompanionsPerWorld + " compañeros en este mundo, el máximo.", "You already have " + MaxCompanionsPerWorld + " companions in this world, the maximum."));
+                MessageHud.instance?.ShowMessage(MessageHud.MessageType.Center, ModLang.Pick(
+                    "Ya tienes " + MaxCompanionsPerWorld + " compañeros en este mundo, el máximo.",
+                    "You already have " + MaxCompanionsPerWorld + " companions in this world, the maximum.",
+                    "У тебя уже есть максимум спутников в этом мире: " + MaxCompanionsPerWorld + "."));
                 __result = false;
                 return false;
             }

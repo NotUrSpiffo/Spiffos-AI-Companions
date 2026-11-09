@@ -1,11 +1,23 @@
-Spiffo's Valheim AI Companions 0.26.2
+Spiffo's Valheim AI Companions 0.26.3
 
 AI-powered companion conversation, natural-language orders and long-term memory
-for Valheim, with English/Spanish language selection and Offline Companions
+for Valheim, with English/Spanish/Russian language selection and Offline Companions
 Reborn 1.5.8 integrated.
 
 Requires Valheim, BepInEx and an AI service. Voice input requires the Player2 app.
 See README.txt for installation and configuration.
+
+Russian translation (0.26.3)
+
+- Russian joins English and Spanish, added at a player's request: mod
+  texts, AI prompts, Reborn menus and speech, chat commands such as
+  /помощь and /язык, and orders such as «за мной» or «стой». Auto picks it
+  when Valheim is in Russian. Feedback from Russian-speaking players is
+  welcome.
+- The translation was reviewed before release: terms follow Valheim's own
+  Russian names (Бродильная бочка, Молот, Пропашник), tool descriptions
+  for the AI say the same as in English and Spanish, and Russian words with
+  «й» or «ё», such as «домой», match what the player types.
 
 Chest sorting (0.26.2)
 
@@ -95,5 +107,5 @@ the release page:
 
 https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/latest
 
-Package includes the supplied DLL, example configurations, Spanish
-translations, third-party notices and the complete Reborn MIT license.
+Package includes the supplied DLL, example configurations, Spanish and
+Russian translations, third-party notices and the complete Reborn MIT license.

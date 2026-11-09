@@ -41,8 +41,9 @@ internal static class Program
         CheckFreezeVersion();
         CheckSearching();
         CheckEnglishMode();
+        CheckRussianMode();
 
-        Console.WriteLine(_failed == 0 ? "OK: lógica sin red (ES + EN)" : "FALLOS: " + _failed);
+        Console.WriteLine(_failed == 0 ? "OK: lógica sin red (ES + EN + RU)" : "FALLOS: " + _failed);
         int sheetArg = Array.IndexOf(args, "--live-sheet");
         if (_failed == 0 && sheetArg >= 0 && args.Length > sheetArg + 2) LiveSheet(args[sheetArg + 1], args[sheetArg + 2]);
         if (_failed == 0 && Array.IndexOf(args, "--sizes") >= 0) PrintRequestSizes();
@@ -109,6 +110,42 @@ internal static class Program
         Check("Synonym ES Latam/España: madera dura/resistente", ItemNames.Matches("Madera resistente", "madera dura").ToString(), "True");
         Check("Synonym ES Latam/España: carne cocida/asada", ItemNames.Matches("Carne asada", "carne cocida").ToString(), "True");
         Check("Synonym ES/EN: flint/pedernal", ItemNames.Matches("Flint", "pedernal").ToString(), "True");
+
+        ModLang.Current = ModLanguage.Spanish;
+    }
+
+    private static void CheckRussianMode()
+    {
+        ModLang.Current = ModLanguage.Russian;
+        Check("RU ModLang.IsRussian", ModLang.IsRussian.ToString(), "True");
+        Check("RU EffectiveReplyLanguage default", ModLang.EffectiveReplyLanguage("auto"), "русский");
+        Check("RU EffectiveReplyLanguage custom", ModLang.EffectiveReplyLanguage("German"), "German");
+        Check("RU LlmProtocol.DescribeError 402", LlmProtocol.DescribeError(402, null, "insufficient_credits").Contains("средств").ToString(), "True");
+        Check("RU VoiceProtocol.DescribeError 404", VoiceProtocol.DescribeError(404, null).Contains("Время").ToString(), "True");
+        Check("RU PromptBuilder system", PromptBuilder.Build(null, "Храбрый воин", "русский", "Имя: Бьёрн", "События:\n- День 1: прибыл", true, true).Contains("Кто ты и как себя ведёшь:").ToString(), "True");
+        Check("RU EmoteCatalog wave", EmoteCatalog.Extract("Привет [ЖЕСТ: помахать]", out string wave), "Привет");
+        Check("RU EmoteCatalog wave trigger", wave, "wave");
+        Check("RU OrderIntent come here (за мной)", OrderIntent.Detect("за мной", new[] { "Бьёрн" })?.Name, "come_here");
+        Check("RU OrderIntent come here (ко мне)", OrderIntent.Detect("ко мне", new[] { "Бьёрн" })?.Name, "come_here");
+        Check("RU OrderIntent stop (стой)", OrderIntent.Detect("стой", new[] { "Бьёрн" })?.Name, "cancel_orders");
+        Check("RU OrderIntent stay here (жди здесь)", OrderIntent.Detect("жди здесь", new[] { "Бьёрн" })?.Name, "set_follow");
+        Check("RU OrderIntent everyone follow me (все за мной)", OrderIntent.Detect("все за мной", new[] { "Бьёрн" })?.Arguments.Contains("all").ToString(), "True");
+        Check("RU CompanionActions gather Wood", CompanionActions.Parse("gather", "{\"item\":\"Wood\",\"amount\":10}", out string _)?.Description.Contains("древесин").ToString(), "True");
+        Check("RU CompanionActions stance passive", CompanionActions.StanceName(1), "пассивная");
+        Check("RU Landmarks Crypt", Landmarks.Label("Crypt2").Contains("погребальн").ToString(), "True");
+        Check("RU Landmarks Copper", Landmarks.Ore("rock4_copper").Contains("медн").ToString(), "True");
+        Check("RU PlaceBook home (дом)", PlaceBook.IsHomeWord("дом").ToString(), "True");
+        Check("RU PlaceBook home (база)", PlaceBook.IsHomeWord("база").ToString(), "True");
+        var mem = new CompanionMemory();
+        mem.AddEvent(3, 2, "Победил Эйктюра", true);
+        Check("RU CompanionMemory LongTerm", mem.LongTerm().Contains("День 3: Победил Эйктюра").ToString(), "True");
+        mem.ApplySummary("Текст сводки.\nФАКТ: Наша база на Лугах", 0);
+        Check("RU CompanionMemory FACT", mem.LongTerm().Contains("Наша база на Лугах").ToString(), "True");
+
+        ModLang.Current = ModLanguage.Auto;
+        ModLang.UpdateGameLanguage("Russian");
+        Check("Auto Russian IsRussian", ModLang.IsRussian.ToString(), "True");
+        Check("Auto Russian EffectiveReplyLanguage", ModLang.EffectiveReplyLanguage("auto"), "русский");
 
         ModLang.Current = ModLanguage.Spanish;
     }

@@ -78,7 +78,10 @@ namespace OfflineCompanionsAI
             }
             catch (Exception ex)
             {
-                Plugin.Log.LogWarning("[Multijugador] " + ModLang.Pick("No se pudo mostrar lo que dijo un compañero de otro jugador: ", "Could not show what another player's companion said: ") + ex.Message);
+                Plugin.Log.LogWarning("[Multijugador] " + ModLang.Pick(
+                    "No se pudo mostrar lo que dijo un compañero de otro jugador: ",
+                    "Could not show what another player's companion said: ",
+                    "Не удалось отобразить реплику спутника другого игрока: ") + ex.Message);
             }
         }
 

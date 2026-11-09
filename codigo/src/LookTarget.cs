@@ -61,30 +61,30 @@ namespace OfflineCompanionsAI
         /// <summary>Una descripción breve para que la IA sepa a qué se refiere el jugador.</summary>
         public string Describe()
         {
-            if (Collider == null) return ModLang.Pick("nada en particular", "nothing in particular");
-            if (Enemy != null) return Localized(Enemy.m_name) + ModLang.Pick(" (enemigo)", " (enemy)");
+            if (Collider == null) return ModLang.Pick("nada en particular", "nothing in particular", "ничего особенного");
+            if (Enemy != null) return Localized(Enemy.m_name) + ModLang.Pick(" (enemigo)", " (enemy)", " (враг)");
 
             string kind = KindOf(Collider);
             string name = Collider.GetComponentInParent<Hoverable>()?.GetHoverName();
             if (!string.IsNullOrEmpty(name)) return kind == null ? Localized(name) : Localized(name) + " (" + kind + ")";
-            return kind ?? ModLang.Pick("el suelo o una construcción", "the ground or a structure");
+            return kind ?? ModLang.Pick("el suelo o una construcción", "the ground or a structure", "земля или постройка");
         }
 
         private static string KindOf(Collider c)
         {
-            if (c.GetComponentInParent<Vagon>() != null) return ModLang.Pick("carro", "cart");
-            if (c.GetComponentInParent<Door>() != null) return ModLang.Pick("puerta", "door");
-            if (c.GetComponentInParent<Fireplace>() != null) return ModLang.Pick("fuego", "fire");
-            if (c.GetComponentInParent<Bed>() != null) return ModLang.Pick("cama", "bed");
-            if (c.GetComponentInParent<CraftingStation>() != null) return ModLang.Pick("estación de trabajo", "crafting station");
-            if (c.GetComponentInParent<Smelter>() != null) return ModLang.Pick("horno", "smelter");
-            if (c.GetComponentInParent<Beehive>() != null) return ModLang.Pick("colmena", "beehive");
-            if (c.GetComponentInParent<Ship>() != null) return ModLang.Pick("barco", "ship");
-            if (c.GetComponentInParent<TombStone>() != null) return ModLang.Pick("tumba", "tombstone");
-            if (c.GetComponentInParent<Container>() != null) return ModLang.Pick("cofre", "chest");
-            if (c.GetComponentInParent<TreeBase>() != null || c.GetComponentInParent<TreeLog>() != null) return ModLang.Pick("árbol", "tree");
-            if (c.GetComponentInParent<MineRock5>() != null || c.GetComponentInParent<MineRock>() != null) return ModLang.Pick("roca", "rock");
-            if (c.GetComponentInParent<Destructible>() != null && c.GetComponentInParent<Piece>() == null) return ModLang.Pick("planta o resto pequeño", "plant or small debris");
+            if (c.GetComponentInParent<Vagon>() != null) return ModLang.Pick("carro", "cart", "телега");
+            if (c.GetComponentInParent<Door>() != null) return ModLang.Pick("puerta", "door", "дверь");
+            if (c.GetComponentInParent<Fireplace>() != null) return ModLang.Pick("fuego", "fire", "огонь");
+            if (c.GetComponentInParent<Bed>() != null) return ModLang.Pick("cama", "bed", "кровать");
+            if (c.GetComponentInParent<CraftingStation>() != null) return ModLang.Pick("estación de trabajo", "crafting station", "станция ремесла");
+            if (c.GetComponentInParent<Smelter>() != null) return ModLang.Pick("horno", "smelter", "плавильня");
+            if (c.GetComponentInParent<Beehive>() != null) return ModLang.Pick("colmena", "beehive", "улей");
+            if (c.GetComponentInParent<Ship>() != null) return ModLang.Pick("barco", "ship", "корабль");
+            if (c.GetComponentInParent<TombStone>() != null) return ModLang.Pick("tumba", "tombstone", "надгробие");
+            if (c.GetComponentInParent<Container>() != null) return ModLang.Pick("cofre", "chest", "сундук");
+            if (c.GetComponentInParent<TreeBase>() != null || c.GetComponentInParent<TreeLog>() != null) return ModLang.Pick("árbol", "tree", "дерево");
+            if (c.GetComponentInParent<MineRock5>() != null || c.GetComponentInParent<MineRock>() != null) return ModLang.Pick("roca", "rock", "камень");
+            if (c.GetComponentInParent<Destructible>() != null && c.GetComponentInParent<Piece>() == null) return ModLang.Pick("planta o resto pequeño", "plant or small debris", "растение или мелкие обломки");
             return null;
         }
 

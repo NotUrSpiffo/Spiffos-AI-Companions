@@ -176,23 +176,23 @@ namespace OfflineCompanionsAI
         /// <summary>Lo que se puede elegir en el editor. Automática deja que decida su perfil.</summary>
         public static KeyValuePair<string, string>[] Choices => new[]
         {
-            new KeyValuePair<string, string>("", ModLang.Pick("Automática", "Automatic")),
-            new KeyValuePair<string, string>(NoneValue, ModLang.Pick("Ninguna", "None")),
-            new KeyValuePair<string, string>("oficio", ModLang.Pick("Oficio", "Craft")),
-            new KeyValuePair<string, string>("exploracion", ModLang.Pick("Exploración", "Exploration")),
-            new KeyValuePair<string, string>("caza", ModLang.Pick("Caza", "Hunting")),
-            new KeyValuePair<string, string>("recoleccion", ModLang.Pick("Recolección", "Foraging"))
+            new KeyValuePair<string, string>("", ModLang.Pick("Automática", "Automatic", "Авто")),
+            new KeyValuePair<string, string>(NoneValue, ModLang.Pick("Ninguna", "None", "Нет")),
+            new KeyValuePair<string, string>("oficio", ModLang.Pick("Oficio", "Craft", "Ремесло")),
+            new KeyValuePair<string, string>("exploracion", ModLang.Pick("Exploración", "Exploration", "Разведка")),
+            new KeyValuePair<string, string>("caza", ModLang.Pick("Caza", "Hunting", "Охота")),
+            new KeyValuePair<string, string>("recoleccion", ModLang.Pick("Recolección", "Foraging", "Сбор"))
         };
 
         public static string Name(Inclination inclination)
         {
             switch (inclination)
             {
-                case Inclination.Oficio: return ModLang.Pick("Oficio", "Craft");
-                case Inclination.Exploracion: return ModLang.Pick("Exploración", "Exploration");
-                case Inclination.Caza: return ModLang.Pick("Caza", "Hunting");
-                case Inclination.Recoleccion: return ModLang.Pick("Recolección", "Foraging");
-                default: return ModLang.Pick("Ninguna", "None");
+                case Inclination.Oficio: return ModLang.Pick("Oficio", "Craft", "Ремесло");
+                case Inclination.Exploracion: return ModLang.Pick("Exploración", "Exploration", "Разведка");
+                case Inclination.Caza: return ModLang.Pick("Caza", "Hunting", "Охота");
+                case Inclination.Recoleccion: return ModLang.Pick("Recolección", "Foraging", "Сбор");
+                default: return ModLang.Pick("Ninguna", "None", "Нет");
             }
         }
 
@@ -346,10 +346,10 @@ namespace OfflineCompanionsAI
     {
         public static string Name(float dayFraction)
         {
-            if (dayFraction < 0.2f || dayFraction >= 0.78f) return ModLang.Pick("de noche", "at night");
-            if (dayFraction < 0.3f) return ModLang.Pick("amaneciendo", "at dawn");
-            if (dayFraction < 0.5f) return ModLang.Pick("por la mañana", "in the morning");
-            return dayFraction < 0.68f ? ModLang.Pick("por la tarde", "in the afternoon") : ModLang.Pick("anocheciendo", "at dusk");
+            if (dayFraction < 0.2f || dayFraction >= 0.78f) return ModLang.Pick("de noche", "at night", "ночью");
+            if (dayFraction < 0.3f) return ModLang.Pick("amaneciendo", "at dawn", "на рассвете");
+            if (dayFraction < 0.5f) return ModLang.Pick("por la mañana", "in the morning", "утром");
+            return dayFraction < 0.68f ? ModLang.Pick("por la tarde", "in the afternoon", "днём") : ModLang.Pick("anocheciendo", "at dusk", "в сумерках");
         }
     }
 
@@ -380,19 +380,23 @@ namespace OfflineCompanionsAI
 
         public static string MemoryLine => ModLang.Pick(
             "(Momento tranquilo: actuaste por iniciativa propia.)",
-            "(Quiet moment: you acted on your own initiative.)");
+            "(Quiet moment: you acted on your own initiative.)",
+            "(Спокойный момент: ты действовал по собственной инициативе.)");
 
         private const string SilenceTagEs = "[nada]";
         private const string SilenceTagEn = "[nothing]";
-        private static string SilenceTag => ModLang.Pick(SilenceTagEs, SilenceTagEn);
+        private const string SilenceTagRu = "[ничего]";
+        private static string SilenceTag => ModLang.Pick(SilenceTagEs, SilenceTagEn, SilenceTagRu);
 
         public static string PromptLine => ModLang.Pick(
             "Tienes iniciativa propia: no eres una herramienta que espera órdenes. Opina, propón planes, pregunta al jugador por lo que hace, retoma temas de la historia que comparten y lleva la contraria si tu personaje lo haría.",
-            "You have your own initiative: you are not a tool waiting for orders. Share opinions, suggest plans, ask the player what they are doing, revisit topics from your shared history, and push back if your character would.");
+            "You have your own initiative: you are not a tool waiting for orders. Share opinions, suggest plans, ask the player what they are doing, revisit topics from your shared history, and push back if your character would.",
+            "У тебя есть собственная инициатива: ты не инструмент, ждущий приказов. Высказывай мнение, предлагай планы, спрашивай игрока о его делах, возвращайся к темам из вашей общей истории и возражай, если твой персонаж так бы поступил.");
 
         public static string AfterActing => ModLang.Pick(
             "Ya has empezado lo que decidiste hacer. Si quieres, avísalo con tu voz en muy pocas palabras, unas seis como mucho, como quien dice de pasada a dónde va. No digas por qué ni para qué, ni adornes la frase. Si hubo un error, no insistas.",
-            "You have already started what you decided to do. If you like, mention it in your own voice in very few words, about six at most, like someone casually saying where they are going. Do not explain why or what for, and do not embellish. If there was an error, do not insist.");
+            "You have already started what you decided to do. If you like, mention it in your own voice in very few words, about six at most, like someone casually saying where they are going. Do not explain why or what for, and do not embellish. If there was an error, do not insist.",
+            "Ты уже начал делать то, что решил. Если хочешь, скажи об этом вслух очень кратко, не более шести слов, словно мимоходом бросая, куда идёшь. Не объясняй почему или зачем и не приукрашивай фразу. Если возникла ошибка, не настаивай.");
 
         private static readonly HashSet<string> AllowedTools = new HashSet<string>
         {
@@ -431,31 +435,36 @@ namespace OfflineCompanionsAI
             {
                 return ModLang.Pick(
                     "Esto no lo haces por tu cuenta: propónselo al jugador.",
-                    "You do not do this on your own: suggest it to the player.");
+                    "You do not do this on your own: suggest it to the player.",
+                    "Ты не делаешь это сам по себе: предложи это игроку.");
             }
             if (action.Kind == ActionKind.GoTo && (action.Value == CompanionActions.PlaceLookedAt || action.Stay))
             {
                 return ModLang.Pick(
                     "Por tu cuenta solo puedes ir un momento hasta algo cercano.",
-                    "On your own you can only step over to something nearby for a moment.");
+                    "On your own you can only step over to something nearby for a moment.",
+                    "По собственной инициативе ты можешь лишь ненадолго подойти к чему-то поблизости.");
             }
             if (action.Kind == ActionKind.Gather && action.Amount > MaxGatherAmount)
             {
                 return ModLang.Pick(
                     "Por tu cuenta, como mucho " + MaxGatherAmount + " de una vez.",
-                    "On your own, at most " + MaxGatherAmount + " at a time.");
+                    "On your own, at most " + MaxGatherAmount + " at a time.",
+                    "По собственной инициативе максимум " + MaxGatherAmount + " за раз.");
             }
             if (action.Kind == ActionKind.Cook && action.Amount > MaxCookAmount)
             {
                 return ModLang.Pick(
                     "Por tu cuenta, como mucho " + MaxCookAmount + " raciones de una vez.",
-                    "On your own, at most " + MaxCookAmount + " portions at a time.");
+                    "On your own, at most " + MaxCookAmount + " portions at a time.",
+                    "По собственной инициативе максимум " + MaxCookAmount + " порций за раз.");
             }
             if (action.Kind == ActionKind.TakeFromChest && !ItemNames.IsFoodWord(action.Item) && !ItemNames.IsAmmoWord(action.Item) && (action.Amount <= 0 || action.Amount > MaxGatherAmount))
             {
                 return ModLang.Pick(
                     "Por tu cuenta, indica cuánto coges, como mucho " + MaxGatherAmount + ": lo demás es del jugador. Para comer, usa item comida.",
-                    "On your own, specify how much you take, at most " + MaxGatherAmount + ": the rest belongs to the player. To eat, use item food.");
+                    "On your own, specify how much you take, at most " + MaxGatherAmount + ": the rest belongs to the player. To eat, use item food.",
+                    "По собственной инициативе укажи, сколько берёшь, максимум " + MaxGatherAmount + ": остальное принадлежит игроку. Чтобы поесть, укажи item food.");
             }
             return null;
         }
@@ -489,31 +498,31 @@ namespace OfflineCompanionsAI
             float materials = facts.PlayerBuilding ? BuildingFactor : 1f;
 
             Add(facts.LooseItems, IdeaKind.Discovery, "pick_up_item", "pick_up_item",
-                ModLang.Pick("recoger lo que hay suelto (pick_up_item con su nombre)", "pick up loose items (pick_up_item with their name)"));
+                ModLang.Pick("recoger lo que hay suelto (pick_up_item con su nombre)", "pick up loose items (pick_up_item with their name)", "подобрать то, что лежит на земле (pick_up_item с его именем)"));
             Add(facts.FiresLow, IdeaKind.Upkeep, "maintain", "maintain:" + CompanionActions.PlanForTask("fuel"),
-                ModLang.Pick("reavivar los fuegos que se apagan (maintain fuel)", "refuel dying fires (maintain fuel)"), 3f, urgent: facts.Night);
+                ModLang.Pick("reavivar los fuegos que se apagan (maintain fuel)", "refuel dying fires (maintain fuel)", "подбросить топлива в затухающие огни (maintain fuel)"), 3f, urgent: facts.Night);
             Add(facts.DamagedPieces && facts.CanGetHammer, IdeaKind.Upkeep, "maintain", "maintain:" + CompanionActions.PlanForTask("repair"),
-                ModLang.Pick("reparar lo que está dañado (maintain repair)", "repair damaged structures (maintain repair)"), 3f);
+                ModLang.Pick("reparar lo que está dañado (maintain repair)", "repair damaged structures (maintain repair)", "починить повреждённые постройки (maintain repair)"), 3f);
             Add(facts.HoneyReady, IdeaKind.Upkeep, "maintain", "maintain:" + CompanionActions.PlanForTask("honey"),
-                ModLang.Pick("recoger la miel (maintain honey)", "collect honey (maintain honey)"), 2f);
+                ModLang.Pick("recoger la miel (maintain honey)", "collect honey (maintain honey)", "собрать мёд (maintain honey)"), 2f);
             Add(facts.GatheredInPack && facts.BuiltChests > 0, IdeaKind.Storage, "store_items", "store_items",
-                ModLang.Pick("guardar en un cofre lo que has recogido (store_items)", "store what you gathered in a chest (store_items)"), 1f, urgent: facts.PackFull);
+                ModLang.Pick("guardar en un cofre lo que has recogido (store_items)", "store what you gathered in a chest (store_items)", "сложить собранное в сундук (store_items)"), 1f, urgent: facts.PackFull);
             Add(facts.BuiltChests > 1, IdeaKind.Storage, "organize_chests", "organize_chests",
-                ModLang.Pick("ordenar los cofres (organize_chests)", "organize the chests (organize_chests)"), 0.5f);
+                ModLang.Pick("ordenar los cofres (organize_chests)", "organize the chests (organize_chests)", "навести порядок в сундуках (organize_chests)"), 0.5f);
             Add(facts.CookingSpot && facts.CookableDish != null, IdeaKind.Other, "cook_food", "cook_food",
-                ModLang.Pick("cocinar hasta " + MaxCookAmount + " de " + facts.CookableDish + " (cook_food)", "cook up to " + MaxCookAmount + " of " + facts.CookableDish + " (cook_food)"), food);
+                ModLang.Pick("cocinar hasta " + MaxCookAmount + " de " + facts.CookableDish + " (cook_food)", "cook up to " + MaxCookAmount + " of " + facts.CookableDish + " (cook_food)", "приготовить до " + MaxCookAmount + " " + facts.CookableDish + " (cook_food)"), food);
             Add(facts.FoundChest && !facts.NightOutside, IdeaKind.Discovery, "go_to", "go_to:" + CompanionActions.PlaceFoundChest,
-                ModLang.Pick("ir a ver el cofre encontrado (go_to found_chest)", "go check the discovered chest (go_to found_chest)"), 2f);
+                ModLang.Pick("ir a ver el cofre encontrado (go_to found_chest)", "go check the discovered chest (go_to found_chest)", "пойти проверить найденный сундук (go_to found_chest)"), 2f);
             Add(!facts.NightOutside && !facts.PackFull, IdeaKind.Discovery, "explore", "explore",
-                ModLang.Pick("explorar los alrededores por si hay algo interesante (explore)", "explore the surroundings for anything interesting (explore)"), ExploreWeight);
+                ModLang.Pick("explorar los alrededores por si hay algo interesante (explore)", "explore the surroundings for anything interesting (explore)", "осмотреть окрестности в поисках чего-то интересного (explore)"), ExploreWeight);
             AddGather(facts.Animals, IdeaKind.Hunting, CompanionActions.JobHunt,
-                ModLang.Pick("cazar los animales cercanos (gather con su carne o piel)", "hunt nearby animals (gather with their meat or hide)"), food);
+                ModLang.Pick("cazar los animales cercanos (gather con su carne o piel)", "hunt nearby animals (gather with their meat or hide)", "поохотиться на животных поблизости (gather с их мясом или шкурой)"), food);
             AddGather(facts.Ripe, IdeaKind.Foraging, CompanionActions.JobForage,
-                ModLang.Pick("recoger plantas que estén listas (gather con su nombre)", "gather ripe plants (gather with their name)"), food);
+                ModLang.Pick("recoger plantas que estén listas (gather con su nombre)", "gather ripe plants (gather with their name)", "собрать созревшие растения (gather с их именем)"), food);
             AddGather(facts.Trees && !facts.NoAxe, IdeaKind.Materials, CompanionActions.JobWood,
-                ModLang.Pick("conseguir madera (gather)", "gather wood (gather)"), ByStock(facts.WoodStored, LowWood, PlentyWood) * materials);
+                ModLang.Pick("conseguir madera (gather)", "gather wood (gather)", "нарубить древесины (gather)"), ByStock(facts.WoodStored, LowWood, PlentyWood) * materials);
             AddGather(facts.Rocks && !facts.NoPickaxe, IdeaKind.Materials, CompanionActions.JobStone,
-                ModLang.Pick("conseguir piedra (gather)", "gather stone (gather)"), ByStock(facts.StoneStored, LowWood, PlentyWood) * materials);
+                ModLang.Pick("conseguir piedra (gather)", "gather stone (gather)", "добыть камень (gather)"), ByStock(facts.StoneStored, LowWood, PlentyWood) * materials);
             return ideas;
         }
 
@@ -560,37 +569,43 @@ namespace OfflineCompanionsAI
             {
                 lines.Add(ModLang.Pick(
                     "Hay una incursión en marcha: no te alejes del jugador ni empieces ningún trabajo.",
-                    "A raid is underway: stay close to the player and do not start any jobs."));
+                    "A raid is underway: stay close to the player and do not start any jobs.",
+                    "Идёт рейд: держись рядом с игроком и не начинай никакой работы."));
             }
             else if (facts.EnemiesClose)
             {
                 lines.Add(ModLang.Pick(
                     "Hay enemigos cerca: no te alejes del jugador ni empieces ningún trabajo.",
-                    "Enemies are nearby: stay close to the player and do not start any jobs."));
+                    "Enemies are nearby: stay close to the player and do not start any jobs.",
+                    "Враги поблизости: держись рядом с игроком и не начинай никакой работы."));
             }
             if (facts.PlayerHurt)
             {
                 lines.Add(ModLang.Pick(
                     "El jugador está malherido: quédate a su lado y, si quieres, díselo. No puedes curarlo ni darle de comer, y comer tú no le ayuda.",
-                    "The player is badly hurt: stay by their side and, if you want, mention it. You cannot heal or feed them, and eating yourself does not help them."));
+                    "The player is badly hurt: stay by their side and, if you want, mention it. You cannot heal or feed them, and eating yourself does not help them.",
+                    "Игрок тяжело ранен: оставайся рядом с ним и, если хочешь, скажи об этом. Ты не можешь вылечить или накормить его, и твоя еда ему не поможет."));
             }
             if (facts.SelfHurt)
             {
                 lines.Add(ModLang.Pick(
                     "Estás malherido: no te alejes, y come si llevas algo.",
-                    "You are badly hurt: do not wander off, and eat if you are carrying food."));
+                    "You are badly hurt: do not wander off, and eat if you are carrying food.",
+                    "Ты тяжело ранен: не уходи далеко и поешь, если у тебя есть еда."));
             }
             if (facts.NightOutside)
             {
                 lines.Add(ModLang.Pick(
                     "Es de noche y están lejos de la base: no te separes del jugador.",
-                    "It is night and you are far from base: do not separate from the player."));
+                    "It is night and you are far from base: do not separate from the player.",
+                    "Сейчас ночь, и вы далеко от базы: не отходи от игрока."));
             }
             if (facts.PlayerBuilding && !facts.MustStayClose)
             {
                 lines.Add(ModLang.Pick(
                     "El jugador está construyendo: los materiales le vendrán bien.",
-                    "The player is building: materials will come in handy."));
+                    "The player is building: materials will come in handy.",
+                    "Игрок строит: материалы придутся кстати."));
             }
             return lines.Count == 0 ? null : string.Join(" ", lines);
         }
@@ -621,7 +636,25 @@ namespace OfflineCompanionsAI
 
         public static string Message(string surroundings, IList<string> needs, bool canAct, IList<string> ideas = null, IList<string> recent = null, string context = null)
         {
-            if (ModLang.IsSpanish)
+            if (ModLang.IsRussian)
+            {
+                string text = "(Спокойный момент; игрок ничего не сказал. Вокруг тебя: " + surroundings;
+                text += " Построенные игроками сундуки принадлежат базе: не представляй их как находку.";
+                if (needs != null && needs.Count > 0) text += " Что тебе нужно" + (canAct ? ", и позаботься об этом прежде всего, если можешь" : "") + ": " + string.Join(" ", needs);
+                if (context != null) text += " " + context;
+                if (canAct)
+                {
+                    text += " Реши в характере своего персонажа, сделаешь ли что-то по собственной инициативе: скажи что-то новое, подходящее к моменту или развивающее вашу общую историю, используй инструмент для полезного дела, которое порадует игрока, или сделай и то и другое. Сам по себе собирай не более " + MaxGatherAmount + " каждого ресурса.";
+                    if (ideas != null && ideas.Count > 0) text += " Идеи на текущий момент: " + string.Join("; ", ideas) + ".";
+                    if (recent != null && recent.Count > 0) text += " Ты уже пробовал это недавно, так что выбери другое: " + string.Join("; ", recent) + ".";
+                }
+                else
+                {
+                    text += " Ты занят другим делом, поэтому не можешь сменить занятие: максимум скажи что-то новое, подходящее к моменту.";
+                }
+                return text + " Не повторяй то, что уже сказал или только что сделал, и не командуй игроком. Если сейчас не стоит ничего делать, ответь только " + SilenceTag + ".)";
+            }
+            else if (ModLang.IsSpanish)
             {
                 string text = "(Momento tranquilo; el jugador no ha dicho nada. A tu alrededor: " + surroundings;
                 text += " Los cofres construidos por jugadores son de la base: no los presentes como un hallazgo.";
@@ -666,13 +699,15 @@ namespace OfflineCompanionsAI
                 "(Suceso de la partida; el jugador no ha dicho nada: " + reaction.Description
                 + " Coméntalo en voz alta con una frase corta. Si puedes resolverlo tú con una herramienta, como buscar lo que te falta en un cofre, hazlo sin esperar a que te lo pidan.)",
                 "(In-game event; the player said nothing: " + reaction.Description
-                + " Comment on it aloud in a short sentence. If you can solve it yourself with a tool, like looking for what you need in a chest, do so without waiting to be asked.)");
+                + " Comment on it aloud in a short sentence. If you can solve it yourself with a tool, like looking for what you need in a chest, do so without waiting to be asked.)",
+                "(Игровое событие; игрок ничего не сказал: " + reaction.Description
+                + " Прокомментируй это вслух короткой фразой. Если ты можешь решить это сам с помощью инструмента, например поискать недостающее в сундуке, сделай это, не дожидаясь просьбы.)");
         }
 
         /// <summary>Quita la indicación de no decir nada. Si no queda texto, se queda callado sin que nada llegue a verse.</summary>
         public static string StripSilence(string reply)
         {
-            return (reply ?? "").Replace(SilenceTagEs, "").Replace(SilenceTagEn, "").Trim();
+            return (reply ?? "").Replace(SilenceTagEs, "").Replace(SilenceTagEn, "").Replace(SilenceTagRu, "").Trim();
         }
     }
 
@@ -684,7 +719,8 @@ namespace OfflineCompanionsAI
         public const float RepeatSeconds = 900f;
         public static string RepeatRefusal => ModLang.Pick(
             "Ya intentaste esto hace poco: elige otra cosa, o simplemente di algo.",
-            "You already tried this recently: choose something else, or simply say something.");
+            "You already tried this recently: choose something else, or simply say something.",
+            "Ты уже пробовал это недавно: выбери что-то другое или просто скажи что-нибудь.");
 
         private readonly Dictionary<string, KeyValuePair<float, string>> _done = new Dictionary<string, KeyValuePair<float, string>>();
 
@@ -722,12 +758,23 @@ namespace OfflineCompanionsAI
                 "Tu equipo está muy gastado. Se repara en una estación de trabajo, sin gastar materiales"
                 + (stationNear ? " (repair_gear)." : ", y no hay ninguna cerca: no busques materiales para esto; como mucho, díselo al jugador."),
                 "Your gear is very worn. It is repaired at a crafting station without spending materials"
-                + (stationNear ? " (repair_gear)." : ", and there is none nearby: do not look for materials for this; at most, mention it to the player."));
+                + (stationNear ? " (repair_gear)." : ", and there is none nearby: do not look for materials for this; at most, mention it to the player."),
+                "Твоё снаряжение сильно изношено. Оно ремонтируется на верстаке или в кузнице без расхода материалов"
+                + (stationNear ? " (repair_gear)." : ", но поблизости ничего нет: не ищи материалы для этого; максимум скажи об этом игроку."));
         }
 
         /// <summary>Qué decirle si lleva un arma a distancia sin munición.</summary>
         public static string AmmoNeed(string launcher, string ammo, bool inChest, bool hasMelee)
         {
+            if (ModLang.IsRussian)
+            {
+                string text = "У тебя есть " + launcher + ", но нет " + ammo;
+                if (inChest) return text + ", и они есть в сундуке поблизости (take_from_chest).";
+                text += ", и в сундуках поблизости их тоже нет.";
+                return text + (hasMelee
+                    ? " Пока сражайся оружием ближнего боя. Ты не умеешь их создавать: попроси у игрока."
+                    : " У тебя также нет оружия ближнего боя: поищи в сундуках или попроси у игрока.");
+            }
             if (ModLang.IsSpanish)
             {
                 string text = "Llevas " + launcher + " pero no tienes " + ammo;

@@ -103,14 +103,14 @@ namespace OfflineCompanionsAI
                 // Reaparece lejos de donde estaban: se enteran todos, no solo los que queden cerca.
                 foreach (Component companion in CompanionBridge.MyCompanions())
                 {
-                    _remember(companion, MemoryWeight.Death, player.GetPlayerName() + ModLang.Pick(" murió y volvió a aparecer.", " died and respawned."), false);
+                    _remember(companion, MemoryWeight.Death, player.GetPlayerName() + ModLang.Pick(" murió y volvió a aparecer.", " died and respawned.", " погиб и возродился."), false);
                 }
                 if (_settings.ReactPlayerDeath.Value)
                 {
                     _emit(new Reaction
                     {
                         Kind = ReactionKind.PlayerDied,
-                        Description = ModLang.Pick("El jugador acaba de morir y ha reaparecido.", "The player just died and respawned.")
+                        Description = ModLang.Pick("El jugador acaba de morir y ha reaparecido.", "The player just died and respawned.", "Игрок только что погиб и возродился.")
                     });
                 }
             }
@@ -142,13 +142,13 @@ namespace OfflineCompanionsAI
                 // Los jefes ya derrotados al cargar el mundo no son noticia.
                 if (_bossBaselineDone)
                 {
-                    _remember(null, MemoryWeight.Boss, ModLang.Pick("Derrotamos a " + boss + ".", "We defeated " + boss + "."), true);
+                    _remember(null, MemoryWeight.Boss, ModLang.Pick("Derrotamos a " + boss + ".", "We defeated " + boss + ".", "Мы победили босса: " + boss + "."), true);
                     if (_settings.ReactBoss.Value)
                     {
                         _emit(new Reaction
                         {
                             Kind = ReactionKind.BossDefeated,
-                            Description = ModLang.Pick("Acaban de derrotar a " + boss + ".", "You just defeated " + boss + ".")
+                            Description = ModLang.Pick("Acaban de derrotar a " + boss + ".", "You just defeated " + boss + ".", "Вы только что победили босса: " + boss + ".")
                         });
                     }
                 }
@@ -192,13 +192,13 @@ namespace OfflineCompanionsAI
             }
             foreach (string name in defeated)
             {
-                _remember(null, MemoryWeight.Boss, ModLang.Pick("Derrotamos a " + name + ".", "We defeated " + name + "."), false);
+                _remember(null, MemoryWeight.Boss, ModLang.Pick("Derrotamos a " + name + ".", "We defeated " + name + ".", "Мы победили: " + name + "."), false);
                 if (_settings.ReactBoss.Value)
                 {
                     _emit(new Reaction
                     {
                         Kind = ReactionKind.BossDefeated,
-                        Description = ModLang.Pick("Acaban de derrotar a " + name + ", un jefe menor.", "You just defeated " + name + ", a lesser boss.")
+                        Description = ModLang.Pick("Acaban de derrotar a " + name + ", un jefe menor.", "You just defeated " + name + ", a lesser boss.", "Вы только что победили " + name + ", мини-босса.")
                     });
                 }
             }
@@ -222,7 +222,7 @@ namespace OfflineCompanionsAI
                 _emit(new Reaction
                 {
                     Kind = ReactionKind.RaidStarted,
-                    Description = ModLang.Pick("Empieza una incursión de enemigos: ", "An enemy raid has started: ") + raid
+                    Description = ModLang.Pick("Empieza una incursión de enemigos: ", "An enemy raid has started: ", "Начался рейд врагов: ") + raid
                 });
             }
             else if (previous != null)
@@ -230,7 +230,7 @@ namespace OfflineCompanionsAI
                 _emit(new Reaction
                 {
                     Kind = ReactionKind.RaidEnded,
-                    Description = ModLang.Pick("La incursión de enemigos ha terminado.", "The enemy raid has ended.")
+                    Description = ModLang.Pick("La incursión de enemigos ha terminado.", "The enemy raid has ended.", "Рейд врагов закончился.")
                 });
             }
         }
@@ -253,9 +253,11 @@ namespace OfflineCompanionsAI
             bool firstOfSession = _visitedBiomes.Count == 0;
             if (_visitedBiomes.Add(key) && !firstOfSession)
             {
-                string visitedLine = ModLang.IsSpanish
-                    ? ("Llegamos a " + name + ".").Replace(" a el ", " al ")
-                    : "We arrived at " + name + ".";
+                string visitedLine = ModLang.IsRussian
+                    ? "Мы прибыли в " + name + "."
+                    : (ModLang.IsSpanish
+                        ? ("Llegamos a " + name + ".").Replace(" a el ", " al ")
+                        : "We arrived at " + name + ".");
                 _remember(null, MemoryWeight.Notable, visitedLine, true);
                 if (_settings.ReactBiome.Value)
                 {
@@ -264,7 +266,8 @@ namespace OfflineCompanionsAI
                         Kind = ReactionKind.NewBiome,
                         Description = ModLang.Pick(
                             "Acabáis de entrar en " + name + " por primera vez en esta sesión.",
-                            "You have just entered " + name + " for the first time this session.")
+                            "You have just entered " + name + " for the first time this session.",
+                            "Вы только что впервые вошли в " + name + " за эту сессию.")
                     });
                 }
             }
@@ -296,7 +299,7 @@ namespace OfflineCompanionsAI
                         {
                             Kind = ReactionKind.CompanionReturned,
                             Speaker = companion,
-                            Description = ModLang.Pick("Acabas de volver a la vida tras morir.", "You just came back to life after dying.")
+                            Description = ModLang.Pick("Acabas de volver a la vida tras morir.", "You just came back to life after dying.", "Ты только что вернулся к жизни после гибели.")
                         });
                     }
                 }
@@ -358,7 +361,7 @@ namespace OfflineCompanionsAI
                     {
                         Kind = ReactionKind.CompanionLowHealth,
                         Speaker = companion,
-                        Description = ModLang.Pick("Te queda muy poca salud.", "You are very low on health.")
+                        Description = ModLang.Pick("Te queda muy poca salud.", "You are very low on health.", "У тебя осталось очень мало здоровья.")
                     });
                 }
             }

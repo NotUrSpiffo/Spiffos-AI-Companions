@@ -69,13 +69,13 @@ public class SpeechConfig
 	public static void Load()
 	{
 		string directoryName = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-		string text = "English";
+		string text = OfflineCompanionsAI.ModLang.IsRussian ? "Russian" : (OfflineCompanionsAI.ModLang.IsSpanish ? "Spanish" : "English");
 		try
 		{
 			if (Localization.instance != null)
 			{
 				OfflineCompanionsAI.ModLang.UpdateGameLanguage(Localization.instance.GetSelectedLanguage());
-				text = OfflineCompanionsAI.ModLang.IsEnglish ? "English" : "Spanish";
+				text = OfflineCompanionsAI.ModLang.IsRussian ? "Russian" : (OfflineCompanionsAI.ModLang.IsSpanish ? "Spanish" : "English");
 			}
 		}
 		catch

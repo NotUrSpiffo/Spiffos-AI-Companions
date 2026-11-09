@@ -46,16 +46,20 @@ namespace OfflineCompanionsAI
         {
             if (status == 0) return ModLang.Pick(
                 "No se pudo conectar con Player2 para reconocer tu voz. Comprueba que la app esté abierta.",
-                "Could not connect to Player2 for voice recognition. Check that the app is open.");
+                "Could not connect to Player2 for voice recognition. Check that the app is open.",
+                "Не удалось подключиться к Player2 для распознавания голоса. Убедись, что приложение открыто.");
             if (status == 404) return ModLang.Pick(
                 "Se agotó el tiempo de escucha. Inténtalo de nuevo.",
-                "Listening time expired. Please try again.");
+                "Listening time expired. Please try again.",
+                "Время ожидания голосового ввода истекло. Попробуй ещё раз.");
             if (status == 409) return ModLang.Pick(
                 "Player2 ya está escuchando. Inténtalo de nuevo en un momento.",
-                "Player2 is already listening. Try again in a moment.");
+                "Player2 is already listening. Try again in a moment.",
+                "Player2 уже ведёт запись. Попробуй ещё раз через секунду.");
             if (status == 503) return ModLang.Pick(
                 "El reconocimiento de voz de Player2 no está disponible. Revisa el micrófono en la app.",
-                "Player2 voice recognition is unavailable. Check the microphone in the app.");
+                "Player2 voice recognition is unavailable. Check the microphone in the app.",
+                "Распознавание голоса Player2 недоступно. Проверь микрофон в приложении.");
             return LlmProtocol.DescribeError(status, null, body);
         }
     }
