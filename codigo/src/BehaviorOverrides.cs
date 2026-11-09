@@ -678,7 +678,17 @@ namespace OfflineCompanionsAI
             public Vector3 Anchor;
             public int Swings;
             public float LastHit;
+            public Vector3 StepDir;
+            public float StepUntil;
+            public GameObject StepTarget;
+            public int StepCount;
         }
+
+        private const float StepOffAfterSeconds = 4f;
+        private const float StepOffSeconds = 4f;
+        private const int StepOffTries = 2;
+        // Valheim hace daño por caída a partir de 4 m.
+        private const float StepOffMaxDrop = 3.8f;
 
         private static readonly Dictionary<Companions.HarvestController, GatherWatch> _gatherWatch = new Dictionary<Companions.HarvestController, GatherWatch>();
 
@@ -711,6 +721,16 @@ namespace OfflineCompanionsAI
                     watch = new GatherWatch();
                     _gatherWatch[__instance] = watch;
                 }
+                if (watch.StepUntil > now)
+                {
+                    var stepAi = __instance.GetComponent<Companions.CompanionAI>();
+                    if (stepAi != null && __instance._target != null && StandingOn(__instance.transform.position, __instance._target))
+                    {
+                        stepAi.MoveTowards(watch.StepDir, run: false);
+                        return;
+                    }
+                    watch.StepUntil = 0f;
+                }
                 if (now < watch.NextCheck) return;
                 watch.NextCheck = now + StuckCheckSeconds;
 
@@ -731,6 +751,12 @@ namespace OfflineCompanionsAI
                     watch.Anchor = position;
                     watch.Swings = swings;
                     watch.LastHit = lastHit;
+                    return;
+                }
+                if (now - watch.Since >= StepOffAfterSeconds && now - watch.Since < StuckGatherSeconds
+                    && (__instance._targetType == "MineRock5" || __instance._targetType == "MineRock")
+                    && ai != null && StandingOn(position, target) && TryStepOff(__instance, watch, target, position, now))
+                {
                     return;
                 }
                 if (now - watch.Since < StuckGatherSeconds) return;
@@ -756,6 +782,83 @@ namespace OfflineCompanionsAI
                 // Se ejecuta en cada fotograma de Offline Companions: mejor que siga con su propia decisión.
                 Plugin.Log.LogError("[Recoger] " + ex);
             }
+        }
+
+        /// <summary>
+        /// Al ir hacia el trozo más cercano de una mena puede acabar subido encima y sin golpear nada. Offline Companions
+        /// no lo baja, porque cualquier escalón de más de 1,2 m le parece una caída. Aquí baja por el lado donde la caída
+        /// no hace daño y no hay agua, y vuelve a picar desde el suelo. A la tercera vez con la misma roca la deja un rato.
+        /// </summary>
+        private static bool TryStepOff(Companions.HarvestController harvest, GatherWatch watch, GameObject target, Vector3 position, float now)
+        {
+            if (watch.StepTarget != target)
+            {
+                watch.StepTarget = target;
+                watch.StepCount = 0;
+            }
+            string name = CompanionBridge.Name(harvest);
+            if (watch.StepCount >= StepOffTries)
+            {
+                Plugin.Log.LogInfo("[Recoger] " + name + " se vuelve a subir a " + target.name + "; la deja un rato y busca otra.");
+                watch.StepTarget = null;
+                watch.Target = null;
+                watch.Since = now;
+                harvest._blacklist[target.GetInstanceID()] = now;
+                harvest.ResetToIdle();
+                return true;
+            }
+            if (!StepOffDirection(position, target, out Vector3 dir)) return false;
+            watch.StepCount++;
+            watch.StepDir = dir;
+            watch.StepUntil = now + StepOffSeconds;
+            watch.Since = now;
+            watch.Anchor = position;
+            Plugin.Log.LogInfo("[Recoger] " + name + " está subido a " + target.name + " sin poder picar; baja para golpearla desde el suelo.");
+            return true;
+        }
+
+        private static bool StandingOn(Vector3 position, GameObject target)
+        {
+            RaycastHit[] hits = Physics.RaycastAll(position + Vector3.up * 0.5f, Vector3.down, 1.5f, -1, QueryTriggerInteraction.Ignore);
+            foreach (RaycastHit hit in hits)
+            {
+                if (hit.collider != null && hit.collider.transform.IsChildOf(target.transform)) return true;
+            }
+            return false;
+        }
+
+        private static bool StepOffDirection(Vector3 position, GameObject target, out Vector3 best)
+        {
+            best = Vector3.zero;
+            if (ZoneSystem.instance == null) return false;
+            Vector3 outward = position - target.transform.position;
+            outward.y = 0f;
+            if (outward.sqrMagnitude < 0.01f) outward = Vector3.forward;
+            outward.Normalize();
+            float bestDistance = float.MaxValue;
+            for (int i = 0; i < 16; i++)
+            {
+                Vector3 dir = Quaternion.Euler(0f, i * 22.5f, 0f) * outward;
+                for (float d = 1f; d <= 8f; d += 0.5f)
+                {
+                    Vector3 p = position + dir * d;
+                    if (StandingOn(new Vector3(p.x, position.y, p.z), target)) continue;
+                    float ground = ZoneSystem.instance.GetGroundHeight(p);
+                    float beyond = ZoneSystem.instance.GetGroundHeight(p + dir * 1.5f);
+                    bool safe = position.y - ground <= StepOffMaxDrop
+                        && ground > ZoneSystem.instance.m_waterLevel + 0.3f
+                        && ground - beyond < 2f;
+                    // Cerca del lado de fuera gana por poco: así no cruza la roca entera.
+                    float score = d + Mathf.Min(i, 16 - i) * 0.05f;
+                    if (safe && score < bestDistance)
+                    {
+                        bestDistance = score;
+                        best = dir;
+                    }
+                    break;
+                }
+            }
+            return bestDistance < float.MaxValue;
         }
 
         /// <summary>Cuántos compañeros puede haber en un mundo, contando los muertos que van a revivir.</summary>

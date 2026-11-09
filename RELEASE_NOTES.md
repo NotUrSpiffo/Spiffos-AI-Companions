@@ -15,6 +15,9 @@ See the included README for installation and configuration.
   chest with the same item or, failing that, to the one with the most items
   of the same type: food, ore, wood, stone, gear or trophies. Items from
   other mods fall into their type from the game's own data.
+- Mining: a companion that ends up standing on top of an ore rock without
+  hitting it now steps down and mines from the ground, instead of shuffling
+  on top of it.
 
 ## Therzie's mods (0.26.1)
 - Works alongside Therzie's Warfare, Monstrum and Armory. Without them,
