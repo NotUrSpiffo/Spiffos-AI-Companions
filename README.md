@@ -1,6 +1,6 @@
 # Spiffo's Valheim AI Companions
 
-[Español](README.es.md) · [Latest release](https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/latest) · `main` is plugin `0.26.0`
+[Español](README.es.md) · [Latest release](https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/latest) · `main` is plugin `0.26.1`
 
 <p>
   <img src="docs/assets/cover.jpg" width="640" height="360" alt="Cover art of four illustrated companions in a snowy forest, titled Spiffo's AI Companions. Promotional artwork, not a gameplay screenshot, and not an endorsement by Valheim or Player2.">
@@ -49,7 +49,7 @@ This page describes settings and limits in this repository. It is not a gameplay
 
 Six built-in personalities are in the character editor: **Old Guard**, **Rookie**, **Explorer**, **Hunter**, **Craftsman**, and **Joker**. If `[Personaje] Personality` is empty, each companion without custom instructions gets one of those profiles. Inclination choices in the editor are **Automatic**, **None**, **Craft**, **Exploration**, **Hunting**, and **Foraging**. Automatic follows the profile; it does not override an order you give.
 
-On `main`, plugin **0.26.0** also changes these Reborn behaviors in `codigo/src/BehaviorOverrides.cs` and `codigo/src/SeatSync.cs`. What changed is in [RELEASE_NOTES.md](RELEASE_NOTES.md).
+On `main`, plugin **0.26.1** also changes these Reborn behaviors in `codigo/src/BehaviorOverrides.cs` and `codigo/src/SeatSync.cs`. What changed is in [RELEASE_NOTES.md](RELEASE_NOTES.md).
 
 - **Mining:** a stone or ore rock, or a section of one, is skipped when the code decides it can only be reached by swimming. If `MHR_Water.WouldSwim` or `MHR_GatherRules.AllowTarget` is missing, the log warns that this skip is unavailable.
 - **Fighting with a tool out:** if the chosen item is a fishing rod, has pickaxe damage, or is a tool, the mod tries a melee weapon, then a bow, and otherwise unequips that item. If the Reborn combat methods are missing, the log warns that the swap is unavailable.
@@ -64,6 +64,21 @@ On `main`, plugin **0.26.0** also changes these Reborn behaviors in `codigo/src/
 
 - **Shared speech:** with `[Multijugador] ShareSpeech = true` (the default), what your companions say is sent to the other players. Their game shows it as a bubble over the companion and as a chat line, only if they have this mod and are within Valheim's normal chat talking distance (`Talker.m_normalDistance`, the range of a player talking normally). Players further away see nothing. What you type to your companion is not sent, and neither are the mod's notices. The setting is per player: it decides whether your companions' speech is shared. `codigo/src/SharedSpeech.cs`.
 - **Other players:** each request to the AI lists the other players within **60** m of the companion, up to **5**: name, distance, whether they are badly hurt, and what they hold in their hands. Their inventory stays in their game, so it is not included. The companion recognizes them and can talk about them, but only takes orders from its own player. `codigo/src/GameContext.cs`.
+
+<a id="therzie"></a>
+
+## 🛡️ Therzie's mods (0.26.1)
+
+These changes only take effect when [Warfare](https://thunderstore.io/c/valheim/p/Therzie/Warfare/), [Monstrum](https://thunderstore.io/c/valheim/p/Therzie/Monstrum/) or [Armory](https://thunderstore.io/c/valheim/p/Therzie/Armory/) are loaded. Without them, the item list, places and reactions are the same as in 0.26.0.
+
+- **Gather orders:** `gather` also accepts **10** pelts and meats from Therzie's prey (fox, razorback, black and grizzly bear, rotting elk and lox), only if the game has that item loaded. The name is the one the game shows, with Therzie's translation. Drops from monsters that are not hunted, such as troll bone or prowler fang, are not on the list. `codigo/src/CompanionActions.cs`.
+- **Skills:** asking about a companion's skills also lists skills added by other mods, such as Warfare's throwing skill. `codigo/src/CompanionBridge.cs`.
+- **Places:** while exploring, the altars of Asmodeus, Svält and Vrykolathas and the vegvisirs that point to them are named. `codigo/src/OrderPlanning.cs`.
+- **Mini-bosses:** defeating Asmodeus, Svält or Vrykolathas gets a comment and a memory, like a boss. They leave no world key, so it counts when one that was within **60** m and below **35 %** health dies or disappears. `codigo/src/WorldEvents.cs`.
+
+Combat, hunting, mining, repairs and the too-strong check already read the game's own data, so Warfare weapons and Monstrum creatures go through the same rules as the base game's.
+
+The Spanish texts of the mod now use neutral Spanish.
 
 <a id="companions"></a>
 
@@ -101,7 +116,7 @@ The cover shows four illustrated figures. It is promotional art, not the world l
 3. Install and open the [Player2](https://player2.game) app. Leave `[IA] Provider` at `Player2` and leave `ApiKey` empty.
 4. Start Valheim. In chat, `/balance` should answer with your Player2 joules.
 
-The playable package is the [latest release](https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/latest). Inside that zip the DLL is under `install/BepInEx/plugins/`, and the sample configs are under `configuration examples/`. In this git tree the same DLL path is still [`instalar/BepInEx/plugins/SpiffoAiCompanions.dll`](instalar/BepInEx/plugins/SpiffoAiCompanions.dll). The source constant on `main` is plugin **0.26.0**. The published zip can lag behind that tree; use the latest release page, not an older checksum copied here.
+The playable package is the [latest release](https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/latest). Inside that zip the DLL is under `install/BepInEx/plugins/`, and the sample configs are under `configuration examples/`. In this git tree the same DLL path is still [`instalar/BepInEx/plugins/SpiffoAiCompanions.dll`](instalar/BepInEx/plugins/SpiffoAiCompanions.dll). The source constant on `main` is plugin **0.26.1**. The published zip can lag behind that tree; use the latest release page, not an older checksum copied here.
 
 <a id="requirements"></a>
 

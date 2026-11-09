@@ -296,7 +296,7 @@
         { "key": "hc_speech_fish_full", "value": "¡Tengo la mochila llena!" },
         { "key": "hc_speech_tomb_found", "value": "¡Mis cosas!" },
         { "key": "hc_speech_tomb_recovered", "value": "Lo he recuperado todo." },
-        { "key": "hc_speech_tomb_empty", "value": "No queda nada que coger." },
+        { "key": "hc_speech_tomb_empty", "value": "No queda nada que tomar." },
         { "key": "hc_speech_deposit_done", "value": "Todo guardado." },
         { "key": "hc_speech_deposit_empty", "value": "No tengo nada que guardar." },
         { "key": "hc_cmd_comehere_1", "value": "¡Voy!" },

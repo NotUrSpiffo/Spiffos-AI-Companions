@@ -307,6 +307,42 @@ namespace OfflineCompanionsAI
             { "Fish6", Entry(ModeFish, "arenques gigantes", "giant herring") }
         };
 
+        // Objetos de los mods Monstrum y Warfare de Therzie que sueltan las presas que Reborn caza (las que dan carne).
+        // Solo se añaden si el juego los tiene cargados: sin esos mods, la lista es la de siempre.
+        private static readonly Dictionary<string, LocalizedOption> ModItems = new Dictionary<string, LocalizedOption>
+        {
+            { "FoxMeat_TW", Entry(ModeHunt, "carne de zorro", "fox meat") },
+            { "FoxPelt_TW", Entry(ModeHunt, "piel de zorro", "fox pelt") },
+            { "RazorbackLeather_TW", Entry(ModeHunt, "cuero de jabalí rabioso", "razorback leather") },
+            { "RazorbackTusk_TW", Entry(ModeHunt, "colmillos de jabalí rabioso", "razorback tusks") },
+            { "BearSteak_TW", Entry(ModeHunt, "filetes de oso", "bear steaks") },
+            { "BlackBearPelt_TW", Entry(ModeHunt, "piel de oso negro", "black bear pelt") },
+            { "GrizzlyBearPelt_TW", Entry(ModeHunt, "piel de oso pardo", "grizzly bear pelt") },
+            { "RottingElkMeat_TW", Entry(ModeHunt, "carne de alce podrida", "rotting elk meat") },
+            { "RottenPelt_TW", Entry(ModeHunt, "piel podrida", "rotten pelt") },
+            { "LoxBone_TW", Entry(ModeHunt, "huesos de luey", "lox bones") }
+        };
+
+        /// <summary>
+        /// Añade los objetos de otros mods que estén cargados. nameOf da el nombre que el juego muestra del objeto, en el
+        /// idioma del juego, o null si no existe; si no tiene traducción, se usa el de la lista. Se puede llamar varias veces.
+        /// </summary>
+        public static int AddModItems(System.Func<string, string> nameOf)
+        {
+            int added = 0;
+            foreach (KeyValuePair<string, LocalizedOption> item in ModItems)
+            {
+                if (Items.ContainsKey(item.Key)) continue;
+                string shown = nameOf(item.Key);
+                if (shown == null) continue;
+                bool translated = shown.Length > 0 && !shown.StartsWith("[") && !shown.StartsWith("$");
+                string label = translated ? char.ToLowerInvariant(shown[0]) + shown.Substring(1) : null;
+                Items[item.Key] = translated ? Entry(item.Value.Value, label, label) : item.Value;
+                added++;
+            }
+            return added;
+        }
+
         public static List<string> ItemsForJobs(ICollection<int> jobs)
         {
             var items = new List<string>();
@@ -445,7 +481,7 @@ namespace OfflineCompanionsAI
                     ["required"] = new JArray("job")
                 }),
                 Tool(PickUpTool, ModLang.Pick(
-                    "Va hasta un objeto suelto en el suelo y lo recoge, también si lo soltó el jugador. item es su nombre; sin item, lo que mira el jugador. Úsalo con \"recoge eso\" o \"coge el hacha del suelo\", y no uses set_option ni go_to para esto.",
+                    "Va hasta un objeto suelto en el suelo y lo recoge, también si lo soltó el jugador. item es su nombre; sin item, lo que mira el jugador. Úsalo con \"recoge eso\" o \"toma el hacha del suelo\", y no uses set_option ni go_to para esto.",
                     "Walks to a loose item on the ground and picks it up, including items dropped by the player. item is its name; without item, picks up what the player is looking at. Use for \"pick that up\" or \"grab the axe on the ground\", and do not use set_option or go_to for this."), new JObject
                 {
                     ["type"] = "object",
@@ -557,14 +593,14 @@ namespace OfflineCompanionsAI
                     ["required"] = new JArray("item")
                 }),
                 Tool(TakeTool, ModLang.Pick(
-                    "Va al cofre, hasta unos 30 m, que contenga un objeto y lo coge; si ninguno lo tiene, te lo dice, así que úsalo directamente sin mirar antes. Úsalo con \"coge madera del cofre\" o \"agarra flechas\"; item flechas sirve para cualquier munición. Para buscar qué comer, usa item comida sin amount: coge una parte de hasta " + FoodPlan.Kinds + " comidas distintas, aunque estén en varios cofres. Conserva el equipo, la munición y la comida que coja. Después puede dárselo al jugador con give_items y last_task.",
+                    "Va al cofre, hasta unos 30 m, que contenga un objeto y lo saca; si ninguno lo tiene, te lo dice, así que úsalo directamente sin mirar antes. Úsalo con \"saca madera del cofre\" o \"agarra flechas\"; item flechas sirve para cualquier munición. Para buscar qué comer, usa item comida sin amount: coge una parte de hasta " + FoodPlan.Kinds + " comidas distintas, aunque estén en varios cofres. Conserva el equipo, la munición y la comida que coja. Después puede dárselo al jugador con give_items y last_task.",
                     "Walks to a chest within about 30 m that contains an item and takes it; if none has it, it tells you, so call it directly without checking first. Use for \"take wood from the chest\" or \"grab arrows\"; item arrows works for any ammo. To get food to eat, use item food without amount: takes a share of up to " + FoodPlan.Kinds + " different foods, even across multiple chests. Keeps gear, ammo, and food taken. Can then hand it to the player with give_items and last_task."), new JObject
                 {
                     ["type"] = "object",
                     ["properties"] = new JObject
                     {
                         ["item"] = new JObject { ["type"] = "string" },
-                        ["amount"] = new JObject { ["type"] = "integer", ["minimum"] = 1, ["description"] = ModLang.Pick("Opcional. Si se omite, de una comida coge solo una parte, el " + FoodPlan.SharePercent + " %, para dejar al jugador; de lo demás, todo lo que haya. Si piden expresamente toda una comida, indica " + MaxGiveAmount + ".", "Optional. If omitted, for food takes only a " + FoodPlan.SharePercent + " % share so some is left for the player; for other items, takes all available. If explicitly asked for all of a food, pass " + MaxGiveAmount + ".") }
+                        ["amount"] = new JObject { ["type"] = "integer", ["minimum"] = 1, ["description"] = ModLang.Pick("Opcional. Si se omite, de una comida toma solo una parte, el " + FoodPlan.SharePercent + " %, para dejar al jugador; de lo demás, todo lo que haya. Si piden expresamente toda una comida, indica " + MaxGiveAmount + ".", "Optional. If omitted, for food takes only a " + FoodPlan.SharePercent + " % share so some is left for the player; for other items, takes all available. If explicitly asked for all of a food, pass " + MaxGiveAmount + ".") }
                     },
                     ["required"] = new JArray("item")
                 }),
@@ -996,7 +1032,7 @@ namespace OfflineCompanionsAI
                         Item = wanted,
                         Amount = count,
                         Description = (take
-                                ? ModLang.Pick("coger de un cofre: ", "take from chest: ")
+                                ? ModLang.Pick("sacar de un cofre: ", "take from chest: ")
                                 : drop
                                     ? ModLang.Pick("soltar al suelo: ", "drop on ground: ")
                                     : ModLang.Pick("darle al jugador: ", "give to player: "))

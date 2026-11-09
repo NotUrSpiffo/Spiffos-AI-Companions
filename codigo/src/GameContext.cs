@@ -140,7 +140,7 @@ namespace OfflineCompanionsAI
                 counts[name] = n + 1;
             }
             string tooStrongNote = ModLang.Pick(
-                " (demasiado fuertes para vuestro equipo: no vas a por ellos salvo que ataquen de cerca o el jugador lo ordene)",
+                " (demasiado fuertes para ustedes: no vas a por ellos salvo que ataquen de cerca o el jugador lo ordene)",
                 " (too strong for your gear: you do not go after them unless they attack up close or the player orders it)");
             return string.Join(", ", counts.Select(kv => kv.Value + " " + kv.Key + (CompanionBridge.IsTooStrong(companion, kv.Key) ? tooStrongNote : "")).ToArray());
         }

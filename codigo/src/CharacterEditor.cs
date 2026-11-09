@@ -162,7 +162,7 @@ namespace OfflineCompanionsAI
                 110f);
             _memories.Summary = Field(
                 ModLang.Pick("Otros recuerdos", "Other Memories"),
-                ModLang.Pick("El resumen de vuestras conversaciones. Se reescribe solo, pero puedes corregirlo.", "Summary of your conversations. Rewritten automatically, but you can edit it."),
+                ModLang.Pick("El resumen de lo que han hablado. Se reescribe solo, pero puedes corregirlo.", "Summary of your conversations. Rewritten automatically, but you can edit it."),
                 _memories.Summary,
                 130f);
             _forget = GUILayout.Toggle(_forget, ModLang.Pick(

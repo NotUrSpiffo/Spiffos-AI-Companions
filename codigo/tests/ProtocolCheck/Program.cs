@@ -528,6 +528,12 @@ internal static class Program
 
         // Lo que encuentra.
         Check("lugar: cripta", Landmarks.Label("Crypt3"), "una cripta");
+        Check("lugar: altar de Monstrum", Landmarks.Label("AltarSvalt_TW"), "la cámara de rituales de Svält");
+        Check("mods: sin Therzie no se añade nada", CompanionActions.AddModItems(p => null).ToString(), "0");
+        Check("mods: antes de cargarse, no se acepta", (CompanionActions.Parse("gather", "{\"item\":\"FoxMeat_TW\",\"amount\":5}", out error) == null).ToString(), "True");
+        Check("mods: con Therzie se añaden", CompanionActions.AddModItems(p => p == "FoxMeat_TW" ? "Carne de zorro cruda" : p == "LoxBone_TW" ? "[mat_loxbone_TW]" : null).ToString(), "2");
+        Check("mods: con el nombre del juego", CompanionActions.Parse("gather", "{\"item\":\"FoxMeat_TW\",\"amount\":5}", out error)?.Description, "conseguir 5 de carne de zorro cruda");
+        Check("mods: sin traducción, el nombre de la lista", CompanionActions.Parse("gather", "{\"item\":\"LoxBone_TW\",\"amount\":5}", out error)?.Description, "conseguir 5 de huesos de luey");
         Check("lugar: cripta hundida no es una cripta cualquiera", Landmarks.Label("SunkenCrypt2"), "una cripta hundida");
         Check("lugar: altar", Landmarks.Label("Eikthyrnir"), "el altar de Eikthyr");
         Check("lugar: ciudadela no es una ruina cualquiera", Landmarks.Label("Mistlands_DvergrTownEntrance1"), "la entrada de una ciudadela");

@@ -353,7 +353,7 @@ namespace OfflineCompanionsAI
         {
             var text = new StringBuilder();
             if (Facts.Count > 0) AppendList(text, ModLang.Pick("Hechos firmes:", "Core facts:"), Facts);
-            if (Events.Count > 0) AppendList(text, ModLang.Pick("Lo que habéis vivido:", "What you have lived through:"), DescribeEvents());
+            if (Events.Count > 0) AppendList(text, ModLang.Pick("Lo que han vivido juntos:", "What you have lived through:"), DescribeEvents());
             if (text.Length == 0) return Summary;
             if (!string.IsNullOrWhiteSpace(Summary))
             {

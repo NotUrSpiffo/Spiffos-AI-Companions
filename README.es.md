@@ -1,6 +1,6 @@
 # Spiffo's Valheim AI Companions
 
-[English](README.md) · [Último release](https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/latest) · en `main` el plugin es `0.26.0`
+[English](README.md) · [Último release](https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/latest) · en `main` el plugin es `0.26.1`
 
 <p>
   <img src="docs/assets/cover.jpg" width="640" height="360" alt="Arte de portada con cuatro compañeros ilustrados en un bosque nevado y el título Spiffo's AI Companions. Es arte promocional, no una captura de partida, ni un respaldo de Valheim o de Player2.">
@@ -49,7 +49,7 @@ Esta página describe ajustes y límites de este repositorio. No es un informe d
 
 En el editor de personaje hay seis personalidades: **Vieja guardia**, **Aprendiz**, **Exploración**, **Caza**, **Oficio** y **Bromas**. Si `[Personaje] Personality` está vacío, cada compañero sin instrucciones propias recibe uno de esos perfiles. Las inclinaciones del editor son **Automática**, **Ninguna**, **Oficio**, **Exploración**, **Caza** y **Recolección**. Automática sigue el perfil y no anula una orden tuya.
 
-En `main`, el plugin **0.26.0** cambia además estos comportamientos de Reborn en `codigo/src/BehaviorOverrides.cs` y `codigo/src/SeatSync.cs`. Lo que cambió está en [RELEASE_NOTES.md](RELEASE_NOTES.md).
+En `main`, el plugin **0.26.1** cambia además estos comportamientos de Reborn en `codigo/src/BehaviorOverrides.cs` y `codigo/src/SeatSync.cs`. Lo que cambió está en [RELEASE_NOTES.md](RELEASE_NOTES.md).
 
 - **Picar:** se deja una roca de piedra o de mineral, o una sección, cuando el código decide que solo se llega nadando. Si faltan `MHR_Water.WouldSwim` o `MHR_GatherRules.AllowTarget`, el registro avisa de que ese filtro no está disponible.
 - **Pelear con una herramienta en la mano:** si el objeto elegido es una caña de pescar, tiene daño de pico o es una herramienta, el mod prueba un arma cuerpo a cuerpo, luego un arco, y si no, la desequipa. Si faltan los métodos de combate de Reborn, el registro avisa de que el cambio no está disponible.
@@ -64,6 +64,21 @@ En `main`, el plugin **0.26.0** cambia además estos comportamientos de Reborn e
 
 - **Habla compartida:** con `[Multijugador] ShareSpeech = true` (por defecto), lo que dicen tus compañeros se envía a los demás jugadores. Su juego lo muestra como burbuja sobre el compañero y como línea de chat, solo si tienen este mod y están a la distancia normal de escucha del chat de Valheim (`Talker.m_normalDistance`, la de un jugador hablando normal). Quien esté más lejos no ve nada. Lo que tú escribes a tu compañero no se envía, ni los avisos del mod. La opción es de cada jugador: decide si se comparte lo que dicen sus compañeros. `codigo/src/SharedSpeech.cs`.
 - **Otros jugadores:** cada petición a la IA incluye los demás jugadores a menos de **60** m del compañero, hasta **5**: nombre, distancia, si están malheridos y lo que llevan en las manos. Su inventario está en su juego, así que no se incluye. El compañero los reconoce y puede hablar de ellos, pero solo obedece a su jugador. `codigo/src/GameContext.cs`.
+
+<a id="therzie"></a>
+
+## 🛡️ Mods de Therzie (0.26.1)
+
+Estos cambios solo se activan si están cargados [Warfare](https://thunderstore.io/c/valheim/p/Therzie/Warfare/), [Monstrum](https://thunderstore.io/c/valheim/p/Therzie/Monstrum/) o [Armory](https://thunderstore.io/c/valheim/p/Therzie/Armory/). Sin ellos, la lista de objetos, los lugares y las reacciones son los mismos que en la 0.26.0.
+
+- **Órdenes de conseguir:** `gather` acepta también **10** pieles y carnes de las presas de Therzie (zorro, jabalí rabioso, oso negro y pardo, alce podrido y luey), solo si el juego tiene ese objeto cargado. El nombre es el que muestra el juego, con la traducción de Therzie. Lo que sueltan monstruos que no se cazan, como el hueso de trol o el colmillo de merodeador, no está en la lista. `codigo/src/CompanionActions.cs`.
+- **Habilidades:** al preguntar por las habilidades de un compañero salen también las que añaden otros mods, como la de lanzar de Warfare. `codigo/src/CompanionBridge.cs`.
+- **Lugares:** al explorar, se nombran los altares de Asmodeus, Svält y Vrykolathas y los vegvísir que señalan a ellos. `codigo/src/OrderPlanning.cs`.
+- **Minijefes:** derrotar a Asmodeus, Svält o Vrykolathas tiene comentario y recuerdo, como un jefe. No dejan marca en el mundo, así que cuenta cuando uno que estaba a menos de **60** m y por debajo del **35 %** de salud muere o desaparece. `codigo/src/WorldEvents.cs`.
+
+El combate, la caza, picar, reparar y la valoración de enemigos demasiado fuertes ya leían los datos del juego, así que las armas de Warfare y las criaturas de Monstrum siguen las mismas reglas que las del juego base.
+
+Los textos en español del mod usan ahora español neutro.
 
 <a id="companions"></a>
 
@@ -101,7 +116,7 @@ La portada muestra cuatro figuras ilustradas. Es arte promocional, no el límite
 3. Instala y abre la app de [Player2](https://player2.game). Deja `[IA] Provider` en `Player2` y `ApiKey` vacío.
 4. Arranca Valheim. En el chat, `/saldo` debe responder con los joules de Player2.
 
-El paquete para jugar es el [último release](https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/latest). En ese zip la DLL está en `install/BepInEx/plugins/`, y las configs de ejemplo en `configuration examples/`. En este árbol git la misma DLL sigue en [`instalar/BepInEx/plugins/SpiffoAiCompanions.dll`](instalar/BepInEx/plugins/SpiffoAiCompanions.dll). La constante de fuente en `main` es el plugin **0.26.0**. El zip publicado puede ir por detrás de este árbol; usa la página del último release, no una suma vieja copiada aquí.
+El paquete para jugar es el [último release](https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/latest). En ese zip la DLL está en `install/BepInEx/plugins/`, y las configs de ejemplo en `configuration examples/`. En este árbol git la misma DLL sigue en [`instalar/BepInEx/plugins/SpiffoAiCompanions.dll`](instalar/BepInEx/plugins/SpiffoAiCompanions.dll). La constante de fuente en `main` es el plugin **0.26.1**. El zip publicado puede ir por detrás de este árbol; usa la página del último release, no una suma vieja copiada aquí.
 
 <a id="requirements"></a>
 

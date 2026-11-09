@@ -618,6 +618,22 @@ namespace OfflineCompanionsAI
             return phase != "Idle" && phase != "Monitoring";
         }
 
+        /// <summary>Las habilidades del juego y las que añaden otros mods, como la de lanzar de Warfare.</summary>
+        private static IEnumerable<Skills.SkillType> KnownSkillTypes()
+        {
+            var types = new HashSet<Skills.SkillType>();
+            foreach (Skills.SkillType type in Enum.GetValues(typeof(Skills.SkillType))) types.Add(type);
+            Skills own = Player.m_localPlayer != null ? Player.m_localPlayer.GetComponent<Skills>() : null;
+            if (own != null && own.m_skills != null)
+            {
+                foreach (Skills.SkillDef def in own.m_skills)
+                {
+                    if (def != null) types.Add(def.m_skill);
+                }
+            }
+            return types;
+        }
+
         /// <summary>Sus habilidades con algún progreso, de mayor a menor.</summary>
         public static string DescribeSkills(Component companion)
         {
@@ -625,13 +641,15 @@ namespace OfflineCompanionsAI
             if (skills == null) return ModLang.Pick("No se pueden consultar sus habilidades.", "Cannot check their skills.");
 
             var found = new List<KeyValuePair<float, string>>();
-            foreach (Skills.SkillType type in Enum.GetValues(typeof(Skills.SkillType)))
+            foreach (Skills.SkillType type in KnownSkillTypes())
             {
                 if (type == Skills.SkillType.None || type == Skills.SkillType.All) continue;
                 float level = (float)_skillFactor.Invoke(skills, new object[] { type }) * 100f;
                 if (level < 1f) continue;
+                // Las de otros mods no tienen nombre en la lista del juego: su texto es "$skill_" y su número.
                 string token = "$skill_" + type.ToString().ToLowerInvariant();
                 string label = Localization.instance != null ? Localization.instance.Localize(token) : type.ToString();
+                if (label.StartsWith("[") && !Enum.IsDefined(typeof(Skills.SkillType), type)) continue;
                 found.Add(new KeyValuePair<float, string>(level, label + " " + Mathf.FloorToInt(level)));
             }
             if (found.Count == 0) return ModLang.Pick("Todavía no ha desarrollado ninguna habilidad.", "Hasn't developed any skills yet.");
@@ -1434,7 +1452,7 @@ namespace OfflineCompanionsAI
                 }
             }
             return ModLang.Pick(
-                "No lleva " + wanted + " en la mochila, ya lo tiene puesto o no se puede equipar. Si está en un cofre cercano, puede cogerlo primero con take_from_chest.",
+                "No lleva " + wanted + " en la mochila, ya lo tiene puesto o no se puede equipar. Si está en un cofre cercano, puede sacarlo primero con take_from_chest.",
                 "Not carrying " + wanted + " in the pack, already wearing it, or it cannot be equipped. If it is in a nearby chest, take it first with take_from_chest.");
         }
 

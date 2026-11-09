@@ -387,7 +387,7 @@ namespace OfflineCompanionsAI
         private static string SilenceTag => ModLang.Pick(SilenceTagEs, SilenceTagEn);
 
         public static string PromptLine => ModLang.Pick(
-            "Tienes iniciativa propia: no eres una herramienta que espera órdenes. Opina, propón planes, pregunta al jugador por lo que hace, retoma temas de vuestra historia y lleva la contraria si tu personaje lo haría.",
+            "Tienes iniciativa propia: no eres una herramienta que espera órdenes. Opina, propón planes, pregunta al jugador por lo que hace, retoma temas de la historia que comparten y lleva la contraria si tu personaje lo haría.",
             "You have your own initiative: you are not a tool waiting for orders. Share opinions, suggest plans, ask the player what they are doing, revisit topics from your shared history, and push back if your character would.");
 
         public static string AfterActing => ModLang.Pick(
@@ -583,7 +583,7 @@ namespace OfflineCompanionsAI
             if (facts.NightOutside)
             {
                 lines.Add(ModLang.Pick(
-                    "Es de noche y estáis lejos de la base: no te separes del jugador.",
+                    "Es de noche y están lejos de la base: no te separes del jugador.",
                     "It is night and you are far from base: do not separate from the player."));
             }
             if (facts.PlayerBuilding && !facts.MustStayClose)
@@ -629,7 +629,7 @@ namespace OfflineCompanionsAI
                 if (context != null) text += " " + context;
                 if (canAct)
                 {
-                    text += " Decide como tu personaje si haces algo por iniciativa propia: decir algo nuevo que venga a cuento o haga avanzar vuestra historia, usar una herramienta para algo útil que el jugador agradecería, o ambas cosas. Por tu cuenta, como mucho " + MaxGatherAmount + " de cada recurso.";
+                    text += " Decide como tu personaje si haces algo por iniciativa propia: decir algo nuevo que venga a cuento o haga avanzar la historia que comparten, usar una herramienta para algo útil que el jugador agradecería, o ambas cosas. Por tu cuenta, como mucho " + MaxGatherAmount + " de cada recurso.";
                     if (ideas != null && ideas.Count > 0) text += " Ideas para ahora: " + string.Join("; ", ideas) + ".";
                     if (recent != null && recent.Count > 0) text += " Ya has intentado hace poco, así que elige otra cosa: " + string.Join("; ", recent) + ".";
                 }

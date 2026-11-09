@@ -22,7 +22,7 @@ namespace OfflineCompanionsAI
         public const string PluginGuid = "OfflineCompanionsAI";
 #endif
         public const string PluginName = "Spiffo's Valheim AI Companions";
-        public const string PluginVersion = "0.26.0";
+        public const string PluginVersion = "0.26.1";
 
         private const float EmoteCooldown = 10f;
 
@@ -315,6 +315,7 @@ namespace OfflineCompanionsAI
                 ResetSession();
             }
             SharedSpeech.Update();
+            AddModItemsOnce();
             if (Player.m_localPlayer == null) return;
             ShowHintOnce();
 
@@ -403,7 +404,7 @@ namespace OfflineCompanionsAI
                 Kind = ReactionKind.StrongEnemy,
                 Speaker = companion,
                 Description = ModLang.Pick(
-                    "Has visto " + group.Count + " " + group.Label + " y son demasiado fuertes para el equipo que lleváis. No irás a por ellos salvo que ataquen de cerca o el jugador lo ordene." + (leftTask ? " Has dejado lo que hacías y vuelves con él." : ""),
+                    "Has visto " + group.Count + " " + group.Label + " y son demasiado fuertes para el equipo que llevan. No irás a por ellos salvo que ataquen de cerca o el jugador lo ordene." + (leftTask ? " Has dejado lo que hacías y vuelves con él." : ""),
                     "You saw " + group.Count + " " + group.Label + " and they are too strong for your current gear. You will not engage them unless they attack at close range or the player orders it." + (leftTask ? " You left what you were doing and are returning to the player." : ""))
             }, Time.time);
         }
@@ -534,7 +535,7 @@ namespace OfflineCompanionsAI
             AddLine("Encargos: consigue 10 piedras, cocina 3 de carne asada, funde el cobre, caza, pesca, organiza los cofres");
             AddLine("Mantenimiento: repara las construcciones, reaviva los fuegos, recoge la miel, apila los materiales");
             AddLine("Equipo de compañeros: ¿dónde está Bjorn?, ¿quién pesca mejor?, que vengan todos estén donde estén");
-            AddLine("Objetos: recoge esa hacha, dame lo que soltó, dame 5 de madera, suelta la madera, coge madera del cofre");
+            AddLine("Objetos: recoge esa hacha, dame lo que soltó, dame 5 de madera, suelta la madera, saca madera del cofre");
             AddLine("Equipo: come algo, bebe hidromiel, equípate el arco, repara tu equipo");
             AddLine("Combate: protege esta zona, ponte en postura pasiva, retírate con menos de la mitad de vida");
             AddLine("Grupo: todos, síganme | Bjorn, tala madera | Te llamarás Saber");
@@ -871,7 +872,7 @@ namespace OfflineCompanionsAI
                     string text = CompanionBridge.DescribeItems(items);
                     Log.LogInfo("[Equipo] " + CompanionBridge.Name(companion) + ": sin munición, va a por " + text);
                     AddOrderLine(ModLang.Pick(
-                        "Por iniciativa propia, " + CompanionBridge.Name(companion) + " va a coger de un cofre: " + text,
+                        "Por iniciativa propia, " + CompanionBridge.Name(companion) + " va a sacar de un cofre: " + text,
                         "On their own initiative, " + CompanionBridge.Name(companion) + " goes to take from a chest: " + text));
                 }
                 else if (CompanionBridge.HungryWithoutFood(companion) && StartTakingFood(companion, 0) == null)
@@ -2460,6 +2461,22 @@ namespace OfflineCompanionsAI
             return null;
         }
 
+        private static bool _modItemsAdded;
+
+        /// <summary>Con los mods de Therzie cargados, la IA también puede pedir sus pieles y carnes. Sin ellos no cambia nada.</summary>
+        private static void AddModItemsOnce()
+        {
+            if (_modItemsAdded || Player.m_localPlayer == null || ObjectDB.instance == null || ObjectDB.instance.m_items.Count == 0) return;
+            _modItemsAdded = true;
+            int added = CompanionActions.AddModItems(prefab =>
+            {
+                string token = ObjectDB.instance.GetItemPrefab(prefab)?.GetComponent<ItemDrop>()?.m_itemData?.m_shared?.m_name;
+                if (token == null) return null;
+                return Localization.instance != null ? Localization.instance.Localize(token) : "";
+            });
+            if (added > 0) Log.LogInfo("[Mods] " + added + " items from other mods can be requested with gather.");
+        }
+
         private string GroundItemFor(GameObject worker)
         {
             foreach (KeyValuePair<Component, GatherGoal> goal in _goals)
@@ -2518,7 +2535,7 @@ namespace OfflineCompanionsAI
                     _pickups.Remove(companion);
                     _chains.Remove(companion);
                     AddToChat(name, ModLang.Pick(
-                        name + " ya no encuentra " + task.Label + ": alguien lo ha cogido o ha desaparecido.",
+                        name + " ya no encuentra " + task.Label + ": alguien lo tomó o desapareció.",
                         name + " can no longer find " + task.Label + ": someone picked it up or it disappeared."));
                 }
                 else if (task.Goal.InReach(Vector3.Distance(companion.transform.position, task.Drop.transform.position)) && CompanionBridge.PickUp(companion, task.Drop))
@@ -2583,7 +2600,7 @@ namespace OfflineCompanionsAI
             if (stops.Count == 0)
             {
                 return CompanionBridge.CarriesFood(companion)
-                    ? ModLang.Pick("Ya lleva comida suficiente y no necesita coger más.", "Already carrying enough food and does not need to take more.")
+                    ? ModLang.Pick("Ya lleva comida suficiente y no necesita tomar más.", "Already carrying enough food and does not need to take more.")
                     : ModLang.Pick("No hay comida en ningún cofre utilizable cerca.", "No food in any usable chest nearby.");
             }
             var task = new TakeTask { Goal = new GiveGoal(Time.time), Chest = stops[0].Key, Items = stops[0].Value };
@@ -2641,7 +2658,7 @@ namespace OfflineCompanionsAI
                     {
                         _chains.Remove(companion);
                         string problem = arrived
-                            ? ModLang.Pick(name + " no ha podido coger eso del cofre: está en uso, no le cabe o ya no está.", name + " could not take that from the chest: it is in use, does not fit, or is gone.")
+                            ? ModLang.Pick(name + " no pudo sacar eso del cofre: está en uso, no le cabe o ya no está.", name + " could not take that from the chest: it is in use, does not fit, or is gone.")
                             : ModLang.Pick(name + " no ha llegado hasta el cofre.", name + " did not reach the chest.");
                         Log.LogWarning("[Meta] " + problem);
                         Notify(problem);
@@ -2649,10 +2666,10 @@ namespace OfflineCompanionsAI
                         continue;
                     }
                     string text = CompanionBridge.DescribeItems(task.Taken);
-                    _lastTask[CompanionBridge.PermanentId(companion)] = new TaskRecord { Description = ModLang.Pick("coger cosas de un cofre", "taking items from a chest"), Gained = task.Taken };
-                    Log.LogInfo("[Meta] " + name + ": coge del cofre " + text);
-                    Notify(ModLang.Pick(name + " ha cogido " + text + ".", name + " took " + text + "."));
-                    AddToChat(name, ModLang.Pick("ha cogido " + text + " del cofre.", "took " + text + " from the chest."));
+                    _lastTask[CompanionBridge.PermanentId(companion)] = new TaskRecord { Description = ModLang.Pick("sacar cosas de un cofre", "taking items from a chest"), Gained = task.Taken };
+                    Log.LogInfo("[Meta] " + name + ": saca del cofre " + text);
+                    Notify(ModLang.Pick(name + " sacó " + text + ".", name + " took " + text + "."));
+                    AddToChat(name, ModLang.Pick("sacó " + text + " del cofre.", "took " + text + " from the chest."));
                 }
                 else if (task.Goal.ShouldWalk(Time.time))
                 {
@@ -2901,7 +2918,7 @@ namespace OfflineCompanionsAI
                 : _gives.ContainsKey(companion) ? ModLang.Pick("ir a darle objetos al jugador", "going to hand items to the player")
                 : _pickups.TryGetValue(companion, out PickupTask pickup) ? ModLang.Pick("ir a recoger del suelo ", "going to pick up ") + pickup.Label
                 : _stores.ContainsKey(companion) ? ModLang.Pick("guardar tus cosas en los cofres", "storing your items in the chests")
-                : _takes.ContainsKey(companion) ? ModLang.Pick("ir a coger algo de un cofre", "going to take something from a chest")
+                : _takes.ContainsKey(companion) ? ModLang.Pick("ir a sacar algo de un cofre", "going to take something from a chest")
                 : _hunts.TryGetValue(companion, out HuntTask hunt) ? ModLang.Pick("cazar ", "hunting ") + hunt.Label
                 : _guards.ContainsKey(companion) ? ModLang.Pick("proteger una zona", "guarding an area")
                 : _organizing.TryGetValue(companion, out UpkeepTask upkeep) ? upkeep.Label
@@ -3669,7 +3686,7 @@ namespace OfflineCompanionsAI
             {
                 int homeDist = Mathf.RoundToInt(FlatDistance(Player.m_localPlayer.transform.position, home));
                 parts.Add(ModLang.Pick(
-                    HomePlaceLabel + ", vale con decir hogar (a " + homeDist + " m)",
+                    HomePlaceLabel + ", basta con decir hogar (a " + homeDist + " m)",
                     HomePlaceLabel + ", can just say home (" + homeDist + " m away)"));
             }
             return parts.Count == 0 ? "" : ModLang.Pick("\nLugares marcados: ", "\nMarked places: ") + string.Join(", ", parts.ToArray());

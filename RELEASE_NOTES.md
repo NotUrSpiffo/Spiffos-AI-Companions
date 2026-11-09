@@ -1,10 +1,24 @@
-# Spiffo's Valheim AI Companions 0.26.0
+# Spiffo's Valheim AI Companions 0.26.1
 AI-powered companion conversation, natural-language orders and long-term memory
 for Valheim, with English/Spanish language selection and Offline Companions
 Reborn 1.5.8 integrated.
 
 Requires Valheim, BepInEx and an AI service. Voice input requires the Player2 app.
 See the included README for installation and configuration.
+
+## Therzie's mods (0.26.1)
+- Works alongside Therzie's Warfare, Monstrum and Armory. Without them,
+  nothing changes.
+- Gather orders: the AI can also ask companions for 10 pelts and meats from
+  Therzie's prey (fox, razorback, black and grizzly bear, rotting elk and
+  lox), using the name the game shows.
+- Skills: skills added by other mods, such as Warfare's throwing skill, are
+  listed when you ask about a companion's skills.
+- Places: the altars of Asmodeus, Svalt and Vrykolathas, and the vegvisirs
+  that point to them, are named while exploring.
+- Mini-bosses: defeating Asmodeus, Svalt or Vrykolathas gets a comment and a
+  memory, like a boss.
+- Spanish texts now use neutral Spanish.
 
 ## Multiplayer Update (0.26.0)
 - Shared speech: what your companions say is shown to other players who have

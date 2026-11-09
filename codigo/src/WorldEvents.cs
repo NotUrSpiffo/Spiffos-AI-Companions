@@ -39,6 +39,11 @@ namespace OfflineCompanionsAI
         private bool _playerScared;
         private string _playerScarePlace;
         private readonly HashSet<string> _knownBossKeys = new HashSet<string>();
+        // Los minijefes del mod Monstrum de Therzie no dejan marca en el mundo al morir, como los jefes del juego.
+        private static readonly HashSet<string> MiniBossPrefabs = new HashSet<string> { "BossAsmodeus_TW", "BossSvalt_TW", "BossVrykolathas_TW" };
+        private const float MiniBossRange = 60f;
+        private const float MiniBossNearlyDead = 0.35f;
+        private readonly Dictionary<Character, KeyValuePair<string, float>> _miniBosses = new Dictionary<Character, KeyValuePair<string, float>>();
         private readonly HashSet<string> _visitedBiomes = new HashSet<string>();
         private ZoneSystem _world;
         private bool _bossBaselineDone;
@@ -70,6 +75,7 @@ namespace OfflineCompanionsAI
 
             CheckPlayerScare(player);
             CheckBosses();
+            CheckMiniBosses(player);
             CheckRaid();
             CheckBiome(player);
             CheckCompanions(player);
@@ -86,6 +92,7 @@ namespace OfflineCompanionsAI
             _playerWasDead = false;
             _playerScared = false;
             _raid = null;
+            _miniBosses.Clear();
         }
 
         private void CheckPlayerDeath(Player player)
@@ -147,6 +154,54 @@ namespace OfflineCompanionsAI
                 }
             }
             _bossBaselineDone = true;
+        }
+
+        /// <summary>
+        /// Un minijefe que estaba cerca y casi muerto, y que ya no está o ha muerto, es que lo derrotaron. Si se aleja
+        /// o se descarga con salud, no cuenta.
+        /// </summary>
+        private void CheckMiniBosses(Player player)
+        {
+            Vector3 at = player.transform.position;
+            foreach (Character c in Character.GetAllCharacters())
+            {
+                if (c == null || _miniBosses.ContainsKey(c) || c.GetHealth() <= 0f) continue;
+                if (!MiniBossPrefabs.Contains(Utils.GetPrefabName(c.gameObject)) || Vector3.Distance(at, c.transform.position) > MiniBossRange) continue;
+                string name = Localization.instance != null ? Localization.instance.Localize(c.m_name) : c.m_name;
+                _miniBosses[c] = new KeyValuePair<string, float>(name, 1f);
+            }
+            if (_miniBosses.Count == 0) return;
+
+            var gone = new List<Character>();
+            var defeated = new List<string>();
+            foreach (KeyValuePair<Character, KeyValuePair<string, float>> boss in _miniBosses)
+            {
+                Character c = boss.Key;
+                bool dead = c == null || c.IsDead() || c.GetHealth() <= 0f;
+                if (dead)
+                {
+                    gone.Add(c);
+                    if (boss.Value.Value <= MiniBossNearlyDead) defeated.Add(boss.Value.Key);
+                }
+                else if (Vector3.Distance(at, c.transform.position) > MiniBossRange * 1.5f) gone.Add(c);
+            }
+            foreach (Character c in gone) _miniBosses.Remove(c);
+            foreach (Character c in new List<Character>(_miniBosses.Keys))
+            {
+                if (c.GetMaxHealth() > 0f) _miniBosses[c] = new KeyValuePair<string, float>(_miniBosses[c].Key, c.GetHealth() / c.GetMaxHealth());
+            }
+            foreach (string name in defeated)
+            {
+                _remember(null, MemoryWeight.Boss, ModLang.Pick("Derrotamos a " + name + ".", "We defeated " + name + "."), false);
+                if (_settings.ReactBoss.Value)
+                {
+                    _emit(new Reaction
+                    {
+                        Kind = ReactionKind.BossDefeated,
+                        Description = ModLang.Pick("Acaban de derrotar a " + name + ", un jefe menor.", "You just defeated " + name + ", a lesser boss.")
+                    });
+                }
+            }
         }
 
         private void CheckRaid()

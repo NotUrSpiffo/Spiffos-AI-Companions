@@ -888,7 +888,14 @@ namespace OfflineCompanionsAI
             Entry("Vendor_BlackForest", "el campamento de Haldor", "Haldor's camp"),
             Entry("Hildir_camp", "el campamento de Hildir", "Hildir's camp"),
             Entry("Hildir", "una guarida de los encargos de Hildir", "a Hildir quest dungeon"),
-            Entry("BogWitch", "el campamento de la Bruja del Pantano", "the Bog Witch's camp")
+            Entry("BogWitch", "el campamento de la Bruja del Pantano", "the Bog Witch's camp"),
+            // Del mod Monstrum de Therzie: solo aparecen en los mundos que lo tienen.
+            Entry("AltarAsmodeus_TW", "el altar de Asmodeus", "Asmodeus's altar"),
+            Entry("AltarSvalt_TW", "la cámara de rituales de Svält", "Svält's ritual chamber"),
+            Entry("AltarVrykolathas_TW", "el brasero de Hel de Vrykolathas", "Vrykolathas's Hel brazier"),
+            Entry("Vegvisir_location_Asmodeus_TW", "un vegvísir que señala el altar de Asmodeus", "a vegvisir pointing to Asmodeus's altar"),
+            Entry("Vegvisir_location_Svalt_TW", "un vegvísir que señala la cámara de Svält", "a vegvisir pointing to Svält's chamber"),
+            Entry("Vegvisir_location_Vrykolathas_TW", "un vegvísir que señala el brasero de Vrykolathas", "a vegvisir pointing to Vrykolathas's brazier")
         };
 
         // Están por todas partes, o son el punto de partida: no son un hallazgo.
