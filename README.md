@@ -1,6 +1,6 @@
 # Spiffo's Valheim AI Companions
 
-[Español](README.es.md) · [Latest release](https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/latest) · `main` is plugin `0.26.1`
+[Español](README.es.md) · [Latest release](https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/latest) · `main` is plugin `0.26.2`
 
 <p>
   <img src="docs/assets/cover.jpg" width="640" height="360" alt="Cover art of four illustrated companions in a snowy forest, titled Spiffo's AI Companions. Promotional artwork, not a gameplay screenshot, and not an endorsement by Valheim or Player2.">
@@ -49,7 +49,7 @@ This page describes settings and limits in this repository. It is not a gameplay
 
 Six built-in personalities are in the character editor: **Old Guard**, **Rookie**, **Explorer**, **Hunter**, **Craftsman**, and **Joker**. If `[Personaje] Personality` is empty, each companion without custom instructions gets one of those profiles. Inclination choices in the editor are **Automatic**, **None**, **Craft**, **Exploration**, **Hunting**, and **Foraging**. Automatic follows the profile; it does not override an order you give.
 
-On `main`, plugin **0.26.1** also changes these Reborn behaviors in `codigo/src/BehaviorOverrides.cs` and `codigo/src/SeatSync.cs`. What changed is in [RELEASE_NOTES.md](RELEASE_NOTES.md).
+On `main`, plugin **0.26.2** also changes these Reborn behaviors in `codigo/src/BehaviorOverrides.cs`, `codigo/src/SeatSync.cs` and `codigo/src/StorageSortPatches.cs`. What changed is in [RELEASE_NOTES.md](RELEASE_NOTES.md).
 
 - **Mining:** a stone or ore rock, or a section of one, is skipped when the code decides it can only be reached by swimming. If `MHR_Water.WouldSwim` or `MHR_GatherRules.AllowTarget` is missing, the log warns that this skip is unavailable.
 - **Fighting with a tool out:** if the chosen item is a fishing rod, has pickaxe damage, or is a tool, the mod tries a melee weapon, then a bow, and otherwise unequips that item. If the Reborn combat methods are missing, the log warns that the swap is unavailable.
@@ -57,6 +57,8 @@ On `main`, plugin **0.26.1** also changes these Reborn behaviors in `codigo/src/
 - **Companion limit (0.25.7):** a world holds at most **5** (`MaxCompanionsPerWorld`), a fixed constant, not a config entry. One order still addresses at most **4**. See [companions](#companions).
 - **Stone without a pickaxe (0.25.8):** an order for stone picks up loose stones when the companion has no pickaxe, even though Reborn stops collecting them once there is a bronze-or-better axe or a forge. With a pickaxe it mines rocks.
 - **Walking while seated (0.25.8):** every 0.5 s each loaded companion is checked; one that moves between 0.8 and 15 m/s for 1.5 s while its animation is seated is stood up, unless it is on a ship. The game that runs it stands it up for everyone; other games only on their own screen. The log gets a `[Sentado]` line.
+- **Smelted output (0.26.2):** what comes out of a smelter goes to a chest that already holds the same item, then to one with another output of the same smelters, then to one with its ore. Between two chests that match the same way, the one holding more of that smelter's output wins, then the nearest. What each smelter makes is read from every smelter in the game, not only the one being worked. `OutputWithSame`.
+- **Storing by type (0.26.2):** leftovers put away after upkeep (honey, for example), gathered materials and harvested crops go to a chest with the same item, then to the one holding the most items of the same type: food, ore, wood, stone, gear or trophies. Types are read from the game: fuelled smelters, cooking stations, the fermenter and food recipes. If no chest holds anything alike, Reborn's chest is used. `codigo/src/StorageSort.cs`, `codigo/src/StorageSortPatches.cs`.
 
 <a id="multiplayer"></a>
 
@@ -116,7 +118,7 @@ The cover shows four illustrated figures. It is promotional art, not the world l
 3. Install and open the [Player2](https://player2.game) app. Leave `[IA] Provider` at `Player2` and leave `ApiKey` empty.
 4. Start Valheim. In chat, `/balance` should answer with your Player2 joules.
 
-The playable package is the [latest release](https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/latest). Inside that zip the DLL is under `install/BepInEx/plugins/`, and the sample configs are under `configuration examples/`. In this git tree the same DLL path is still [`instalar/BepInEx/plugins/SpiffoAiCompanions.dll`](instalar/BepInEx/plugins/SpiffoAiCompanions.dll). The source constant on `main` is plugin **0.26.1**. The published zip can lag behind that tree; use the latest release page, not an older checksum copied here.
+The playable package is the [latest release](https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/latest). Inside that zip the DLL is under `install/BepInEx/plugins/`, and the sample configs are under `configuration examples/`. In this git tree the same DLL path is still [`instalar/BepInEx/plugins/SpiffoAiCompanions.dll`](instalar/BepInEx/plugins/SpiffoAiCompanions.dll). The source constant on `main` is plugin **0.26.2**. The published zip can lag behind that tree; use the latest release page, not an older checksum copied here.
 
 <a id="requirements"></a>
 

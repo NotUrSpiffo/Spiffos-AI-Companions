@@ -87,6 +87,7 @@ namespace OfflineCompanionsAI
             ApplyToolInFight(harmony);
             ApplyUpkeep(harmony);
             ApplySmelting(harmony);
+            StorageSortPatches.Apply(harmony);
             ApplySpeechFilter(harmony);
             ApplyRockStrikes(harmony);
             ApplyStuckGather(harmony);
@@ -1026,8 +1027,7 @@ namespace OfflineCompanionsAI
             MethodInfo output = AccessTools.Method(smelt, "FindChestWithSpace");
             _smeltChests = AccessTools.Field(smelt, "_nearbyChests");
             _smeltSkipChest = AccessTools.Method(smelt, "SkipChest");
-            _smeltTarget = AccessTools.Field(smelt, "_targetSmelter");
-            if (output == null || _smeltChests == null || _smeltSkipChest == null || _smeltTarget == null)
+            if (output == null || _smeltChests == null || _smeltSkipChest == null)
             {
                 Plugin.Log.LogWarning("Guardar lo fundido junto a lo mismo no está disponible en esta versión de Offline Companions Reborn: irá al cofre más cercano con sitio.");
                 return;
@@ -1037,50 +1037,128 @@ namespace OfflineCompanionsAI
 
         private static FieldInfo _smeltChests;
         private static MethodInfo _smeltSkipChest;
-        private static FieldInfo _smeltTarget;
 
-        // Offline Companions lo deja en el cofre más cercano con un hueco libre, aunque haya otro con lo mismo.
+        private const int MatchSame = 3;
+        private const int MatchFamily = 2;
+        private const int MatchSource = 1;
+
+        /// <summary>
+        /// Offline Companions lo deja en el cofre más cercano con un hueco libre, tenga lo que tenga. Se prefiere, por
+        /// orden: un cofre con lo mismo; uno con otra cosa del mismo horno (el estaño junto al cobre o al hierro); uno
+        /// con su mineral. Lo que da cada horno sale de todos los hornos del juego, no del que tiene asignado ahora: al
+        /// recoger el carbón del horno de carbón, el asignado puede ser ya la fundición.
+        /// </summary>
         private static void OutputWithSame(Component __instance, ref Container __result)
         {
             Inventory pack = __instance.GetComponent<Humanoid>()?.GetInventory();
             var chests = _smeltChests.GetValue(__instance) as List<Container>;
-            if (pack == null || chests == null) return;
-            HashSet<string> outputs = SmelterOutputs(_smeltTarget.GetValue(__instance) as Smelter);
+            if (pack == null || chests == null || !SmeltFamiliesReady()) return;
 
             Container best = null;
+            int bestMatch = 0;
+            int bestAmount = 0;
             float bestDistance = float.MaxValue;
             foreach (Container chest in chests)
             {
                 if (chest == null || (bool)_smeltSkipChest.Invoke(__instance, new object[] { chest })) continue;
                 Inventory inventory = chest.GetInventory();
-                if (inventory == null || !HoldsCarriedOutput(pack, inventory, outputs)) continue;
+                int amount = 0;
+                int match = inventory == null ? 0 : OutputMatch(pack, inventory, out amount);
+                if (match == 0) continue;
                 float distance = Vector3.Distance(__instance.transform.position, chest.transform.position);
-                if (distance < bestDistance)
+                // Entre dos cofres que encajan igual gana el que guarda más de esa familia: si una vez cayó estaño en
+                // otro cofre, el más cercano no se queda con todo lo que sigue.
+                bool better = match > bestMatch
+                    || match == bestMatch && amount > bestAmount
+                    || match == bestMatch && amount == bestAmount && distance < bestDistance;
+                if (better)
                 {
                     best = chest;
+                    bestMatch = match;
+                    bestAmount = amount;
                     bestDistance = distance;
                 }
             }
             if (best != null) __result = best;
         }
 
-        private static HashSet<string> SmelterOutputs(Smelter smelter)
+        // Por cada cosa que sale de un horno: lo demás que sale de esos hornos, y de qué se hace.
+        private static Dictionary<string, HashSet<string>> _smeltFamily;
+        private static Dictionary<string, HashSet<string>> _smeltSource;
+
+        private static bool SmeltFamiliesReady()
         {
-            var outputs = new HashSet<string>();
-            if (smelter == null || smelter.m_conversion == null) return outputs;
-            foreach (Smelter.ItemConversion conversion in smelter.m_conversion)
+            if (_smeltFamily != null) return true;
+            if (ZNetScene.instance == null) return false;
+            var family = new Dictionary<string, HashSet<string>>();
+            var source = new Dictionary<string, HashSet<string>>();
+            foreach (GameObject prefab in ZNetScene.instance.m_prefabs)
             {
-                if (conversion?.m_to != null) outputs.Add(conversion.m_to.gameObject.name);
+                Smelter smelter = prefab != null ? prefab.GetComponent<Smelter>() : null;
+                if (smelter?.m_conversion == null) continue;
+                var outputs = new List<string>();
+                foreach (Smelter.ItemConversion conversion in smelter.m_conversion)
+                {
+                    if (conversion?.m_to == null) continue;
+                    string output = conversion.m_to.gameObject.name;
+                    outputs.Add(output);
+                    if (!source.TryGetValue(output, out HashSet<string> from)) source[output] = from = new HashSet<string>();
+                    if (conversion.m_from != null) from.Add(conversion.m_from.gameObject.name);
+                }
+                foreach (string output in outputs)
+                {
+                    if (!family.TryGetValue(output, out HashSet<string> siblings)) family[output] = siblings = new HashSet<string>();
+                    foreach (string other in outputs) siblings.Add(other);
+                }
             }
-            return outputs;
+            if (family.Count == 0) return false;
+            _smeltFamily = family;
+            _smeltSource = source;
+            return true;
         }
 
-        private static bool HoldsCarriedOutput(Inventory pack, Inventory chest, HashSet<string> outputs)
+        /// <summary>Lo bien que encaja el cofre con lo fundido que lleva: 0 si no le cabe o no tiene nada parecido.
+        /// <paramref name="amount"/> es cuánto guarda ya de esa familia, para desempatar.</summary>
+        private static int OutputMatch(Inventory pack, Inventory chest, out int amount)
         {
+            var inChest = new Dictionary<string, int>();
+            foreach (ItemDrop.ItemData stored in chest.GetAllItems())
+            {
+                string storedName = stored?.m_dropPrefab?.name;
+                if (storedName == null) continue;
+                inChest.TryGetValue(storedName, out int count);
+                inChest[storedName] = count + stored.m_stack;
+            }
+            int best = 0;
+            amount = 0;
             foreach (ItemDrop.ItemData item in pack.GetAllItems())
             {
-                if (item?.m_dropPrefab == null || item.m_shared == null || !outputs.Contains(item.m_dropPrefab.name)) continue;
-                if (chest.HaveItem(item.m_shared.m_name) && chest.CanAddItem(item, item.m_stack)) return true;
+                string name = item?.m_dropPrefab?.name;
+                if (name == null || item.m_shared == null || !_smeltFamily.TryGetValue(name, out HashSet<string> siblings)) continue;
+                if (!chest.CanAddItem(item, item.m_stack)) continue;
+                int family = 0;
+                foreach (string sibling in siblings)
+                {
+                    if (inChest.TryGetValue(sibling, out int count)) family += count;
+                }
+                int match = inChest.ContainsKey(name) ? MatchSame
+                    : family > 0 ? MatchFamily
+                    : _smeltSource.TryGetValue(name, out HashSet<string> from) && HasAny(inChest, from) ? MatchSource
+                    : 0;
+                if (match > best || match == best && family > amount)
+                {
+                    best = match;
+                    amount = family;
+                }
+            }
+            return best;
+        }
+
+        private static bool HasAny(Dictionary<string, int> inChest, HashSet<string> names)
+        {
+            foreach (string name in names)
+            {
+                if (inChest.ContainsKey(name)) return true;
             }
             return false;
         }

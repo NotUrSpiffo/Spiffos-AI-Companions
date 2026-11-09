@@ -1,4 +1,4 @@
-Spiffo's Valheim AI Companions 0.26.1
+Spiffo's Valheim AI Companions 0.26.2
 
 AI-powered companion conversation, natural-language orders and long-term memory
 for Valheim, with English/Spanish language selection and Offline Companions
@@ -6,6 +6,17 @@ Reborn 1.5.8 integrated.
 
 Requires Valheim, BepInEx and an AI service. Voice input requires the Player2 app.
 See README.txt for installation and configuration.
+
+Chest sorting (0.26.2)
+
+- Smelted metal goes to the chest that already holds it, even with two
+  smelters running. Before, tin could end up in the nearest chest, and from
+  then on that chest kept getting it. Between two matching chests, the one
+  holding more of that metal wins.
+- Honey, other leftovers, gathered materials and harvested crops go to a
+  chest with the same item or, failing that, to the one with the most items
+  of the same type: food, ore, wood, stone, gear or trophies. Items from
+  other mods fall into their type from the game's own data.
 
 Therzie's mods (0.26.1)
 

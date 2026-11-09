@@ -1,6 +1,6 @@
 # Spiffo's Valheim AI Companions
 
-[English](README.md) · [Último release](https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/latest) · en `main` el plugin es `0.26.1`
+[English](README.md) · [Último release](https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/latest) · en `main` el plugin es `0.26.2`
 
 <p>
   <img src="docs/assets/cover.jpg" width="640" height="360" alt="Arte de portada con cuatro compañeros ilustrados en un bosque nevado y el título Spiffo's AI Companions. Es arte promocional, no una captura de partida, ni un respaldo de Valheim o de Player2.">
@@ -49,7 +49,7 @@ Esta página describe ajustes y límites de este repositorio. No es un informe d
 
 En el editor de personaje hay seis personalidades: **Vieja guardia**, **Aprendiz**, **Exploración**, **Caza**, **Oficio** y **Bromas**. Si `[Personaje] Personality` está vacío, cada compañero sin instrucciones propias recibe uno de esos perfiles. Las inclinaciones del editor son **Automática**, **Ninguna**, **Oficio**, **Exploración**, **Caza** y **Recolección**. Automática sigue el perfil y no anula una orden tuya.
 
-En `main`, el plugin **0.26.1** cambia además estos comportamientos de Reborn en `codigo/src/BehaviorOverrides.cs` y `codigo/src/SeatSync.cs`. Lo que cambió está en [RELEASE_NOTES.md](RELEASE_NOTES.md).
+En `main`, el plugin **0.26.2** cambia además estos comportamientos de Reborn en `codigo/src/BehaviorOverrides.cs`, `codigo/src/SeatSync.cs` y `codigo/src/StorageSortPatches.cs`. Lo que cambió está en [RELEASE_NOTES.md](RELEASE_NOTES.md).
 
 - **Picar:** se deja una roca de piedra o de mineral, o una sección, cuando el código decide que solo se llega nadando. Si faltan `MHR_Water.WouldSwim` o `MHR_GatherRules.AllowTarget`, el registro avisa de que ese filtro no está disponible.
 - **Pelear con una herramienta en la mano:** si el objeto elegido es una caña de pescar, tiene daño de pico o es una herramienta, el mod prueba un arma cuerpo a cuerpo, luego un arco, y si no, la desequipa. Si faltan los métodos de combate de Reborn, el registro avisa de que el cambio no está disponible.
@@ -57,6 +57,8 @@ En `main`, el plugin **0.26.1** cambia además estos comportamientos de Reborn e
 - **Límite de compañeros (0.25.7):** un mundo admite como mucho **5** (`MaxCompanionsPerWorld`), constante fija, no una clave de config. Una orden sigue dirigiéndose como máximo a **4**. Ver [compañeros](#companions).
 - **Piedra sin pico (0.25.8):** una orden de piedra recoge las piedras sueltas cuando el compañero no tiene pico, aunque Reborn deja de recogerlas en cuanto hay un hacha de bronce o mejor o una forja. Con pico pica rocas.
 - **Andar sentado (0.25.8):** cada 0,5 s se revisa cada compañero cargado; si se mueve entre 0,8 y 15 m/s durante 1,5 s con la animación de sentado, se le levanta, salvo en un barco. El juego que lo mueve lo levanta para todos; los demás, solo en su pantalla. El registro anota una línea `[Sentado]`.
+- **Lo fundido (0.26.2):** lo que sale de un horno va a un cofre que ya tenga ese mismo objeto, luego a uno con otra cosa que sale de los mismos hornos, y luego a uno con su mineral. Entre dos cofres que encajan igual gana el que guarda más de lo que sale de ese horno, y luego el más cercano. Lo que da cada horno se lee de todos los hornos del juego, no solo del que se está usando. `OutputWithSame`.
+- **Guardar por tipo (0.26.2):** lo que sobra al terminar el mantenimiento (la miel, por ejemplo), lo recolectado y la cosecha van a un cofre con lo mismo y luego al que guarda más cosas del mismo tipo: comida, mineral, madera, piedra, equipo o trofeos. Los tipos se leen del juego: hornos con combustible, estaciones de cocina, el fermentador y las recetas de comida. Si ningún cofre tiene nada parecido, se usa el cofre de Reborn. `codigo/src/StorageSort.cs`, `codigo/src/StorageSortPatches.cs`.
 
 <a id="multiplayer"></a>
 
@@ -116,7 +118,7 @@ La portada muestra cuatro figuras ilustradas. Es arte promocional, no el límite
 3. Instala y abre la app de [Player2](https://player2.game). Deja `[IA] Provider` en `Player2` y `ApiKey` vacío.
 4. Arranca Valheim. En el chat, `/saldo` debe responder con los joules de Player2.
 
-El paquete para jugar es el [último release](https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/latest). En ese zip la DLL está en `install/BepInEx/plugins/`, y las configs de ejemplo en `configuration examples/`. En este árbol git la misma DLL sigue en [`instalar/BepInEx/plugins/SpiffoAiCompanions.dll`](instalar/BepInEx/plugins/SpiffoAiCompanions.dll). La constante de fuente en `main` es el plugin **0.26.1**. El zip publicado puede ir por detrás de este árbol; usa la página del último release, no una suma vieja copiada aquí.
+El paquete para jugar es el [último release](https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/latest). En ese zip la DLL está en `install/BepInEx/plugins/`, y las configs de ejemplo en `configuration examples/`. En este árbol git la misma DLL sigue en [`instalar/BepInEx/plugins/SpiffoAiCompanions.dll`](instalar/BepInEx/plugins/SpiffoAiCompanions.dll). La constante de fuente en `main` es el plugin **0.26.2**. El zip publicado puede ir por detrás de este árbol; usa la página del último release, no una suma vieja copiada aquí.
 
 <a id="requirements"></a>
 
