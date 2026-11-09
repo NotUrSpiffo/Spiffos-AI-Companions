@@ -133,6 +133,10 @@
             "value": "Оттенок волос"
         },
         {
+            "key": "hc_ui_label_hairdye",
+            "value": "Краска для волос (слева — без краски)"
+        },
+        {
             "key": "hc_ui_label_subtype",
             "value": "Подтип"
         },

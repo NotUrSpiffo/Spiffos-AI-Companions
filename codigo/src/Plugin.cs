@@ -22,7 +22,7 @@ namespace OfflineCompanionsAI
         public const string PluginGuid = "OfflineCompanionsAI";
 #endif
         public const string PluginName = "Spiffo's Valheim AI Companions";
-        public const string PluginVersion = "0.26.3";
+        public const string PluginVersion = "0.27.0";
 
         private const float EmoteCooldown = 10f;
 
@@ -119,6 +119,15 @@ namespace OfflineCompanionsAI
         private const string AutonomyCommandAccented = "/autonomía";
         private const string AutonomyCommandEn = "/autonomy";
         private const string AutonomyCommandRu = "/автономия";
+        private const string FreeTalkCommand = "/freetalk";
+        private const string FreeTalkCommandEs = "/charla";
+        private const string FreeTalkCommandRu = "/беседа";
+        // Hasta dónde se oyen dos compañeros para charlar entre ellos.
+        private const float FreeTalkRange = 20f;
+        private const float SideReplyMinDelay = 2f;
+        private const float SideReplyMaxDelay = 6f;
+        // Una respuesta del grupo no encadena charla.
+        private const int GroupTurn = 99;
         private const float InitiativeCheckInterval = 5f;
         private const float InitiativeDangerRange = 15f;
         private const float StrongEnemyCheckInterval = 1f;
@@ -143,6 +152,7 @@ namespace OfflineCompanionsAI
             BalanceCommand, BalanceCommandEn, BalanceCommandRu,
             EditCommand, EditCommandEn, EditCommandRu,
             AutonomyCommand, AutonomyCommandAccented, AutonomyCommandEn, AutonomyCommandRu,
+            FreeTalkCommand, FreeTalkCommandEs, FreeTalkCommandRu,
             PlacesCommand, PlacesCommandEn, PlacesCommandRu,
             MarkCommand, MarkCommandEn, MarkCommandRu,
             ForgetCommand, ForgetCommandEn, ForgetCommandRu,
@@ -169,6 +179,7 @@ namespace OfflineCompanionsAI
         private readonly Dictionary<Component, HuntSweep> _huntSweeps = new Dictionary<Component, HuntSweep>();
         private readonly Dictionary<Component, ExploreTask> _explores = new Dictionary<Component, ExploreTask>();
         private readonly HashSet<string> _foundThings = new HashSet<string>();
+        private readonly List<SideReply> _sideReplies = new List<SideReply>();
         private float _nextExpeditionCheckAt;
         private JsonFileStore<PlaceBook> _placeFiles;
         private PlaceBook _places;
@@ -351,6 +362,7 @@ namespace OfflineCompanionsAI
             UpdateChains(Player.m_localPlayer);
             UpdateStrongEnemies(Player.m_localPlayer);
             UpdateReactions(Player.m_localPlayer);
+            UpdateSideReplies(Player.m_localPlayer);
             UpdateAutonomy(Player.m_localPlayer);
             SeatSync.Update();
         }
@@ -455,6 +467,7 @@ namespace OfflineCompanionsAI
             _huntSweeps.Clear();
             _explores.Clear();
             _foundThings.Clear();
+            _sideReplies.Clear();
             _nextExpeditionCheckAt = 0f;
             _places = null;
             _placesWorld = null;
@@ -522,7 +535,7 @@ namespace OfflineCompanionsAI
             if (ModLang.IsEnglish)
             {
                 AddLine("Talk: " + TalkKeys() + " | Shout so they hear you from farther away: /s message | Voice: hold " + _settings.VoiceKey.Value + " | Character: " + _settings.EditModifier.Value + " + " + _settings.TalkKey.Value);
-                AddLine("Commands: /help, /status, /recall, /balance, /character, /autonomy, /places, /mark name, /forget name, /language [en|es|ru|auto]");
+                AddLine("Commands: /help, /status, /recall, /balance, /character, /autonomy, /freetalk, /places, /mark name, /forget name, /language [en|es|ru|auto]");
                 AddLine("Ask & remember: what's nearby?, what's in the chests?, remember my base is to the north");
                 AddLine("Move: follow me, come here, go there, go to the chest, go there and stay, stay here, stop");
                 AddLine("Places: mark base here, mark mine there, go back to base, go to base and tend it, forget mine");
@@ -541,7 +554,7 @@ namespace OfflineCompanionsAI
             if (ModLang.IsRussian)
             {
                 AddLine("Разговор: " + TalkKeys() + " | Крикнуть дальше: /s сообщение | Голос: удерживай " + _settings.VoiceKey.Value + " | Анкета: " + _settings.EditModifier.Value + " + " + _settings.TalkKey.Value);
-                AddLine("Команды: /помощь (/help), /статус (/status), /позвать (/recall), /баланс (/balance), /персонаж (/character), /автономия (/autonomy), /места (/places), /отметить имя (/mark), /забыть имя (/forget), /язык [en|es|ru|auto]");
+                AddLine("Команды: /помощь (/help), /статус (/status), /позвать (/recall), /баланс (/balance), /персонаж (/character), /автономия (/autonomy), /беседа (/freetalk), /места (/places), /отметить имя (/mark), /забыть имя (/forget), /язык [en|es|ru|auto]");
                 AddLine("Вопросы и память: что рядом?, что в сундуках?, помни: база на севере");
                 AddLine("Движение: за мной, иди сюда, иди туда, иди к сундуку, оставайся там, стой здесь, стоп");
                 AddLine("Места: отметь здесь базу, отметь там шахту, вернись на базу, иди на базу и следи за ней, забудь шахту");
@@ -558,7 +571,7 @@ namespace OfflineCompanionsAI
                 return;
             }
             AddLine("Hablar: " + TalkKeys() + " | Gritar, para que te oiga de más lejos: /s mensaje | Voz: mantén " + _settings.VoiceKey.Value + " | Personaje: " + _settings.EditModifier.Value + " + " + _settings.TalkKey.Value);
-            AddLine("Comandos: /ayuda, /estado, /llamar, /saldo, /personaje, /autonomia, /lugares, /marcar nombre, /olvidar nombre, /idioma [en|es|ru|auto]");
+            AddLine("Comandos: /ayuda, /estado, /llamar, /saldo, /personaje, /autonomia, /charla (/freetalk), /lugares, /marcar nombre, /olvidar nombre, /idioma [en|es|ru|auto]");
             AddLine("Saber y recordar: ¿qué hay cerca?, ¿qué hay en los cofres?, recuerda que mi base está al norte");
             AddLine("Moverse: sígueme, ven aquí, ve allí, ve al cofre, ve allí y quédate, quédate aquí, para");
             AddLine("Lugares: marca aquí la base, marca allí la mina, vuelve a la base, ve a la base y encárgate, olvida la mina");
@@ -601,6 +614,10 @@ namespace OfflineCompanionsAI
                 "Modo: " + (_settings.Autonomy.Value == AutonomyMode.Autonomo ? "autónomo" : "normal") + " (" + AutonomyCommand + " para cambiarlo)",
                 "Mode: " + (_settings.Autonomy.Value == AutonomyMode.Autonomo ? "autonomous" : "normal") + " (" + AutonomyCommandEn + " to toggle)",
                 "Режим: " + (_settings.Autonomy.Value == AutonomyMode.Autonomo ? "автономный" : "обычный") + " (" + AutonomyCommandRu + " для переключения)"));
+            AddLine(ModLang.Pick(
+                "Charla entre compañeros: " + (_settings.FreeTalk.Value ? "activada" : "desactivada") + " (" + FreeTalkCommand + " para cambiarlo)",
+                "Free talk between companions: " + (_settings.FreeTalk.Value ? "on" : "off") + " (" + FreeTalkCommand + " to toggle)",
+                "Беседа между спутниками: " + (_settings.FreeTalk.Value ? "включена" : "выключена") + " (" + FreeTalkCommandRu + " для переключения)"));
         }
 
         private void ShowBalance()
@@ -1219,6 +1236,7 @@ namespace OfflineCompanionsAI
             else if (command == StatusCommand || command == StatusCommandEn || command == StatusCommandRu) ShowStatus();
             else if (command == BalanceCommand || command == BalanceCommandEn || command == BalanceCommandRu) ShowBalance();
             else if (command == AutonomyCommand || command == AutonomyCommandAccented || command == AutonomyCommandEn || command == AutonomyCommandRu) ToggleAutonomy();
+            else if (command == FreeTalkCommand || command == FreeTalkCommandEs || command == FreeTalkCommandRu) ToggleFreeTalk();
             else if (target == null) Notify(ModLang.Pick("No hay ningún compañero tuyo cerca.", "None of your companions are nearby.", "Рядом нет ни одного твоего спутника."));
             else OpenEditorFor(target);
             return true;
@@ -1310,7 +1328,9 @@ namespace OfflineCompanionsAI
             string id = CompanionBridge.PermanentId(target);
             LookTarget look = LookTarget.Capture(player, CompanionBridge.CompanionType);
             List<ChatMessage> request = BuildRequest(player, target, id, text, look, playerMessage: true, reach: reach);
-            var state = new MessageActions { OrderRange = reach, PlayerText = text };
+            var state = new MessageActions { OrderRange = reach, PlayerText = text, Plural = Recipients.AddressesSeveral(text, nearby.ConvertAll(c => CompanionBridge.Name(c))) };
+            // Lo que diga el jugador corta la charla que hubiera entre ellos.
+            _sideReplies.Clear();
 
             _waiting = true;
             _nextTalkAt = Time.time + _settings.Cooldown.Value;
@@ -1329,7 +1349,7 @@ namespace OfflineCompanionsAI
                         return;
                     }
                     ApplyClearOrder(target, look, name, text, state);
-                    Finish(target, name, id, text, response.Text);
+                    QueueGroupReplies(target, name, state, Finish(target, name, id, text, response.Text));
                 },
                 error =>
                 {
@@ -1359,7 +1379,9 @@ namespace OfflineCompanionsAI
             public bool Initiative;
             public float OrderRange = Plugin.OrderRange;
             public string PlayerText;
+            public bool Plural;
             public JArray OnOwnTools;
+            public readonly HashSet<Component> Addressed = new HashSet<Component>();
             public readonly List<string> Done = new List<string>();
             public readonly HashSet<Component> TaskStarted = new HashSet<Component>();
             public readonly HashSet<Component> OpenEndedJob = new HashSet<Component>();
@@ -1398,12 +1420,12 @@ namespace OfflineCompanionsAI
                 next =>
                 {
                     if (next.ToolCalls.Count > 0 && tools != null) RunActions(target, look, name, id, followUp, question, next, state);
-                    else Finish(target, name, id, question, next.Text ?? fallback);
+                    else QueueGroupReplies(target, name, state, Finish(target, name, id, question, next.Text ?? fallback));
                 },
                 error =>
                 {
                     Log.LogWarning("[IA] Sin respuesta tras la acción: " + error);
-                    Finish(target, name, id, question, fallback);
+                    QueueGroupReplies(target, name, state, Finish(target, name, id, question, fallback));
                 }));
         }
 
@@ -1460,6 +1482,15 @@ namespace OfflineCompanionsAI
             if (chosen.Count == 0) return ModLang.Pick("Error: No hay compañeros cerca.", "Error: No companions nearby.", "Ошибка: поблизости нет спутников.");
 
             List<Component> group = chosen.ConvertAll(i => nearby[i]);
+            if (!state.Initiative)
+            {
+                foreach (Component c in group) state.Addressed.Add(c);
+                // Un lugar se marca una sola vez, pero si la IA nombró a varios, todos deben contestar.
+                if (CompanionActions.IsWorldWide(action.Kind) && !string.IsNullOrWhiteSpace(action.Who))
+                {
+                    foreach (int i in Recipients.Resolve(action.Who, names, out string _)) state.Addressed.Add(nearby[i]);
+                }
+            }
 
             // Usar lo que se mira se aplica de una vez al grupo, porque la tecla de mando ya reparte asientos y objetos.
             if (action.Kind == ActionKind.UseLookedAt)
@@ -4148,13 +4179,14 @@ namespace OfflineCompanionsAI
             return text;
         }
 
-        private void Finish(Component target, string name, string id, string question, string reply)
+        /// <summary>Devuelve lo que dijo, o null si se quedó callado.</summary>
+        private string Finish(Component target, string name, string id, string question, string reply, int talkTurn = 0, Component talkPartner = null)
         {
             _waiting = false;
             // Fuera del historial y de lo que se muestra: es una indicación para el juego, no algo que el personaje dice.
             string spoken = LlmProtocol.StripNarration(EmoteCatalog.Extract(Initiative.StripSilence(reply), out string emote), PromptBuilder.WantsNarration(LoadProfile(id)));
             if (target != null) TryEmote(target, name, emote);
-            if (string.IsNullOrWhiteSpace(spoken)) return;
+            if (string.IsNullOrWhiteSpace(spoken)) return null;
             _reactions.NotifySpoke(Time.time);
             _initiative.NotifySpoke(Time.time);
 
@@ -4173,6 +4205,153 @@ namespace OfflineCompanionsAI
             }
 
             SummarizeIfNeeded(name, id, memory);
+            QueueFreeTalk(target, name, spoken, talkTurn, talkPartner);
+            return spoken;
+        }
+
+        /// <summary>Lo que dirá otro compañero cuando quede libre la IA: contestar a una orden para todos, o charlar.</summary>
+        private sealed class SideReply
+        {
+            public Component Speaker;
+            public Component ReplyTo;
+            public string Prompt;
+            public string MemoryLine;
+            public float NotBefore;
+            public int Turn;
+            public bool Group;
+        }
+
+        /// <summary>El tiempo de leer lo que se dijo, para que el otro no hable encima.</summary>
+        private float SideReplyDelay(string spoken)
+        {
+            return LlmProtocol.ReadingSeconds(LlmProtocol.Shorten(spoken ?? "", 0), _settings.ReadingSpeed.Value, SideReplyMinDelay, SideReplyMaxDelay);
+        }
+
+        /// <summary>Si la orden era para varios, los demás también contestan, sin herramientas: la orden ya se aplicó.</summary>
+        private void QueueGroupReplies(Component speaker, string name, MessageActions state, string spoken)
+        {
+            Player player = Player.m_localPlayer;
+            if (state == null || state.Initiative || speaker == null || player == null) return;
+
+            var listeners = new List<Component>();
+            foreach (Component c in state.Addressed)
+            {
+                if (c != null && c != speaker && !listeners.Contains(c)) listeners.Add(c);
+            }
+            if (state.Plural)
+            {
+                foreach (Component c in CompanionBridge.Nearby(player, speaker, state.OrderRange))
+                {
+                    if (c != speaker && !listeners.Contains(c)) listeners.Add(c);
+                }
+            }
+            if (listeners.Count == 0) return;
+            if (listeners.Count > Recipients.MaxPerOrder - 1) listeners.RemoveRange(Recipients.MaxPerOrder - 1, listeners.Count - (Recipients.MaxPerOrder - 1));
+
+            // Contestar a todos sustituye a la charla que hubiera empezado lo dicho.
+            _sideReplies.RemoveAll(r => !r.Group);
+            string done = state.Done.Count == 0 ? ModLang.Pick("nada", "nothing", "ничего") : string.Join("; ", state.Done.ToArray());
+            string said = string.IsNullOrWhiteSpace(spoken) ? ModLang.Pick("(no dijo nada)", "(said nothing)", "(ничего не сказал)") : "«" + LlmProtocol.Shorten(spoken, 0) + "»";
+            float at = Time.time + SideReplyDelay(spoken);
+            foreach (Component listener in listeners)
+            {
+                _sideReplies.Add(new SideReply
+                {
+                    Speaker = listener,
+                    Group = true,
+                    Turn = GroupTurn,
+                    NotBefore = at,
+                    MemoryLine = state.PlayerText,
+                    Prompt = ModLang.Pick(
+                        "(El jugador les habló a varios a la vez, también a ti: «" + state.PlayerText + "». " + name + " ya contestó: " + said + " Lo que se hizo: " + done + ". Contesta tú también, con una frase corta y sin repetir lo que dijo " + name + ". No digas que harás algo distinto de lo que se hizo.)",
+                        "(The player spoke to several of you at once, you included: \"" + state.PlayerText + "\". " + name + " already answered: " + said + " What was done: " + done + ". Answer too, in one short sentence, without repeating what " + name + " said. Do not say you will do anything other than what was done.)",
+                        "(Игрок обратился сразу к нескольким спутникам, и к тебе тоже: «" + state.PlayerText + "». " + name + " уже ответил: " + said + " Что сделано: " + done + ". Ответь и ты одной короткой фразой, не повторяя слов " + name + ". Не говори, что сделаешь что-то кроме того, что уже сделано.)")
+                });
+                at += SideReplyMinDelay;
+            }
+            Log.LogInfo("[Grupo] La orden era para varios: contestarán también " + string.Join(", ", listeners.ConvertAll(c => CompanionBridge.Name(c)).ToArray()));
+        }
+
+        /// <summary>Con /freetalk, otro compañero cercano puede contestar a lo que acaba de decir uno, o callarse.</summary>
+        private void QueueFreeTalk(Component speaker, string name, string spoken, int turn, Component previous)
+        {
+            Player player = Player.m_localPlayer;
+            if (!_settings.FreeTalk.Value || speaker == null || player == null || turn >= _settings.FreeTalkTurns.Value) return;
+            if (_sideReplies.Exists(r => r.Group)) return;
+
+            var candidates = new List<Component>();
+            foreach (Component c in CompanionBridge.Nearby(player, speaker, _settings.TalkRange.Value))
+            {
+                if (c == speaker || CompanionBridge.InCombat(c)) continue;
+                if (Vector3.Distance(c.transform.position, speaker.transform.position) <= FreeTalkRange) candidates.Add(c);
+            }
+            if (candidates.Count == 0) return;
+            Component listener = previous != null && candidates.Contains(previous) ? previous : candidates[Random.Range(0, candidates.Count)];
+
+            string line = LlmProtocol.Shorten(spoken, 0);
+            bool answered = listener == previous;
+            _sideReplies.RemoveAll(r => !r.Group);
+            _sideReplies.Add(new SideReply
+            {
+                Speaker = listener,
+                ReplyTo = speaker,
+                Turn = turn + 1,
+                NotBefore = Time.time + SideReplyDelay(spoken),
+                MemoryLine = ModLang.Pick("(" + name + " dijo: «" + line + "»)", "(" + name + " said: \"" + line + "\")", "(" + name + " сказал: «" + line + "»)"),
+                Prompt = answered
+                    ? ModLang.Pick(
+                        "(Charla entre compañeros; el jugador no te habla a ti. " + name + " te contestó: «" + line + "». Si quieres, sigue la conversación con una o dos frases dirigidas a " + name + ". Si ya no hay nada que añadir, responde solo [nada].)",
+                        "(Chat between companions; the player is not talking to you. " + name + " answered you: \"" + line + "\". If you want, continue the conversation with one or two sentences addressed to " + name + ". If there is nothing left to add, reply only [nothing].)",
+                        "(Разговор между спутниками; игрок обращается не к тебе. " + name + " ответил тебе: «" + line + "». Если хочешь, продолжи разговор одной-двумя фразами, обращаясь к " + name + ". Если добавить нечего, ответь только [ничего].)")
+                    : ModLang.Pick(
+                        "(Charla entre compañeros; el jugador no te habla a ti. " + name + " acaba de decir en voz alta: «" + line + "». Si te nace, contéstale a " + name + " con una o dos frases, como hablarías tú. Si no tienes nada que añadir, responde solo [nada].)",
+                        "(Chat between companions; the player is not talking to you. " + name + " just said aloud: \"" + line + "\". If you feel like it, answer " + name + " in one or two sentences, the way you would talk. If you have nothing to add, reply only [nothing].)",
+                        "(Разговор между спутниками; игрок обращается не к тебе. " + name + " только что сказал вслух: «" + line + "». Если хочется, ответь " + name + " одной-двумя фразами, как говорил бы ты сам. Если добавить нечего, ответь только [ничего].)")
+            });
+        }
+
+        private void UpdateSideReplies(Player player)
+        {
+            if (_sideReplies.Count == 0 || _waiting || player.IsDead() || !CanOpenInput() || _voiceState != VoiceState.Idle) return;
+            SideReply next = _sideReplies[0];
+            if (Time.time < next.NotBefore) return;
+            _sideReplies.RemoveAt(0);
+
+            Component target = next.Speaker;
+            if (target == null || Vector3.Distance(player.transform.position, target.transform.position) > Mathf.Max(_settings.TalkRange.Value, OrderRange)) return;
+            if (!next.Group && (CompanionBridge.InCombat(target) || next.ReplyTo == null)) return;
+
+            string name = CompanionBridge.Name(target);
+            string id = CompanionBridge.PermanentId(target);
+            List<ChatMessage> request = BuildRequest(player, target, id, next.Prompt);
+            _waiting = true;
+            Log.LogInfo((next.Group ? "[Grupo] " : "[Charla] ") + name + " contesta" + (next.Group ? "" : " (turno " + next.Turn + ")"));
+            StartCoroutine(_client.Complete(
+                request,
+                null,
+                response => Finish(target, name, id, next.MemoryLine, response.Text ?? "", next.Turn, next.ReplyTo),
+                error =>
+                {
+                    _waiting = false;
+                    Log.LogWarning((next.Group ? "[Grupo]" : "[Charla]") + " Sin respuesta: " + error);
+                }));
+        }
+
+        private void ToggleFreeTalk()
+        {
+            bool enable = !_settings.FreeTalk.Value;
+            _settings.FreeTalk.Value = enable;
+            if (!enable) _sideReplies.RemoveAll(r => !r.Group);
+            Log.LogInfo("[Charla] " + (enable ? "activada" : "desactivada"));
+            AddLine(enable
+                ? ModLang.Pick(
+                    "Charla entre compañeros activada: cuando uno hable, otro cercano podrá contestarle, o callarse si no tiene nada que decir. Cada respuesta gasta saldo. Vuelve a escribir " + FreeTalkCommand + " para desactivarla.",
+                    "Free talk between companions on: when one speaks, another nearby one may answer, or stay quiet if they have nothing to say. Each answer uses AI credits. Type " + FreeTalkCommand + " again to turn it off.",
+                    "Беседа между спутниками включена: когда один говорит, другой рядом может ответить или промолчать, если сказать нечего. Каждый ответ тратит баланс. Напиши " + FreeTalkCommandRu + " ещё раз, чтобы выключить.")
+                : ModLang.Pick(
+                    "Charla entre compañeros desactivada.",
+                    "Free talk between companions off.",
+                    "Беседа между спутниками выключена."));
         }
 
         private void ShowNextPage(Component target, Queue<string> pages)

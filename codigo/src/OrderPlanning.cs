@@ -67,6 +67,53 @@ namespace OfflineCompanionsAI
             return best;
         }
 
+        private static readonly HashSet<string> GroupWords = new HashSet<string>
+        {
+            "todos", "todas", "ustedes", "ambos", "ambas", "chicos", "chicas",
+            "everyone", "everybody", "both", "guys", "yall",
+            "все", "оба", "обе", "ребята", "вдвоем"
+        };
+        private static readonly string[] GroupPhrases = { "los dos", "las dos", "all of you", "you two", "you all", "вы оба", "вы обе", "вы двое" };
+        // Palabras que acaban como un plural de "ustedes" sin serlo.
+        private static readonly HashSet<string> NotPlural = new HashSet<string>
+        {
+            "tambien", "quien", "alguien", "bien", "recien", "orden", "joven", "imagen", "examen", "origen", "almacen", "margen", "resumen", "volumen"
+        };
+
+        /// <summary>
+        /// Si el jugador habla a varios compañeros a la vez: nombra a dos o más, usa "todos", "ustedes", "both" o "все",
+        /// o empieza con un verbo en plural, como "marquen", "síganme" o "отметьте".
+        /// </summary>
+        public static bool AddressesSeveral(string text, IList<string> names)
+        {
+            var nameOf = new Dictionary<string, int>();
+            for (int n = 0; names != null && n < names.Count; n++)
+            {
+                if (string.IsNullOrWhiteSpace(names[n])) continue;
+                foreach (string part in OrderIntent.Normalize(names[n]).Split(' ')) nameOf[part] = n;
+            }
+
+            string plain = " " + OrderIntent.Normalize(text) + " ";
+            foreach (string phrase in GroupPhrases)
+            {
+                if (plain.Contains(" " + phrase + " ")) return true;
+            }
+            // Los nombres solo cuentan al principio, como en "Roxy y Darkness, vengan": "Darkness, ¿conoces a Roxy?" es para uno.
+            var leading = new HashSet<int>();
+            string first = null;
+            foreach (string word in plain.Trim().Split(' '))
+            {
+                if (word.Length == 0) continue;
+                if (GroupWords.Contains(word)) return true;
+                if (first != null) continue;
+                if (nameOf.TryGetValue(word, out int who)) leading.Add(who);
+                else if (word != "y" && word != "e" && word != "and" && word != "и") first = word;
+            }
+            if (leading.Count >= 2) return true;
+            if (first == null || first.Length < 5 || NotPlural.Contains(first)) return false;
+            return first.EndsWith("en") || first.EndsWith("an") || first.EndsWith("nse") || first.EndsWith("nme") || first.EndsWith("те");
+        }
+
         /// <summary>
         /// Si lo escrito en el chat del juego es para los compañeros. Con otros jugadores en la partida debe nombrarlos,
         /// para no enviar a la IA conversaciones entre personas.

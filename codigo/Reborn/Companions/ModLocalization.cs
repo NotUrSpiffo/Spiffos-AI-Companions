@@ -111,6 +111,7 @@ public static class ModLocalization
 			{ "hc_ui_label_skin", "Skin Tone" },
 			{ "hc_ui_label_hairtone", "Hair Tone" },
 			{ "hc_ui_label_hairshade", "Hair Shade" },
+			{ "hc_ui_label_hairdye", "Hair Dye (left = none)" },
 			{ "hc_ui_label_subtype", "Sub-Type" },
 			{ "hc_ui_btn_male", "Male" },
 			{ "hc_ui_btn_female", "Female" },

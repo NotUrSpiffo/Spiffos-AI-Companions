@@ -1,10 +1,23 @@
-# Spiffo's Valheim AI Companions 0.26.3
+# Spiffo's Valheim AI Companions 0.27.0
 AI-powered companion conversation, natural-language orders and long-term memory
 for Valheim, with English/Spanish/Russian language selection and Offline Companions
 Reborn 1.5.8 integrated.
 
 Requires Valheim, BepInEx and an AI service. Voice input requires the Player2 app.
 See the included README for installation and configuration.
+
+## Companions together (0.27.0)
+- Hair colour: the companion creator has natural tones from grey and
+  platinum through blonde, ginger and auburn to black, and a new Hair Dye
+  bar with rainbow colours. At the far left of that bar there is no dye.
+- Orders for several: when you speak to several companions at once
+  ("Roxy and Darkness, ...", "everyone", "marquen esta casa"), the others
+  answer too after the first, instead of only one of them replying. The
+  order is still carried out once.
+- /freetalk: companions can talk among themselves. When one speaks,
+  another nearby may answer, or stay quiet. Off by default; [Charla]
+  MaxTurns sets how many answers follow in a row (default 2). Each answer
+  uses AI credits.
 
 ## Russian translation (0.26.3)
 - Russian joins English and Spanish, added at a player's request: mod

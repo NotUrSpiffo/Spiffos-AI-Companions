@@ -1,6 +1,6 @@
 # Spiffo's Valheim AI Companions
 
-[English](README.md) · [Русский](README.ru.md) · [Último release](https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/latest) · en `main` el plugin es `0.26.3`
+[English](README.md) · [Русский](README.ru.md) · [Último release](https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/latest) · en `main` el plugin es `0.27.0`
 
 <p>
   <img src="docs/assets/cover.jpg" width="640" height="360" alt="Arte de portada con cuatro compañeros ilustrados en un bosque nevado y el título Spiffo's AI Companions. Es arte promocional, no una captura de partida, ni un respaldo de Valheim o de Player2.">
@@ -15,6 +15,7 @@ Esta página describe ajustes y límites de este repositorio. No es un informe d
 ## Contenido
 
 - [Características](#features)
+- [Compañeros juntos](#together)
 - [Cinco por mundo, cuatro por orden](#companions)
 - [Inicio rápido](#quick-start)
 - [Requisitos](#requirements)
@@ -45,12 +46,13 @@ Esta página describe ajustes y límites de este repositorio. No es un informe d
 | Memoria entre sesiones | `[Memoria] Enabled` activo; se guarda sin cifrar en la carpeta de config del mod |
 | Comentarios breves ante jefes, biomas, muertes, asaltos y hechos parecidos | `[Reacciones]` activo; cada comentario es una petición a la IA |
 | Modo autónomo opcional para todos los compañeros | `/autonomia`; el modo por defecto es `Normal` (solo hacen lo que pides) |
+| Charla opcional entre compañeros | `/charla`, apagada por defecto. Ver [compañeros juntos](#together) |
 | Movimiento, combate y trabajos de Reborn dentro de esta DLL | Versión del plugin Reborn `1.5.8`; no instales una segunda copia |
 | Unas frases exactas siguen funcionando sin IA | `ven` / `sigueme`, `para`, `quedate`, más los comandos con barra de abajo |
 
 En el editor de personaje hay seis personalidades: **Vieja guardia**, **Aprendiz**, **Exploración**, **Caza**, **Oficio** y **Bromas**. Si `[Personaje] Personality` está vacío, cada compañero sin instrucciones propias recibe uno de esos perfiles. Las inclinaciones del editor son **Automática**, **Ninguna**, **Oficio**, **Exploración**, **Caza** y **Recolección**. Automática sigue el perfil y no anula una orden tuya.
 
-En `main`, el plugin **0.26.3** cambia además estos comportamientos de Reborn en `codigo/src/BehaviorOverrides.cs`, `codigo/src/SeatSync.cs` y `codigo/src/StorageSortPatches.cs`. Lo que cambió está en [RELEASE_NOTES.md](RELEASE_NOTES.md).
+En `main`, el plugin **0.27.0** cambia además estos comportamientos de Reborn en `codigo/src/BehaviorOverrides.cs`, `codigo/src/SeatSync.cs` y `codigo/src/StorageSortPatches.cs`. Lo que cambió está en [RELEASE_NOTES.md](RELEASE_NOTES.md).
 
 - **Picar:** se deja una roca de piedra o de mineral, o una sección, cuando el código decide que solo se llega nadando. Si faltan `MHR_Water.WouldSwim` o `MHR_GatherRules.AllowTarget`, el registro avisa de que ese filtro no está disponible.
 - **Pelear con una herramienta en la mano:** si el objeto elegido es una caña de pescar, tiene daño de pico o es una herramienta, el mod prueba un arma cuerpo a cuerpo, luego un arco, y si no, la desequipa. Si faltan los métodos de combate de Reborn, el registro avisa de que el cambio no está disponible.
@@ -61,6 +63,14 @@ En `main`, el plugin **0.26.3** cambia además estos comportamientos de Reborn e
 - **Lo fundido (0.26.2):** lo que sale de un horno va a un cofre que ya tenga ese mismo objeto, luego a uno con otra cosa que sale de los mismos hornos, y luego a uno con su mineral. Entre dos cofres que encajan igual gana el que guarda más de lo que sale de ese horno, y luego el más cercano. Lo que da cada horno se lee de todos los hornos del juego, no solo del que se está usando. `OutputWithSame`.
 - **Bajarse de la mena (0.26.2):** un compañero que queda parado encima de la roca que pica y pasa **4** segundos sin golpear baja por donde la caída es de menos de **3,8** m (en Valheim la caída hace daño desde los 4 m), sin agua abajo ni barranco después, y pica desde el suelo. Reborn ve cualquier escalón de más de 1,2 m como una caída, así que nunca bajaba solo. Si se sube a la misma roca por tercera vez, la deja un rato. Cada vez sale una línea `[Recoger]` en el registro.
 - **Guardar por tipo (0.26.2):** lo que sobra al terminar el mantenimiento (la miel, por ejemplo), lo recolectado y la cosecha van a un cofre con lo mismo y luego al que guarda más cosas del mismo tipo: comida, mineral, madera, piedra, equipo o trofeos. Los tipos se leen del juego: hornos con combustible, estaciones de cocina, el fermentador y las recetas de comida. Si ningún cofre tiene nada parecido, se usa el cofre de Reborn. `codigo/src/StorageSort.cs`, `codigo/src/StorageSortPatches.cs`.
+
+<a id="together"></a>
+
+## 💬 Compañeros juntos (0.27.0)
+
+- **Color de pelo:** en el creador de compañeros, la barra `Tono de pelo` va de canoso a platino, rubio, rubio rojizo, pelirrojo, caoba, castaño y negro. Una barra nueva, `Tinte de pelo`, añade colores del arcoíris, de rojo a rosa; en el extremo izquierdo (por debajo de **0,08**) no hay tinte y manda el tono. `Matiz de pelo` oscurece cualquiera de los dos. `codigo/Reborn/Companions/CompanionPanel.cs`.
+- **Órdenes para varios:** un mensaje lo sigue contestando un compañero, y la orden se cumple una vez. Si era para varios, los demás también contestan, con una frase corta y sin herramientas, después del primero. Cuenta como para varios si empieza con dos nombres (`Roxy y Darkness, ...`), dice `todos`, `ustedes`, `los dos`, `everyone`, `both` o `все`, empieza con un verbo en plural (`marquen`, `síganme`, `отметьте`), o la IA nombró a varios. Contestan hasta **3** más. En el registro sale una línea `[Grupo]`. `Recipients.AddressesSeveral`.
+- **Charla libre:** `/charla` (`/freetalk`, `/беседа`) activa la charla entre compañeros, **apagada** por defecto. Cuando uno habla, otro a menos de **20** m puede contestarle, o callarse si no tiene nada que añadir. `[Charla] MaxTurns` (por defecto **2**, de 1 a 6) es cuántas respuestas siguen seguidas: con 2, uno contesta y el primero puede responderle. Cada respuesta es una petición a la IA. Lo que les digas corta la conversación. En el registro salen líneas `[Charla]`.
 
 <a id="multiplayer"></a>
 
@@ -92,7 +102,7 @@ El ruso se añadió a pedido de un jugador. Es nuevo, y se agradecen los comenta
 
 - **Textos del mod:** la interfaz, los avisos, las indicaciones a la IA y las descripciones de herramientas tienen versión en ruso. `Auto` la elige con Valheim en ruso, o pon `[Personaje] Language = Russian`. `codigo/src/ModLang.cs`.
 - **Menús y frases de Reborn:** `Russian.json` en [`instalar/BepInEx/plugins/OfflineCompanionsReborn/Translations/`](instalar/BepInEx/plugins/OfflineCompanionsReborn/Translations/) y en su carpeta `speech/`.
-- **Comandos:** `/помощь`, `/статус`, `/позвать`, `/баланс`, `/персонаж`, `/автономия`, `/места`, `/отметить`, `/забыть`, `/язык`.
+- **Comandos:** `/помощь`, `/статус`, `/позвать`, `/баланс`, `/персонаж`, `/автономия`, `/беседа`, `/места`, `/отметить`, `/забыть`, `/язык`.
 - **Órdenes sin IA:** `за мной`, `ко мне`, `стой`, `жди здесь` y las demás líneas en ruso de `OrderIntent`.
 - **Revisado antes de publicar:** los términos siguen la traducción rusa del propio Valheim (fermentador «Бродильная бочка», martillo «Молот», cultivador «Пропашник»), se completaron descripciones de herramientas que estaban recortadas para que digan lo mismo que en inglés y español, se corrigieron varios casos gramaticales, y las palabras rusas con «й» o «ё», como «домой» o «желтый гриб», ya coinciden con lo que escribe el jugador.
 
@@ -277,15 +287,16 @@ Valores por defecto. Cambia las teclas si chocan con otro mod. `TalkKey` no pued
 | Ficha del personaje | `LeftShift` + `Y`, o `/personaje` |
 | Ayuda, estado, llamar a todos, saldo | `/ayuda`, `/estado`, `/llamar` o `/recall` / `/call`, `/saldo` |
 | Modo autónomo para todos | `/autonomia` |
+| Charla entre compañeros | `/charla` |
 | Lugares con nombre | `/marcar <nombre>`, `/lugares`, `/olvidar <nombre>` |
 | Idioma del mod | `/idioma es` · `en` · `ru` · `auto` |
 | Reborn: señalar algo | Pulsa `Z` (`DirectTargetKey`). Mantén `Z` para llamarlos |
 | Reborn: rueda de órdenes de uno | Mantén `E` mientras lo miras (`RadialMenuKey`) |
 | Reborn: editor de zona de cultivo | Mantén `LeftAlt` y pulsa `Z` |
 
-También valen `/help`, `/status`, `/recall`, `/balance`, `/character`, `/autonomy`, `/places`, `/mark`, `/forget` y `/language`, y en ruso `/помощь`, `/статус`, `/позвать`, `/баланс`, `/персонаж`, `/автономия`, `/места`, `/отметить`, `/забыть` y `/язык`.
+También valen `/help`, `/status`, `/recall`, `/balance`, `/character`, `/autonomy`, `/freetalk`, `/places`, `/mark`, `/forget` y `/language`, y en ruso `/помощь`, `/статус`, `/позвать`, `/баланс`, `/персонаж`, `/автономия`, `/беседа`, `/места`, `/отметить`, `/забыть` y `/язык`.
 
-`/ayuda`, `/estado`, `/llamar`, `/saldo`, `/autonomia`, `/lugares`, `/marcar`, `/olvidar` y `/idioma` no pasan por la IA (`RunCommand`). `/personaje` necesita un compañero como destino; si no, el juego dice que no hay ninguno tuyo cerca.
+`/ayuda`, `/estado`, `/llamar`, `/saldo`, `/autonomia`, `/charla`, `/lugares`, `/marcar`, `/olvidar` y `/idioma` no pasan por la IA (`RunCommand`). `/personaje` necesita un compañero como destino; si no, el juego dice que no hay ninguno tuyo cerca.
 
 Con otros jugadores en la partida, el chat del juego solo se envía a la IA si el mensaje nombra a un compañero, para no reenviar la conversación entre personas. `TalkInGameChat = false` apaga esa escucha. El hueco mínimo entre mensajes es `Cooldown` (por defecto **2** segundos).
 
@@ -308,6 +319,7 @@ La rueda de Reborn en este código es la rueda completa (seguir, trabajos, fijar
 | `Memoria` | Guardar el chat, y resumir el chat antiguo con otra petición a la IA |
 | `Reacciones` | Comentarios de eventos. Espera por defecto **180** s (30–3600). `MaxPerHour` por defecto **10** (1–60) |
 | `Autonomia` | `Normal` o `Autonomo`. `IntervalSeconds` por defecto **75** (20–3600). `MaxPerHour` por defecto **30** (1–120) |
+| `Charla` | `Enabled` por defecto `false` (`/charla`). `MaxTurns` por defecto **2** (de 1 a 6) |
 | `Multijugador` | `ShareSpeech` por defecto `true`: los demás jugadores con el mod ven lo que dicen tus compañeros a la distancia normal del chat. Ver [multijugador](#multiplayer) |
 
 `RebornSpeech` por defecto `Avisos`: las frases propias de Reborn se limitan a avisos, como no tener hacha. `Todas` es la charla original de Reborn. `Ninguna` calla esas frases fijas. Las respuestas de la IA van aparte.

@@ -33,6 +33,7 @@
         { "key": "hc_ui_label_skin", "value": "Tono de piel" },
         { "key": "hc_ui_label_hairtone", "value": "Tono de pelo" },
         { "key": "hc_ui_label_hairshade", "value": "Matiz de pelo" },
+        { "key": "hc_ui_label_hairdye", "value": "Tinte de pelo (izquierda = sin tinte)" },
         { "key": "hc_ui_label_subtype", "value": "Subtipo" },
         { "key": "hc_ui_btn_male", "value": "Masculino" },
         { "key": "hc_ui_btn_female", "value": "Femenino" },

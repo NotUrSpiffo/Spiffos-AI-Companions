@@ -107,9 +107,23 @@ public class CompanionPanel
 
 	private static readonly Color SkinDark = new Color(0.52f, 0.32f, 0.18f);
 
-	private static readonly Color HairBlonde = new Color(0.93f, 0.8f, 0.48f);
+	// Tonos naturales de claro a oscuro: canoso, platino, rubio, rubio rojizo, pelirrojo, caoba, castaño y negro.
+	private static readonly Color[] HairNatural =
+	{
+		new Color(0.86f, 0.86f, 0.84f),
+		new Color(0.96f, 0.9f, 0.7f),
+		new Color(0.93f, 0.8f, 0.48f),
+		new Color(0.86f, 0.58f, 0.34f),
+		new Color(0.72f, 0.3f, 0.1f),
+		new Color(0.42f, 0.15f, 0.07f),
+		new Color(0.3f, 0.18f, 0.08f),
+		new Color(0.1f, 0.06f, 0.03f)
+	};
 
-	private static readonly Color HairDark = new Color(0.1f, 0.06f, 0.03f);
+	// Por debajo de este valor el tinte no se aplica y manda el tono natural.
+	private const float HairDyeStart = 0.08f;
+
+	private Slider _hairDyeSlider;
 
 	private const float HairBrightMin = 0.1f;
 
@@ -377,7 +391,7 @@ public class CompanionPanel
 		y -= num6 + num3;
 		y = PlacePlainLabel(_appearanceGroup.transform, font, ModLocalization.Loc("hc_ui_label_hairtone"), y, h, "HairTone");
 		y -= num2;
-		_hairHueSlider = MakeSlider(_appearanceGroup.transform, "HairHue", y, num6, 0.45f, delegate
+		_hairHueSlider = MakeSlider(_appearanceGroup.transform, "HairHue", y, num6, 0.8f, delegate
 		{
 			UpdateHairColor();
 		});
@@ -385,6 +399,13 @@ public class CompanionPanel
 		y = PlacePlainLabel(_appearanceGroup.transform, font, ModLocalization.Loc("hc_ui_label_hairshade"), y, h, "HairShade");
 		y -= num2;
 		_hairBrightSlider = MakeSlider(_appearanceGroup.transform, "HairBright", y, num6, 0.85f, delegate
+		{
+			UpdateHairColor();
+		});
+		y -= num6 + num3;
+		y = PlacePlainLabel(_appearanceGroup.transform, font, ModLocalization.Loc("hc_ui_label_hairdye"), y, h, "HairDye");
+		y -= num2;
+		_hairDyeSlider = MakeSlider(_appearanceGroup.transform, "HairDyeSlider", y, num6, 0f, delegate
 		{
 			UpdateHairColor();
 		});
@@ -900,11 +921,25 @@ public class CompanionPanel
 
 	private void UpdateHairColor()
 	{
-		float t = ((_hairHueSlider != null) ? _hairHueSlider.value : 0.3f);
-		float t2 = ((_hairBrightSlider != null) ? _hairBrightSlider.value : 0.8f);
-		Color c = Color.Lerp(HairBlonde, HairDark, t) * Mathf.Lerp(0.1f, 1f, t2);
+		float t = ((_hairHueSlider != null) ? _hairHueSlider.value : 0.8f);
+		float t2 = ((_hairBrightSlider != null) ? _hairBrightSlider.value : 0.85f);
+		float dye = ((_hairDyeSlider != null) ? _hairDyeSlider.value : 0f);
+		Color c = HairColorFor(t, dye) * Mathf.Lerp(0.1f, 1f, t2);
 		_current.HairColor = Utils.ColorToVec3(c);
 		RefreshPreviewAppearance();
+	}
+
+	/// <summary>Sin tinte, el tono natural; con tinte, el color del arcoíris que marque la barra, de rojo a violeta.</summary>
+	private static Color HairColorFor(float tone, float dye)
+	{
+		if (dye >= HairDyeStart)
+		{
+			float hue = (dye - HairDyeStart) / (1f - HairDyeStart) * 0.92f;
+			return Color.HSVToRGB(hue, 0.75f, 0.95f);
+		}
+		float position = Mathf.Clamp01(tone) * (HairNatural.Length - 1);
+		int index = Mathf.Min(Mathf.FloorToInt(position), HairNatural.Length - 2);
+		return Color.Lerp(HairNatural[index], HairNatural[index + 1], position - index);
 	}
 
 	private static string StyleName(string prefab)

@@ -57,6 +57,8 @@ namespace OfflineCompanionsAI
         public readonly ConfigEntry<float> Cooldown;
         public readonly ConfigEntry<bool> ShowInChat;
         public readonly ConfigEntry<bool> ShareSpeech;
+        public readonly ConfigEntry<bool> FreeTalk;
+        public readonly ConfigEntry<int> FreeTalkTurns;
 
         public readonly ConfigEntry<string> ReplyLanguage;
         public readonly ConfigEntry<string> Personality;
@@ -110,6 +112,9 @@ namespace OfflineCompanionsAI
             Cooldown = cfg.Bind("Conversacion", "Cooldown", 2f, new ConfigDescription("Minimum seconds between messages, to avoid overspending.", new AcceptableValueRange<float>(0f, 60f)));
             ShowInChat = cfg.Bind("Conversacion", "ShowInChat", true, "Logs the conversation in the chat window and shows it briefly. Press Enter to re-read it.");
             ShareSpeech = cfg.Bind("Multijugador", "ShareSpeech", true, "Other players who have this mod see what your companions say, in their speech bubble and in the chat, only within the normal talking distance of Valheim's chat. What you type to them is not sent.");
+
+            FreeTalk = cfg.Bind("Charla", "Enabled", false, "Companions talk among themselves: when one speaks, another nearby one may answer, or stay quiet if they have nothing to add. Each answer is an AI request and spends balance. Toggle in-game with /freetalk.");
+            FreeTalkTurns = cfg.Bind("Charla", "MaxTurns", 2, new ConfigDescription("Most answers in a row in one conversation between companions. 2 means one answers and the first may answer back.", new AcceptableValueRange<int>(1, 6)));
 
             ReactNeeds = cfg.Bind("Reacciones", "Needs", true, "Warns when hungry with no food, gear is very worn, or backpack is full, at most once every 10 minutes per need.");
             VoiceEnabled = cfg.Bind("Voz", "Enabled", true, "Allows talking to the companion with your microphone. Only listens while you hold VoiceKey. Requires the Player2 app, where microphone and language are selected, and spends balance.");

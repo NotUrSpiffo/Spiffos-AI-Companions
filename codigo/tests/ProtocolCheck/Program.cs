@@ -1059,6 +1059,24 @@ internal static class Program
         Check("chat con gente: sin nombre no", Recipients.GameChatIsForCompanions("¿vamos a la cueva?", names, true).ToString(), "False");
         Check("chat con gente: con nombre sí", Recipients.GameChatIsForCompanions("darkness, ven aquí", names, true).ToString(), "True");
 
+        var pair = new[] { "Roxy", "Darkness" };
+        Check("varios: marquen", Recipients.AddressesSeveral("marquen esta casa como casa de la playa", pair).ToString(), "True");
+        Check("varios: síganme", Recipients.AddressesSeveral("síganme", pair).ToString(), "True");
+        Check("varios: quédense", Recipients.AddressesSeveral("Quédense aquí", pair).ToString(), "True");
+        Check("varios: dos nombres", Recipients.AddressesSeveral("Roxy y Darkness, vengan", pair).ToString(), "True");
+        Check("varios: todos", Recipients.AddressesSeveral("todos a la base", pair).ToString(), "True");
+        Check("varios: los dos", Recipients.AddressesSeveral("ven, los dos", pair).ToString(), "True");
+        Check("varios: both", Recipients.AddressesSeveral("both of you, mark this", pair).ToString(), "True");
+        Check("varios: ruso", Recipients.AddressesSeveral("отметьте этот дом", pair).ToString(), "True");
+        Check("varios: все", Recipients.AddressesSeveral("все за мной", pair).ToString(), "True");
+        Check("uno: marca", Recipients.AddressesSeveral("marca esta casa", pair).ToString(), "False");
+        Check("uno: ven", Recipients.AddressesSeveral("ven aquí", pair).ToString(), "False");
+        Check("uno: también", Recipients.AddressesSeveral("tu tambien Darkness", pair).ToString(), "False");
+        Check("uno: también al inicio", Recipients.AddressesSeveral("también trae madera", pair).ToString(), "False");
+        Check("uno: nombra a otro", Recipients.AddressesSeveral("Darkness, ya conociste a Roxy?", pair).ToString(), "False");
+        Check("uno: mark", Recipients.AddressesSeveral("mark this house", pair).ToString(), "False");
+        Check("uno: отметь", Recipients.AddressesSeveral("отметь этот дом", pair).ToString(), "False");
+
         string shout;
         Check("grito: es grito", Recipients.TryParseShout("/s ven aquí", out shout).ToString(), "True");
         Check("grito: el mensaje", shout, "ven aquí");

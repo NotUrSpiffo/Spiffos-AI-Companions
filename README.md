@@ -1,6 +1,6 @@
 # Spiffo's Valheim AI Companions
 
-[Español](README.es.md) · [Русский](README.ru.md) · [Latest release](https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/latest) · `main` is plugin `0.26.3`
+[Español](README.es.md) · [Русский](README.ru.md) · [Latest release](https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/latest) · `main` is plugin `0.27.0`
 
 <p>
   <img src="docs/assets/cover.jpg" width="640" height="360" alt="Cover art of four illustrated companions in a snowy forest, titled Spiffo's AI Companions. Promotional artwork, not a gameplay screenshot, and not an endorsement by Valheim or Player2.">
@@ -15,6 +15,7 @@ This page describes settings and limits in this repository. It is not a gameplay
 ## Contents
 
 - [Features](#features)
+- [Companions together](#together)
 - [Five in a world, four in one order](#companions)
 - [Quick start](#quick-start)
 - [Requirements](#requirements)
@@ -45,12 +46,13 @@ This page describes settings and limits in this repository. It is not a gameplay
 | Memory between sessions | `[Memoria] Enabled` default on; stored unencrypted in the mod config folder |
 | Short comments on bosses, biomes, deaths, raids, and similar events | `[Reacciones]` default on; each comment is an AI request |
 | Optional autonomous mode for every companion | `/autonomy`; default mode is `Normal` (they only do what you ask) |
+| Optional talk between companions | `/freetalk`, off by default. See [companions together](#together) |
 | Reborn movement, combat, and jobs inside this DLL | Reborn plugin version `1.5.8`; do not install a second copy |
 | Works without AI for a few exact phrases | `come` / `follow me`, `stop`, `stay`, plus the slash commands below |
 
 Six built-in personalities are in the character editor: **Old Guard**, **Rookie**, **Explorer**, **Hunter**, **Craftsman**, and **Joker**. If `[Personaje] Personality` is empty, each companion without custom instructions gets one of those profiles. Inclination choices in the editor are **Automatic**, **None**, **Craft**, **Exploration**, **Hunting**, and **Foraging**. Automatic follows the profile; it does not override an order you give.
 
-On `main`, plugin **0.26.3** also changes these Reborn behaviors in `codigo/src/BehaviorOverrides.cs`, `codigo/src/SeatSync.cs` and `codigo/src/StorageSortPatches.cs`. What changed is in [RELEASE_NOTES.md](RELEASE_NOTES.md).
+On `main`, plugin **0.27.0** also changes these Reborn behaviors in `codigo/src/BehaviorOverrides.cs`, `codigo/src/SeatSync.cs` and `codigo/src/StorageSortPatches.cs`. What changed is in [RELEASE_NOTES.md](RELEASE_NOTES.md).
 
 - **Mining:** a stone or ore rock, or a section of one, is skipped when the code decides it can only be reached by swimming. If `MHR_Water.WouldSwim` or `MHR_GatherRules.AllowTarget` is missing, the log warns that this skip is unavailable.
 - **Fighting with a tool out:** if the chosen item is a fishing rod, has pickaxe damage, or is a tool, the mod tries a melee weapon, then a bow, and otherwise unequips that item. If the Reborn combat methods are missing, the log warns that the swap is unavailable.
@@ -61,6 +63,14 @@ On `main`, plugin **0.26.3** also changes these Reborn behaviors in `codigo/src/
 - **Smelted output (0.26.2):** what comes out of a smelter goes to a chest that already holds the same item, then to one with another output of the same smelters, then to one with its ore. Between two chests that match the same way, the one holding more of that smelter's output wins, then the nearest. What each smelter makes is read from every smelter in the game, not only the one being worked. `OutputWithSame`.
 - **Off the ore (0.26.2):** a companion that ends up standing on the rock it is mining and goes **4** seconds without a hit steps down where the drop is under **3.8** m (Valheim's fall damage starts at 4 m), with no water below and no cliff beyond, and mines from the ground. Reborn treats any step over 1.2 m as a fall, so it never stepped down by itself. If it climbs the same rock a third time, the rock is left for a while. The log gets a `[Recoger]` line each time.
 - **Storing by type (0.26.2):** leftovers put away after upkeep (honey, for example), gathered materials and harvested crops go to a chest with the same item, then to the one holding the most items of the same type: food, ore, wood, stone, gear or trophies. Types are read from the game: fuelled smelters, cooking stations, the fermenter and food recipes. If no chest holds anything alike, Reborn's chest is used. `codigo/src/StorageSort.cs`, `codigo/src/StorageSortPatches.cs`.
+
+<a id="together"></a>
+
+## 💬 Companions together (0.27.0)
+
+- **Hair colour:** the companion creator's `Hair Tone` bar runs grey, platinum, blonde, strawberry blonde, ginger, auburn, brown and black. A new `Hair Dye` bar adds rainbow colours from red to pink; at the far left (below **0.08**) there is no dye and the tone bar decides. `Hair Shade` darkens either one. `codigo/Reborn/Companions/CompanionPanel.cs`.
+- **Orders for several:** one message is still answered by one companion, and the order is carried out once. If it was meant for several, the others answer too, in one short sentence and without tools, after the first has spoken. It counts as meant for several when it starts with two names (`Roxy and Darkness, ...`), says `everyone`, `both`, `all of you`, `todos`, `ustedes` or `все`, starts with a plural Spanish or Russian verb (`marquen`, `síganme`, `отметьте`), or the AI named several companions. Up to **3** others answer. The log gets a `[Grupo]` line. `Recipients.AddressesSeveral`.
+- **Free talk:** `/freetalk` (`/charla`, `/беседа`) turns on talk between companions, **off** by default. When a companion speaks, another one within **20** m may answer it, or stay quiet if it has nothing to add. `[Charla] MaxTurns` (default **2**, 1–6) is how many answers follow in a row: with 2, one answers and the first may answer back. Each answer is an AI request. Whatever you say to them cuts the conversation short. The log gets `[Charla]` lines.
 
 <a id="multiplayer"></a>
 
@@ -92,7 +102,7 @@ Russian was added at a player's request. It is new, and feedback from Russian-sp
 
 - **Mod texts:** interface, notices, AI prompts and tool descriptions have a Russian version. `Auto` picks it when Valheim is in Russian, or set `[Personaje] Language = Russian`. `codigo/src/ModLang.cs`.
 - **Reborn menus and speech:** `Russian.json` in [`instalar/BepInEx/plugins/OfflineCompanionsReborn/Translations/`](instalar/BepInEx/plugins/OfflineCompanionsReborn/Translations/) and in its `speech/` folder.
-- **Commands:** `/помощь`, `/статус`, `/позвать`, `/баланс`, `/персонаж`, `/автономия`, `/места`, `/отметить`, `/забыть`, `/язык`.
+- **Commands:** `/помощь`, `/статус`, `/позвать`, `/баланс`, `/персонаж`, `/автономия`, `/беседа`, `/места`, `/отметить`, `/забыть`, `/язык`.
 - **Orders without AI:** `за мной`, `ко мне`, `стой`, `жди здесь` and the other Russian lines in `OrderIntent`.
 - **Reviewed before release:** terms follow Valheim's own Russian localization (Fermenter «Бродильная бочка», Hammer «Молот», Cultivator «Пропашник»), shortened tool descriptions were completed to match English and Spanish, several grammar cases were fixed, and Russian words with «й» or «ё», such as «домой» or «желтый гриб», now match what the player types.
 
@@ -277,17 +287,18 @@ Defaults. Change the key fields if these clash with another mod. `TalkKey` canno
 | Character sheet | `LeftShift` + `Y`, or `/character` |
 | Help, status, call everyone, balance | `/help`, `/status`, `/recall` or `/call`, `/balance` |
 | Autonomous mode for every companion | `/autonomy` |
+| Talk between companions | `/freetalk` |
 | Named places | `/mark <name>`, `/places`, `/forget <name>` |
 | Mod language | `/language en` · `es` · `ru` · `auto` |
 | Reborn: point at something | Tap `Z` (`DirectTargetKey`). Hold `Z` to call companions |
 | Reborn: command wheel on one companion | Hold `E` while looking at them (`RadialMenuKey`) |
 | Reborn: farm zone editor | Hold `LeftAlt` and press `Z` |
 
-Spanish aliases: `/ayuda`, `/estado`, `/llamar`, `/saldo`, `/personaje`, `/autonomia`, `/lugares`, `/marcar`, `/olvidar`, `/idioma`.
+Spanish aliases: `/ayuda`, `/estado`, `/llamar`, `/saldo`, `/personaje`, `/autonomia`, `/charla`, `/lugares`, `/marcar`, `/olvidar`, `/idioma`.
 
-Russian aliases: `/помощь`, `/статус`, `/позвать`, `/баланс`, `/персонаж`, `/автономия`, `/места`, `/отметить`, `/забыть`, `/язык`.
+Russian aliases: `/помощь`, `/статус`, `/позвать`, `/баланс`, `/персонаж`, `/автономия`, `/беседа`, `/места`, `/отметить`, `/забыть`, `/язык`.
 
-`/help`, `/status`, `/recall`, `/balance`, `/autonomy`, `/places`, `/mark`, `/forget`, and `/language` do not go through the AI (`RunCommand`). `/character` needs a companion as the target; otherwise the game says none of yours is nearby.
+`/help`, `/status`, `/recall`, `/balance`, `/autonomy`, `/freetalk`, `/places`, `/mark`, `/forget`, and `/language` do not go through the AI (`RunCommand`). `/character` needs a companion as the target; otherwise the game says none of yours is nearby.
 
 With other players in the world, game chat is sent to the AI only if the message names a companion, so talk between players is not forwarded. `TalkInGameChat = false` turns game-chat listening off. The minimum gap between messages is `Cooldown` (default **2** seconds).
 
@@ -310,6 +321,7 @@ Reborn’s wheel is the full command wheel in this source (follow, job actions, 
 | `Memoria` | Save chat, and summarize older chat with an extra AI request |
 | `Reacciones` | Event comments. Cooldown default **180** s (30–3600). `MaxPerHour` default **10** (1–60) |
 | `Autonomia` | `Normal` or `Autonomo`. `IntervalSeconds` default **75** (20–3600). `MaxPerHour` default **30** (1–120) |
+| `Charla` | `Enabled` default `false` (`/freetalk`). `MaxTurns` default **2** (1–6) |
 | `Multijugador` | `ShareSpeech` default `true`: other players with the mod see your companions' speech within normal chat distance. See [multiplayer](#multiplayer) |
 
 `RebornSpeech` default `Avisos`: Reborn’s own lines are limited to warnings such as having no axe. `Todas` is the original Reborn chatter. `Ninguna` silences those fixed lines. The AI replies are separate.

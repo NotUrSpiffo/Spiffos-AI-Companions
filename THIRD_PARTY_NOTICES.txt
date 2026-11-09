@@ -1,5 +1,5 @@
 THIRD-PARTY NOTICES
-Spiffo's Valheim AI Companions 0.26.3
+Spiffo's Valheim AI Companions 0.27.0
 
 Offline Companions Reborn 1.5.8 (modified and integrated)
 By Maddhattr; based on Offline Companions by ProfMags.
