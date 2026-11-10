@@ -80,7 +80,7 @@ public class CompanionTombstoneResurrect : MonoBehaviour
 			return false;
 		}
 		ZDO zDO = _nview.GetZDO();
-		if (zDO.GetLong(CompanionSetup.TombstoneIdHash, 0L) == 0L)
+		if (zDO.GetLong(CompanionSetup.TombstoneIdHash, 0L) == 0L && string.IsNullOrEmpty(zDO.GetString(RespawnPrefabHash)))
 		{
 			return false;
 		}
@@ -633,13 +633,17 @@ public class CompanionTombstoneResurrect : MonoBehaviour
 				continue;
 			}
 			ZDO zDO = component.GetZDO();
-			if (zDO == null || zDO.GetLong(CompanionSetup.TombstoneIdHash, 0L) == 0L)
+			if (zDO == null)
 			{
 				continue;
 			}
 			if (!string.IsNullOrEmpty(zDO.GetString(RespawnPrefabHash)))
 			{
 				return true;
+			}
+			if (zDO.GetLong(CompanionSetup.TombstoneIdHash, 0L) == 0L)
+			{
+				continue;
 			}
 			Container component2 = tombStone.GetComponent<Container>();
 			if (!(component2 == null))

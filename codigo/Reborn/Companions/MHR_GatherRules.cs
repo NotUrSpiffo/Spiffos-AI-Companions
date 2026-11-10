@@ -863,7 +863,7 @@ public static class MHR_GatherRules
 					continue;
 				}
 				bool flag2 = container.GetComponentInParent<Vagon>() != null || container.GetComponentInParent<Ship>() != null;
-				if ((flag2 & flag) || MHR_Chests.InUse(container) || !PrivateArea.CheckAccess(container.transform.position, 0f, flash: false))
+				if ((flag2 & flag) || MHR_Chests.Busy(container) || !PrivateArea.CheckAccess(container.transform.position, 0f, flash: false))
 				{
 					continue;
 				}

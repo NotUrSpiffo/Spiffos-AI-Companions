@@ -1,10 +1,26 @@
-# Spiffo's Valheim AI Companions 0.27.0
+# Spiffo's Valheim AI Companions 0.27.1
 AI-powered companion conversation, natural-language orders and long-term memory
 for Valheim, with English/Spanish/Russian language selection and Offline Companions
 Reborn 1.5.8 integrated.
 
 Requires Valheim, BepInEx and an AI service. Voice input requires the Player2 app.
 See the included README for installation and configuration.
+
+## Fixes in 0.27.1
+- Farming: storing the harvest in a chest no longer freezes the game.
+  When the companion carried anything it was not going to store, such as
+  the crops it keeps as seed, the store loop never ended and Valheim
+  stopped responding right after "Opened output chest".
+- Shared chests: when two companions store things in the same chest at
+  once, the second one now waits its turn (up to 8 seconds) instead of
+  picking another chest or giving up. Before, the harvest, smelted metal,
+  leftovers or gathered items could end up in the wrong chest, and a
+  deposit order was cancelled. A chest you have open yourself is still
+  left alone.
+- Tombstones: a companion that died with an empty inventory, and had no
+  earlier tombstone left, got a tombstone that said to hold E to revive it
+  but did nothing, and its map pin vanished. That tombstone now gets its
+  own ID, and tombstones already left like that can be used to revive.
 
 ## Companions together (0.27.0)
 - Hair colour: the companion creator has natural tones from grey and

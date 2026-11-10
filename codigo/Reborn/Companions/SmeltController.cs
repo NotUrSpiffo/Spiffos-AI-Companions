@@ -587,6 +587,10 @@ public class SmeltController : MonoBehaviour
 			Abort("chest destroyed while taking");
 			return;
 		}
+		if (!_chestOpened && MHR_Chests.CompanionHeld(_targetChest))
+		{
+			return;
+		}
 		if (!_chestOpened && !MHR_Chests.Open(_targetChest))
 		{
 			Abort("someone has the chest open");
@@ -957,6 +961,10 @@ public class SmeltController : MonoBehaviour
 				Log("Output chest gone — back to scanning");
 			}
 			_phase = SmeltPhase.Scanning;
+			return;
+		}
+		if (!_chestOpened && MHR_Chests.CompanionHeld(_outputChest))
+		{
 			return;
 		}
 		if (!_chestOpened && !MHR_Chests.Open(_outputChest))

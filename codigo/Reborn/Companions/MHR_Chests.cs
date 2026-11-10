@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using UnityEngine;
 
 namespace Companions;
@@ -13,6 +14,14 @@ public static class MHR_Chests
 	private static readonly List<Vector3> s_path = new List<Vector3>();
 
 	private static int s_mask = -1;
+
+	// Cofres que abrió un compañero: siguen contando como suyos unos segundos, para que otro compañero espere su turno
+	// en vez de elegir otro cofre.
+	private static readonly Dictionary<int, float> s_held = new Dictionary<int, float>();
+
+	private static readonly FieldInfo s_guiContainer = HarmonyLib.AccessTools.Field(typeof(InventoryGui), "m_currentContainer");
+
+	public const float HoldWait = 8f;
 
 	public const float EyeHeight = 1.6f;
 
@@ -55,7 +64,7 @@ public static class MHR_Chests
 		{
 			return false;
 		}
-		if (InUse(c))
+		if (Busy(c))
 		{
 			return false;
 		}
@@ -92,6 +101,46 @@ public static class MHR_Chests
 		return false;
 	}
 
+	public static bool CompanionHeld(Container c)
+	{
+		if (c == null)
+		{
+			return false;
+		}
+		int instanceID = c.GetInstanceID();
+		if (!s_held.TryGetValue(instanceID, out var value))
+		{
+			return false;
+		}
+		if (Time.time - value > HoldWait || !InUse(c) || PlayerHas(c))
+		{
+			s_held.Remove(instanceID);
+			return false;
+		}
+		return true;
+	}
+
+	public static bool Busy(Container c)
+	{
+		if (InUse(c))
+		{
+			return !CompanionHeld(c);
+		}
+		return false;
+	}
+
+	private static bool PlayerHas(Container c)
+	{
+		try
+		{
+			return InventoryGui.instance != null && InventoryGui.IsVisible() && s_guiContainer != null && (object)(s_guiContainer.GetValue(InventoryGui.instance) as Container) == c;
+		}
+		catch
+		{
+			return false;
+		}
+	}
+
 	public static void Claim(Container c)
 	{
 		ZNetView zNetView = ((c != null) ? c.GetComponent<ZNetView>() : null);
@@ -118,6 +167,7 @@ public static class MHR_Chests
 		}
 		Claim(c);
 		c.SetInUse(inUse: true);
+		s_held[c.GetInstanceID()] = Time.time;
 		return true;
 	}
 

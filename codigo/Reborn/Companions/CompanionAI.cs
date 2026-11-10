@@ -1477,7 +1477,12 @@ public class CompanionAI : BaseAI
 			{
 				Vector3 position2 = PendingDepositContainer.transform.position;
 				float num3 = Vector3.Distance(transform.position, position2);
-				if (num3 < 2f && !_depositChestOpen && !MHR_Chests.Open(PendingDepositContainer))
+				if (num3 < 2f && !_depositChestOpen && MHR_Chests.CompanionHeld(PendingDepositContainer))
+				{
+					StopMoving();
+					LookAtPoint(position2);
+				}
+				else if (num3 < 2f && !_depositChestOpen && !MHR_Chests.Open(PendingDepositContainer))
 				{
 					if (CompanionsPlugin.LogNormal)
 					{

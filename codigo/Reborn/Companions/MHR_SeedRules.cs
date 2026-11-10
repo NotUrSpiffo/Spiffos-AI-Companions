@@ -578,8 +578,7 @@ public static class MHR_SeedRules
 			return 0;
 		}
 		List<ItemDrop.ItemData> list = new List<ItemDrop.ItemData>(pack.GetAllItems());
-		int num2 = list.Count - 1;
-		while (num2 >= 0)
+		for (int num2 = list.Count - 1; num2 >= 0; num2--)
 		{
 			ItemDrop.ItemData itemData = list[num2];
 			try
@@ -630,7 +629,6 @@ public static class MHR_SeedRules
 					CompanionsPlugin.Log.LogWarning("[Farm] Store: " + ex.Message);
 				}
 			}
-			num2--;
 		}
 		return num;
 	}

@@ -1674,6 +1674,10 @@ public class CookController : MonoBehaviour
 
 	private bool OpenChest(Container chest, float dt)
 	{
+		if (!_chestOpen && MHR_Chests.CompanionHeld(chest))
+		{
+			return false;
+		}
 		if (!_chestOpen && !MHR_Chests.Open(chest))
 		{
 			Abort("someone has the chest open");

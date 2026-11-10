@@ -659,7 +659,9 @@ public class CompanionSetup : MonoBehaviour
 		{
 			num4 = 0;
 		}
-		num5 = num3;
+		// Sin objetos se conserva el identificador de la lápida anterior; si no había ninguna, la nueva necesita uno
+		// propio, o la lápida dice que se puede revivir pero no deja hacerlo.
+		num5 = ((num3 != 0L) ? num3 : DateTime.UtcNow.Ticks);
 		goto IL_035b;
 		IL_035b:
 		long tombstoneId = num5;

@@ -724,6 +724,10 @@ public class FarmController : MonoBehaviour
 			Abort("chest destroyed while taking seeds");
 			return;
 		}
+		if (!_chestOpened && MHR_Chests.CompanionHeld(_targetChest))
+		{
+			return;
+		}
 		if (!_chestOpened && !MHR_Chests.Open(_targetChest))
 		{
 			Abort("someone has the chest open");
@@ -903,6 +907,10 @@ public class FarmController : MonoBehaviour
 				_chestOpened = false;
 			}
 			_phase = FarmPhase.Scanning;
+			return;
+		}
+		if (!_chestOpened && MHR_Chests.CompanionHeld(_outputChest))
+		{
 			return;
 		}
 		if (!_chestOpened && !MHR_Chests.Open(_outputChest))

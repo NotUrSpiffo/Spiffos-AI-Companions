@@ -1377,6 +1377,10 @@ public class UpkeepController : MonoBehaviour
 		_ai.StopMoving();
 		MHR_Mover.Release(_ai);
 		_ai.LookAtPoint(container.transform.position);
+		if (_nextAct == 0f && MHR_Chests.CompanionHeld(container))
+		{
+			return;
+		}
 		if (_nextAct == 0f && !MHR_Chests.Open(container))
 		{
 			Skip(container, 30f, "Someone is using the chest");
