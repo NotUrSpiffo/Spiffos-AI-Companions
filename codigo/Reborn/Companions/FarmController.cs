@@ -399,7 +399,11 @@ public class FarmController : MonoBehaviour
 	{
 		ZDO zdo = _nview?.GetZDO();
 		_farmZones = FarmZoneSerializer.Load(zdo);
-		if (ModConfig.FarmPlantTilled == null || ModConfig.FarmPlantTilled.Value)
+		if (_farmZones.Count == 0)
+		{
+			MHR_BorrowZones();
+		}
+		if (_farmZones.Count == 0 && (ModConfig.FarmPlantTilled == null || ModConfig.FarmPlantTilled.Value))
 		{
 			if (_tilled == null || Time.time >= _nextTilledScan)
 			{
@@ -407,6 +411,40 @@ public class FarmController : MonoBehaviour
 				_tilled = FindTilledPatches(_farmZones);
 			}
 			_farmZones.AddRange(_tilled);
+		}
+	}
+
+	private string _borrowedFrom;
+
+	private void MHR_BorrowZones()
+	{
+		string text = null;
+		foreach (CompanionSetup allCompanion in CompanionSetup.AllCompanions)
+		{
+			if (allCompanion == null || allCompanion.gameObject == base.gameObject || !MHR_Owner.IsMine(allCompanion))
+			{
+				continue;
+			}
+			ZDO zDO = allCompanion.GetComponent<ZNetView>()?.GetZDO();
+			if (zDO == null)
+			{
+				continue;
+			}
+			List<FarmZone> list = FarmZoneSerializer.Load(zDO);
+			if (list.Count > 0)
+			{
+				_farmZones.AddRange(list);
+				string text2 = allCompanion.GetComponent<Character>()?.m_name ?? "?";
+				text = ((text == null) ? text2 : (text + ", " + text2));
+			}
+		}
+		if (text != _borrowedFrom)
+		{
+			_borrowedFrom = text;
+			if (text != null)
+			{
+				Log("[Zone] No farm zones of its own - using the ones set on " + text + $" ({_farmZones.Count})");
+			}
 		}
 	}
 

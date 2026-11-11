@@ -359,7 +359,7 @@ public class CompanionCombatAI : MonoBehaviour
 		IL_0036:
 		bool flag = (byte)num != 0;
 		bool flag2 = false;
-		if (flag && Vector3.Distance(transform.position, _targetCreature.transform.position) > (ModConfig.HuntSneakFrom?.Value ?? 20f) + (_stalking ? 2f : 0f))
+		if (flag && Vector3.Distance(transform.position, _targetCreature.transform.position) > (ModConfig.HuntSneakFrom?.Value ?? 32f) + (_stalking ? 2f : 0f))
 		{
 			flag = false;
 			flag2 = true;
@@ -377,7 +377,7 @@ public class CompanionCombatAI : MonoBehaviour
 		if (Time.time >= _nextStalkLog)
 		{
 			_nextStalkLog = Time.time + 5f;
-			if (CompanionsPlugin.LogDetailed)
+			if (CompanionsPlugin.LogNormal)
 			{
 				ManualLogSource log = CompanionsPlugin.Log;
 				string text;
@@ -389,7 +389,7 @@ public class CompanionCombatAI : MonoBehaviour
 				{
 					text = (flag2 ? "Too far off to sneak yet - walking towards " : "Stopped sneaking - spotted by ");
 				}
-				log.LogDebug("[Hunt] " + text + _targetCreature?.m_name);
+				log.LogInfo("[Hunt] " + text + _targetCreature?.m_name);
 			}
 		}
 	}
@@ -677,6 +677,16 @@ public class CompanionCombatAI : MonoBehaviour
 		case ItemDrop.ItemData.ItemType.Bow:
 			return true;
 		}
+	}
+
+	// Lo que está dejando en paz ahora mismo: por ser demasiado fuerte para él o por no poder alcanzarlo.
+	internal bool LeavingAlone(Character c)
+	{
+		if (c != null && _ignoreUntil.TryGetValue(c, out var value))
+		{
+			return Time.time < value;
+		}
+		return false;
 	}
 
 	private static bool Unaware(Character c)

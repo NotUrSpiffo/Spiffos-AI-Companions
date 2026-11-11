@@ -1,4 +1,4 @@
-Spiffo's Valheim AI Companions 0.27.1
+Spiffo's Valheim AI Companions 0.27.2
 
 AI-powered companion conversation, natural-language orders and long-term memory
 for Valheim, with English/Spanish/Russian language selection and Offline Companions
@@ -6,6 +6,35 @@ Reborn 1.5.8 integrated.
 
 Requires Valheim, BepInEx and an AI service. Voice input requires the Player2 app.
 See README.txt for installation and configuration.
+
+Changes in 0.27.2
+
+- Sharing in /freetalk: when companions talk among themselves, the one
+  answering can hand the other items from its backpack, such as arrows,
+  food or potions. Nothing makes it share: it decides as its character
+  would, by how it gets along with the other and what they have lived
+  through, and it may refuse, haggle or give less. A chat line says what
+  was handed over, and both remember it.
+- Farm zones: a companion with no farm zones of its own now uses the ones
+  set on your other companions. Alt + Z opens the zones of the companion
+  nearest to you, and its name now shows at the top of the editor. Tilled
+  ground outside the zones is only used when no zones are set at all, so a
+  companion no longer plants on tilled ground by the door while your zones
+  sit elsewhere.
+- Reviving: telling a companion to use a dead companion's tombstone now
+  revives that companion at its tombstone instead of looting it.
+- Gathering: an order for one item, such as fine wood or core wood, now
+  keeps the item you named even if the AI picked another, and the
+  companion only goes for trees or rocks that drop it.
+- Far from the player: Valheim only runs the area around you, and its edge
+  can be as close as 64 m. Gathering and hunting no longer pick trees,
+  rocks, prey or search spots near that edge, prey that runs toward it is
+  let go, and an order with a target amount waits instead of running out
+  while the companion is out of that area. Companion animations also keep
+  playing at a distance.
+- Hunting: companions skip prey they consider too strong for them, start
+  sneaking from 32 m (was 20 m) so deer do not see them first, and a hunt
+  with no amount ends with a summary of what they brought back.
 
 Fixes in 0.27.1
 

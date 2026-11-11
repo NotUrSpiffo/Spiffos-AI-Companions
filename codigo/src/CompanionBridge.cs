@@ -1513,6 +1513,45 @@ namespace OfflineCompanionsAI
             return Transfer(from, to, wanted);
         }
 
+        /// <summary>
+        /// Pasa objetos de la mochila de un compañero a la de otro, hasta donde quepan. La munición puede ir aunque la lleve puesta:
+        /// es justo lo que se suele pedir. Devuelve lo pasado.
+        /// </summary>
+        public static Dictionary<string, int> ShareWith(Component giver, Component receiver, string wanted, int amount)
+        {
+            var given = new Dictionary<string, int>();
+            Humanoid owner = giver != null ? giver.GetComponent<Humanoid>() : null;
+            Inventory from = owner != null ? owner.GetInventory() : null;
+            Inventory to = receiver != null ? receiver.GetComponent<Humanoid>()?.GetInventory() : null;
+            if (from == null || to == null || giver == receiver) return given;
+            Dictionary<string, int> found = FindIn(ContentsOf(from), wanted, amount);
+            if (found.Count == 0) return given;
+
+            _takeControl.Invoke(null, new object[] { giver });
+            _takeControl.Invoke(null, new object[] { receiver });
+            var left = new Dictionary<string, int>(found);
+            foreach (ItemDrop.ItemData item in new List<ItemDrop.ItemData>(from.GetAllItems()))
+            {
+                if (item.m_dropPrefab == null || (item.m_equipped && !IsAmmo(item))) continue;
+                string prefab = item.m_dropPrefab.name;
+                if (!left.TryGetValue(prefab, out int remaining) || remaining <= 0) continue;
+
+                int count = Math.Min(remaining, item.m_stack);
+                ItemDrop.ItemData copy = item.Clone();
+                copy.m_stack = count;
+                copy.m_equipped = false;
+                if (!to.CanAddItem(copy)) continue;
+                if (item.m_equipped && count >= item.m_stack) owner.UnequipItem(item, false);
+                if (!to.AddItem(copy)) continue;
+                from.RemoveItem(item, count);
+
+                left[prefab] = remaining - count;
+                given.TryGetValue(prefab, out int total);
+                given[prefab] = total + count;
+            }
+            return given;
+        }
+
         private static Dictionary<string, int> Transfer(Inventory from, Inventory to, IDictionary<string, int> wanted)
         {
             var given = new Dictionary<string, int>();
@@ -3020,6 +3059,30 @@ namespace OfflineCompanionsAI
             if (tomb == null) return ModLang.Pick("No hay ninguna tumba suya a menos de " + TombstoneRange + " m.", "None of their gravestones within " + TombstoneRange + " m.", "Нет его надгробия в пределах " + TombstoneRange + " м.");
             Invoke("DirectTombstoneRecovery", companion, player, tomb);
             return null;
+        }
+
+        /// <summary>Más allá de esto el juego deja de mover y animar bien al compañero aunque siga cargado.</summary>
+        private const float SimulatedDistance = 110f;
+
+        /// <summary>
+        /// La distancia al jugador si el compañero está fuera de la zona que el juego simula (allí no camina ni golpea),
+        /// o 0 si está dentro.
+        /// </summary>
+        public static float FarFromPlayer(Component companion)
+        {
+            Player player = Player.m_localPlayer;
+            if (companion == null || player == null) return 0f;
+            Vector3 position = companion.transform.position;
+            float distance = Vector3.Distance(position, player.transform.position);
+            bool outside = distance > SimulatedDistance;
+            try
+            {
+                if (!outside && ZNetScene.instance != null) outside = ZNetScene.instance.OutsideActiveArea(position);
+            }
+            catch (System.Exception)
+            {
+            }
+            return outside ? Mathf.Max(distance, 0.01f) : 0f;
         }
 
         public static bool HasTombstone(string companionId)

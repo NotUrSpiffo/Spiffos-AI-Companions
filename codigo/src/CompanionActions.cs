@@ -459,6 +459,62 @@ namespace OfflineCompanionsAI
             { "sleep", Entry(RestSleep, "ir a dormir a la cama más cercana", "sleep in the nearest bed", "лечь спать в ближайшую кровать") }
         };
 
+        public const string ShareTool = "share_items";
+
+        /// <summary>
+        /// La única herramienta de la charla entre compañeros: pasarle algo de su mochila al que le habla.
+        /// No es una regla: compartir, regatear o negarse lo decide el personaje con su forma de ser y sus recuerdos.
+        /// </summary>
+        public static JArray ShareTools(string partner)
+        {
+            var parameters = new JObject
+            {
+                ["type"] = "object",
+                ["properties"] = new JObject
+                {
+                    ["item"] = new JObject { ["type"] = "string", ["description"] = ModLang.Pick("El objeto, como aparece en tu mochila.", "The item, as it appears in your backpack.", "Предмет, как он назван в твоём инвентаре.") },
+                    ["amount"] = new JObject { ["type"] = "integer", ["minimum"] = 1 }
+                },
+                ["required"] = new JArray("item", "amount")
+            };
+            string description = ModLang.Pick(
+                "Le pasa a " + partner + " objetos de tu mochila (nunca lo que llevas equipado, salvo munición). Nadie te obliga: decídelo como lo haría tu personaje, según cómo te llevas con " + partner + ", lo que recuerdas de lo vivido y si de verdad te sobra. También puedes negarte, regatear o dar menos de lo que pide. Si la usas, di algo también.",
+                "Hands " + partner + " items from your backpack (never equipped gear, except ammo). Nobody makes you: decide as your character would, given how you get along with " + partner + ", what you remember of your time together, and whether you can really spare it. You may also refuse, haggle, or give less than asked. If you use it, say something too.",
+                "Передаёт " + partner + " предметы из твоего инвентаря (никогда не надетое, кроме боеприпасов). Тебя никто не обязывает: решай как твой персонаж — по тому, как ты ладишь с " + partner + ", что помнишь о пережитом вместе и правда ли у тебя есть лишнее. Можно отказать, поторговаться или дать меньше, чем просят. Если используешь, тоже что-нибудь скажи.");
+            return new JArray
+            {
+                new JObject
+                {
+                    ["type"] = "function",
+                    ["function"] = new JObject { ["name"] = ShareTool, ["description"] = description, ["parameters"] = parameters }
+                }
+            };
+        }
+
+        /// <summary>Qué y cuánto quiere pasar. false si falta algo o no tiene sentido.</summary>
+        public static bool ParseShare(string arguments, out string item, out int amount)
+        {
+            item = null;
+            amount = 0;
+            try
+            {
+                JObject args = JObject.Parse(string.IsNullOrWhiteSpace(arguments) ? "{}" : arguments);
+                JToken what = args["item"];
+                if (what != null && what.Type == JTokenType.String) item = what.Value<string>().Trim();
+                JToken howMany = args["amount"];
+                if (howMany != null && (howMany.Type == JTokenType.Integer || howMany.Type == JTokenType.Float))
+                {
+                    double value = howMany.Value<double>();
+                    amount = value < 1 ? 0 : value > MaxGiveAmount ? MaxGiveAmount : (int)value;
+                }
+            }
+            catch (JsonException)
+            {
+                return false;
+            }
+            return !string.IsNullOrEmpty(item) && amount > 0;
+        }
+
         public static JArray ToolDefinitions()
         {
             return new JArray
@@ -714,9 +770,9 @@ namespace OfflineCompanionsAI
                     ["required"] = new JArray("name")
                 }),
                 Tool(UseLookedAtTool, ModLang.Pick(
-                    "Hace lo que corresponda con lo que mira el jugador: talar ese árbol por completo, con su tronco, y luego volver con el jugador; romper a golpes esa planta pequeña o arbusto, sin herramienta; picar esa roca, abrir o cerrar esa puerta, tirar de ese carro o soltarlo, subir a ese barco, sentarse en ese fuego, dormir en esa cama, guardar en ese cofre, reparar en esa estación, vaciar esa colmena o recuperar esa tumba.",
-                    "Interacts appropriately with what the player is looking at: chop down that tree completely, including its log, then return to the player; smash that small plant or bush without a tool; mine that rock, open or close that door, pull or release that cart, board that ship, sit by that fire, sleep in that bed, store items in that chest, repair at that station, empty that beehive, or recover that tombstone.",
-                    "Взаимодействует с тем, на что смотрит игрок, как подходит по смыслу: срубить это дерево полностью, вместе с брёвнами, и вернуться к игроку; сломать это небольшое растение или куст без инструмента; разбить этот камень; открыть или закрыть эту дверь; взяться за телегу или отпустить её; подняться на этот корабль; сесть у этого костра; лечь в эту кровать; сложить вещи в этот сундук; починить снаряжение у этой станции ремесла; опустошить этот улей или забрать вещи из этого надгробия."), NoParameters()),
+                    "Hace lo que corresponda con lo que mira el jugador: talar ese árbol por completo, con su tronco, y luego volver con el jugador; romper a golpes esa planta pequeña o arbusto, sin herramienta; picar esa roca, abrir o cerrar esa puerta, tirar de ese carro o soltarlo, subir a ese barco, sentarse en ese fuego, dormir en esa cama, guardar en ese cofre, reparar en esa estación, vaciar esa colmena o recuperar esa tumba. Si es la tumba de un compañero muerto, lo revive con sus cosas; así se cumple «revive a ...».",
+                    "Interacts appropriately with what the player is looking at: chop down that tree completely, including its log, then return to the player; smash that small plant or bush without a tool; mine that rock, open or close that door, pull or release that cart, board that ship, sit by that fire, sleep in that bed, store items in that chest, repair at that station, empty that beehive, or recover that tombstone. At a dead companion's tombstone it revives that companion with its gear; use it for \"revive ...\".",
+                    "Взаимодействует с тем, на что смотрит игрок, как подходит по смыслу: срубить это дерево полностью, вместе с брёвнами, и вернуться к игроку; сломать это небольшое растение или куст без инструмента; разбить этот камень; открыть или закрыть эту дверь; взяться за телегу или отпустить её; подняться на этот корабль; сесть у этого костра; лечь в эту кровать; сложить вещи в этот сундук; починить снаряжение у этой станции ремесла; опустошить этот улей или забрать вещи из этого надгробия. У надгробия погибшего спутника оживляет его вместе с вещами; так выполняется «оживи ...»."), NoParameters()),
                 ChoiceTool(RestTool, ModLang.Pick(
                     "Se sienta junto al fuego encendido más cercano o va a dormir a la cama más cercana. Si ya está en ello, se levanta.",
                     "Sits by the nearest lit fire or goes to sleep in the nearest bed. If already resting, gets up.",
@@ -1158,6 +1214,28 @@ namespace OfflineCompanionsAI
             if (name.Type != JTokenType.String) return false;
             string text = OrderIntent.Normalize(name.Value<string>());
             return text.Length == 0 || text == "aqui" || text == "here" || text == "este sitio" || text == "este lugar" || text == "this place" || text == "this spot" || text == "здесь" || text == "тут" || text == "это место";
+        }
+
+        /// <summary>El recurso de gather que el jugador nombra con todas sus letras, o null si no nombra uno solo.</summary>
+        public static string NamedGatherItem(string playerText)
+        {
+            if (string.IsNullOrEmpty(playerText)) return null;
+            var items = new List<KeyValuePair<string, string[]>>();
+            foreach (KeyValuePair<string, LocalizedOption> item in Items)
+            {
+                items.Add(new KeyValuePair<string, string[]>(item.Key, new[] { item.Value.Es, item.Value.En, item.Value.Ru }));
+            }
+            return ItemNames.NamedIn(playerText, items);
+        }
+
+        /// <summary>
+        /// Si lo que se tala o se pica debe soltar justo ese objeto. No vale para lo que no sale de árboles ni rocas
+        /// (el sílex se recoge del suelo, la resina y el metal negro los sueltan enemigos).
+        /// </summary>
+        public static bool GatherNeedsSource(string item, int job)
+        {
+            if (job != JobWood && job != JobStone && job != JobOre) return false;
+            return item != "Flint" && item != "Resin" && item != "BlackMetalScrap" && item != "CopperScrap";
         }
 
         /// <summary>Un encargo de recoger que nace del propio mod, con las mismas comprobaciones que los de la IA. Null si no es un objeto conocido.</summary>

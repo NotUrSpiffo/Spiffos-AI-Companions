@@ -275,6 +275,11 @@ public class FarmZonePlacer : MonoBehaviour
 		if (!(_hintLabel == null))
 		{
 			_hintLabel.text = (ZInput.IsGamepadActive() ? ModLocalization.LocFmt("hc_farmzone_hint_gamepad", MHR_Pad.GlyphOf("JoyButtonA"), MHR_Pad.GlyphOf("JoyButtonX"), MHR_Pad.GlyphOf("JoyLTrigger"), MHR_Pad.GlyphOf("JoyRTrigger"), MHR_Pad.GlyphOf("JoyDPadUp") + "/" + MHR_Pad.GlyphOf("JoyDPadDown"), MHR_Pad.GlyphOf("JoyMenu")) : ModLocalization.Loc("hc_farmzone_hint"));
+			string text = _companion?.GetComponent<Character>()?.m_name;
+			if (!string.IsNullOrEmpty(text))
+			{
+				_hintLabel.text = text + ":  " + _hintLabel.text;
+			}
 		}
 	}
 

@@ -1,6 +1,6 @@
 # Spiffo's Valheim AI Companions
 
-[English](README.md) · [Русский](README.ru.md) · [Último release](https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/latest) · en `main` el plugin es `0.27.1`
+[English](README.md) · [Русский](README.ru.md) · [Último release](https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/latest) · en `main` el plugin es `0.27.2`
 
 <p>
   <img src="docs/assets/cover.jpg" width="640" height="360" alt="Arte de portada con cuatro compañeros ilustrados en un bosque nevado y el título Spiffo's AI Companions. Es arte promocional, no una captura de partida, ni un respaldo de Valheim o de Player2.">
@@ -52,7 +52,7 @@ Esta página describe ajustes y límites de este repositorio. No es un informe d
 
 En el editor de personaje hay seis personalidades: **Vieja guardia**, **Aprendiz**, **Exploración**, **Caza**, **Oficio** y **Bromas**. Si `[Personaje] Personality` está vacío, cada compañero sin instrucciones propias recibe uno de esos perfiles. Las inclinaciones del editor son **Automática**, **Ninguna**, **Oficio**, **Exploración**, **Caza** y **Recolección**. Automática sigue el perfil y no anula una orden tuya.
 
-En `main`, el plugin **0.27.1** cambia además estos comportamientos de Reborn en `codigo/src/BehaviorOverrides.cs`, `codigo/src/SeatSync.cs` y `codigo/src/StorageSortPatches.cs`. Lo que cambió está en [RELEASE_NOTES.md](RELEASE_NOTES.md).
+En `main`, el plugin **0.27.2** cambia además estos comportamientos de Reborn en `codigo/src/BehaviorOverrides.cs`, `codigo/src/SeatSync.cs` y `codigo/src/StorageSortPatches.cs`. Lo que cambió está en [RELEASE_NOTES.md](RELEASE_NOTES.md).
 
 - **Picar:** se deja una roca de piedra o de mineral, o una sección, cuando el código decide que solo se llega nadando. Si faltan `MHR_Water.WouldSwim` o `MHR_GatherRules.AllowTarget`, el registro avisa de que ese filtro no está disponible.
 - **Pelear con una herramienta en la mano:** si el objeto elegido es una caña de pescar, tiene daño de pico o es una herramienta, el mod prueba un arma cuerpo a cuerpo, luego un arco, y si no, la desequipa. Si faltan los métodos de combate de Reborn, el registro avisa de que el cambio no está disponible.

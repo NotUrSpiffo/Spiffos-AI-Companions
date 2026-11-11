@@ -242,6 +242,13 @@ public class CompanionTombstoneResurrect : MonoBehaviour
 		return false;
 	}
 
+	internal void ReviveByCompanion()
+	{
+		CancelHold();
+		DoResurrect(isAutoRespawn: false);
+		LastResurrectTime = Time.time;
+	}
+
 	private void DoResurrect(bool isAutoRespawn)
 	{
 		if (!(_nview == null))

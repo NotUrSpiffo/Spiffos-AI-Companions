@@ -22,7 +22,7 @@ namespace OfflineCompanionsAI
         public const string PluginGuid = "OfflineCompanionsAI";
 #endif
         public const string PluginName = "Spiffo's Valheim AI Companions";
-        public const string PluginVersion = "0.27.1";
+        public const string PluginVersion = "0.27.2";
 
         private const float EmoteCooldown = 10f;
 
@@ -165,6 +165,27 @@ namespace OfflineCompanionsAI
         private readonly Dictionary<string, CompanionMemory> _memories = new Dictionary<string, CompanionMemory>();
         private readonly Dictionary<Component, OrderSequence<QueuedOrder>> _chains = new Dictionary<Component, OrderSequence<QueuedOrder>>();
         private readonly Dictionary<Component, GatherGoal> _goals = new Dictionary<Component, GatherGoal>();
+        private static Plugin _self;
+
+        private sealed class OpenHunt
+        {
+            public Dictionary<string, int> Pack;
+            public float StartedAt;
+        }
+
+        /// <summary>Cacerías sin cantidad ("ve a cazar"): lo que llevaba al salir, para contar lo conseguido al volver.</summary>
+        private readonly Dictionary<Component, OpenHunt> _openHunts = new Dictionary<Component, OpenHunt>();
+
+        /// <summary>El objeto que ese compañero tiene encargado conseguir talando o picando, o null.</summary>
+        internal static string GatherFocus(Component worker)
+        {
+            if (_self == null || worker == null || _self._goals.Count == 0) return null;
+            foreach (KeyValuePair<Component, GatherGoal> goal in _self._goals)
+            {
+                if (goal.Key != null && goal.Key.gameObject == worker.gameObject) return goal.Value.Item;
+            }
+            return null;
+        }
         private readonly Dictionary<Component, TreeTask> _trees = new Dictionary<Component, TreeTask>();
         private readonly Dictionary<Component, PlantTask> _plants = new Dictionary<Component, PlantTask>();
         private readonly Dictionary<Component, GiveTask> _gives = new Dictionary<Component, GiveTask>();
@@ -479,6 +500,7 @@ namespace OfflineCompanionsAI
             _cookStoreSince.Clear();
             _organizing.Clear();
             _taskStartPack.Clear();
+            _openHunts.Clear();
             _lastTask.Clear();
             _workers.Clear();
             _diedAtWork.Clear();
@@ -1437,6 +1459,18 @@ namespace OfflineCompanionsAI
                 Log.LogWarning("[Acciones] " + speakerName + ": " + call.Name + " rechazada: " + invalid);
                 return "Error: " + invalid;
             }
+            if (action.Kind == ActionKind.Gather && !state.Initiative)
+            {
+                // La IA a veces confunde recursos parecidos (madera noble por madera resistente): manda lo que dijo el jugador.
+                string named = CompanionActions.NamedGatherItem(state.PlayerText);
+                ActionRequest fixedOrder = named != null && named != action.Item ? CompanionActions.GatherOrder(named, action.Amount) : null;
+                if (fixedOrder != null)
+                {
+                    Log.LogInfo("[Acciones] " + speakerName + ": la IA pidió " + action.ItemLabel + ", pero el jugador nombró " + fixedOrder.ItemLabel + "; se usa eso.");
+                    fixedOrder.Who = action.Who;
+                    action = fixedOrder;
+                }
+            }
 
             string mixup = CompanionActions.FurnaceMixup(action, state.PlayerText);
             if (mixup != null)
@@ -1730,6 +1764,9 @@ namespace OfflineCompanionsAI
         private void BeginHuntSweep(Component companion, ActionRequest action)
         {
             bool hunting = (action.Kind == ActionKind.Gather || action.Kind == ActionKind.SetJob) && action.Value == CompanionActions.JobHunt;
+            if (hunting && action.Kind == ActionKind.SetJob)
+                _openHunts[companion] = new OpenHunt { Pack = CompanionBridge.PackContents(companion), StartedAt = Time.time };
+            else _openHunts.Remove(companion);
             if (hunting && !action.KeepFollowing && CompanionBridge.HuntSearchAvailable) _huntSweeps[companion] = new HuntSweep();
         }
 
@@ -1763,7 +1800,7 @@ namespace OfflineCompanionsAI
                 if (FlatDistance(here, player.transform.position) >= reach) continue;
 
                 Vector3 at = player.transform.position;
-                bool found = sweep.Plan.Next(here.x, here.z, at.x, at.z, HuntSweepStep, reach * ExploreGoal.ReachShare, (x, z) => CompanionBridge.CanWalkStraight(companion, new Vector3(x, here.y, z)), _random, out float nextX, out float nextZ);
+                bool found = sweep.Plan.Next(here.x, here.z, at.x, at.z, HuntSweepStep, reach * ExploreGoal.ReachShare, (x, z) => Companions.MHR_Loaded.Safe(new Vector3(x, here.y, z), 12f) && CompanionBridge.CanWalkStraight(companion, new Vector3(x, here.y, z)), _random, out float nextX, out float nextZ);
                 if (found)
                 {
                     sweep.Exhausted = false;
@@ -1805,7 +1842,7 @@ namespace OfflineCompanionsAI
         {
             Vector3 here = companion.transform.position;
             Vector3 at = player.transform.position;
-            bool found = task.Plan.Next(here.x, here.z, at.x, at.z, ExploreGoal.StepDistance, reach * ExploreGoal.ReachShare, (x, z) => CompanionBridge.CanWalkStraight(companion, new Vector3(x, here.y, z)), _random, out float x2, out float z2,
+            bool found = task.Plan.Next(here.x, here.z, at.x, at.z, ExploreGoal.StepDistance, reach * ExploreGoal.ReachShare, (x, z) => Companions.MHR_Loaded.Safe(new Vector3(x, here.y, z), 12f) && CompanionBridge.CanWalkStraight(companion, new Vector3(x, here.y, z)), _random, out float x2, out float z2,
                 (x, z) => !CompanionBridge.IsMapped(new Vector3(x, here.y, z)), CompanionBridge.MapRevealRadius * ExploreLookAheadShare);
             if (found) task.Waypoint = new Vector3(x2, here.y, z2);
             return found;
@@ -2086,6 +2123,58 @@ namespace OfflineCompanionsAI
             Log.LogInfo("[Meta] " + message);
             Notify(message);
             AddToChat(worker.Name, message);
+        }
+
+        /// <summary>
+        /// Unity deja de animar a los personajes que la cámara no ve, y los golpes de talar y picar salen de la animación:
+        /// un compañero que trabaja a tu espalda o lejos se quedaba parado sin golpear. Los compañeros se animan siempre.
+        /// </summary>
+        private void KeepAnimating()
+        {
+            foreach (Component companion in CompanionBridge.MyCompanions())
+            {
+                if (companion == null) continue;
+                bool changed = false;
+                foreach (Animator animator in companion.GetComponentsInChildren<Animator>(true))
+                {
+                    if (animator == null || animator.cullingMode == AnimatorCullingMode.AlwaysAnimate) continue;
+                    animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+                    changed = true;
+                }
+                _self = this;
+                if (changed) Log.LogInfo("[Animación] " + CompanionBridge.Name(companion) + " se anima aunque no se vea en pantalla.");
+            }
+        }
+
+        /// <summary>Al dejar de cazar, dice lo que ha conseguido desde que salió: una cacería sin cantidad no tenía resumen.</summary>
+        private void UpdateOpenHunts()
+        {
+            if (_openHunts.Count == 0) return;
+            foreach (Component companion in new List<Component>(_openHunts.Keys))
+            {
+                if (companion == null || companion.GetComponent<Character>().GetHealth() <= 0f)
+                {
+                    _openHunts.Remove(companion);
+                    continue;
+                }
+                if (CompanionBridge.OnJob(companion, CompanionActions.JobHunt)) continue;
+
+                OpenHunt hunt = _openHunts[companion];
+                _openHunts.Remove(companion);
+                Dictionary<string, int> gained = CompanionBridge.WithoutGear(InventoryDiff.Gained(hunt.Pack, CompanionBridge.PackContents(companion)));
+                string name = CompanionBridge.Name(companion);
+                string items = gained.Count == 0 ? "" : CompanionBridge.DescribeItems(gained);
+                int minutes = Mathf.Max(1, Mathf.RoundToInt((Time.time - hunt.StartedAt) / 60f));
+                Log.LogInfo("[Meta] " + name + ": deja de cazar tras " + minutes + " min con " + (items.Length == 0 ? "nada" : items));
+                AddLine(items.Length == 0
+                    ? ModLang.Pick(name + " ha dejado de cazar sin conseguir nada.", name + " stopped hunting with nothing to show for it.", name + ": охота окончена, добычи нет.")
+                    : ModLang.Pick(name + " ha dejado de cazar y trae " + items + ".", name + " stopped hunting and brings " + items + ".", name + ": охота окончена, добыто: " + items + "."));
+                if (items.Length > 0)
+                {
+                    RememberEvent(companion, MemoryWeight.Job, ModLang.Pick(
+                        "Fui a cazar y conseguí " + items + ".", "Went hunting and got " + items + ".", "Охота: добыто " + items + "."), false);
+                }
+            }
         }
 
         private void UpdateRevived()
@@ -3973,6 +4062,15 @@ namespace OfflineCompanionsAI
                     continue;
                 }
 
+                float far = CompanionBridge.FarFromPlayer(companion);
+                if (far > 0f)
+                {
+                    if (!goal.Paused) Log.LogInfo("[Meta] " + CompanionBridge.Name(companion) + ": el jugador está a " + far.ToString("F0") + " m, fuera de la zona que el juego simula; " + goal.Label + " espera a que vuelva.");
+                    goal.Pause(Time.time);
+                    continue;
+                }
+                if (goal.Paused) Log.LogInfo("[Meta] " + CompanionBridge.Name(companion) + ": el jugador ha vuelto; sigue con " + goal.Label + ".");
+
                 int pack = CompanionBridge.CountInPack(companion, goal.Item);
                 // Mientras caza o busca presas también está trabajando, aunque aún no haya conseguido nada.
                 bool hunting = _huntSweeps.TryGetValue(companion, out HuntSweep sweep) && (!sweep.Exhausted || CompanionBridge.IsHuntMoving(companion));
@@ -4102,6 +4200,8 @@ namespace OfflineCompanionsAI
             _nextChainCheckAt = Time.time + ChainCheckInterval;
             UpdatePersistence();
             UpdateRevived();
+            KeepAnimating();
+            UpdateOpenHunts();
             UpdateGearChecks(player);
             UpdateWaterTraps(player);
             UpdateTravels(player);
@@ -4326,15 +4426,82 @@ namespace OfflineCompanionsAI
             List<ChatMessage> request = BuildRequest(player, target, id, next.Prompt);
             _waiting = true;
             Log.LogInfo((next.Group ? "[Grupo] " : "[Charla] ") + name + " contesta" + (next.Group ? "" : " (turno " + next.Turn + ")"));
+            Component partner = next.Group ? null : next.ReplyTo;
             StartCoroutine(_client.Complete(
                 request,
-                null,
-                response => Finish(target, name, id, next.MemoryLine, response.Text ?? "", next.Turn, next.ReplyTo),
+                partner != null ? CompanionActions.ShareTools(CompanionBridge.Name(partner)) : null,
+                response => FinishSideReply(target, name, id, next, partner, response),
                 error =>
                 {
                     _waiting = false;
                     Log.LogWarning((next.Group ? "[Grupo]" : "[Charla]") + " Sin respuesta: " + error);
                 }));
+        }
+
+        /// <summary>Lo que contesta en la charla y, si así lo decidió, lo que le pasa al otro de su mochila.</summary>
+        private void FinishSideReply(Component target, string name, string id, SideReply next, Component partner, LlmResponse response)
+        {
+            string text = response.Text ?? "";
+            string shared = partner != null && target != null ? Share(target, name, partner, response.ToolCalls) : null;
+            if (shared != null && string.IsNullOrWhiteSpace(Initiative.StripSilence(text)))
+            {
+                text = ModLang.Pick("Toma: " + shared + ".", "Here: " + shared + ".", "Держи: " + shared + ".");
+            }
+            Finish(target, name, id, next.MemoryLine, text, next.Turn, next.ReplyTo);
+            if (shared == null) return;
+            // Quien lo recibe se entera aunque el otro no lo diga con todas las letras.
+            SideReply answer = _sideReplies.Find(r => !r.Group && r.Speaker == partner);
+            if (answer != null)
+            {
+                answer.Prompt += ModLang.Pick(
+                    " (" + name + " te pasó " + shared + "; ya lo tienes en tu mochila.)",
+                    " (" + name + " handed you " + shared + "; it is already in your backpack.)",
+                    " (" + name + " передал тебе: " + shared + "; это уже в твоём инвентаре.)");
+            }
+        }
+
+        private string Share(Component giver, string name, Component partner, List<ToolCall> calls)
+        {
+            string partnerName = CompanionBridge.Name(partner);
+            var parts = new List<string>();
+            foreach (ToolCall call in calls)
+            {
+                if (call.Name != CompanionActions.ShareTool) continue;
+                if (!CompanionActions.ParseShare(call.Arguments, out string item, out int amount))
+                {
+                    Log.LogWarning("[Charla] " + name + " quiso darle algo a " + partnerName + ", pero la petición no era válida: " + call.Arguments);
+                    continue;
+                }
+                if (Vector3.Distance(giver.transform.position, partner.transform.position) > FreeTalkRange)
+                {
+                    Log.LogInfo("[Charla] " + name + " quiso darle " + amount + " " + item + " a " + partnerName + ", pero ya están lejos");
+                    break;
+                }
+                Dictionary<string, int> given = CompanionBridge.ShareWith(giver, partner, item, amount);
+                if (given.Count == 0)
+                {
+                    Log.LogInfo("[Charla] " + name + " quiso darle " + amount + " " + item + " a " + partnerName + ", pero no lo tiene suelto o no le cabe");
+                    continue;
+                }
+                parts.Add(CompanionBridge.DescribeItems(given));
+            }
+            if (parts.Count == 0) return null;
+
+            string shared = string.Join(", ", parts.ToArray());
+            Log.LogInfo("[Charla] " + name + " le da a " + partnerName + ": " + shared);
+            AddLine(ModLang.Pick(
+                name + " le dio a " + partnerName + ": " + shared + ".",
+                name + " gave " + partnerName + ": " + shared + ".",
+                name + " передаёт " + partnerName + ": " + shared + "."));
+            RememberEvent(giver, MemoryWeight.Notable, ModLang.Pick(
+                "Compartió con " + partnerName + ": " + shared + ".",
+                "Shared with " + partnerName + ": " + shared + ".",
+                "Поделился с " + partnerName + ": " + shared + "."), false);
+            RememberEvent(partner, MemoryWeight.Notable, ModLang.Pick(
+                "Recibió de " + name + ": " + shared + ".",
+                "Received from " + name + ": " + shared + ".",
+                "Получил от " + name + ": " + shared + "."), false);
+            return shared;
         }
 
         private void ToggleFreeTalk()

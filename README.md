@@ -1,6 +1,6 @@
 # Spiffo's Valheim AI Companions
 
-[Español](README.es.md) · [Русский](README.ru.md) · [Latest release](https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/latest) · `main` is plugin `0.27.1`
+[Español](README.es.md) · [Русский](README.ru.md) · [Latest release](https://github.com/NotUrSpiffo/Spiffos-AI-Companions/releases/latest) · `main` is plugin `0.27.2`
 
 <p>
   <img src="docs/assets/cover.jpg" width="640" height="360" alt="Cover art of four illustrated companions in a snowy forest, titled Spiffo's AI Companions. Promotional artwork, not a gameplay screenshot, and not an endorsement by Valheim or Player2.">
@@ -52,7 +52,7 @@ This page describes settings and limits in this repository. It is not a gameplay
 
 Six built-in personalities are in the character editor: **Old Guard**, **Rookie**, **Explorer**, **Hunter**, **Craftsman**, and **Joker**. If `[Personaje] Personality` is empty, each companion without custom instructions gets one of those profiles. Inclination choices in the editor are **Automatic**, **None**, **Craft**, **Exploration**, **Hunting**, and **Foraging**. Automatic follows the profile; it does not override an order you give.
 
-On `main`, plugin **0.27.1** also changes these Reborn behaviors in `codigo/src/BehaviorOverrides.cs`, `codigo/src/SeatSync.cs` and `codigo/src/StorageSortPatches.cs`. What changed is in [RELEASE_NOTES.md](RELEASE_NOTES.md).
+On `main`, plugin **0.27.2** also changes these Reborn behaviors in `codigo/src/BehaviorOverrides.cs`, `codigo/src/SeatSync.cs` and `codigo/src/StorageSortPatches.cs`. What changed is in [RELEASE_NOTES.md](RELEASE_NOTES.md).
 
 - **Mining:** a stone or ore rock, or a section of one, is skipped when the code decides it can only be reached by swimming. If `MHR_Water.WouldSwim` or `MHR_GatherRules.AllowTarget` is missing, the log warns that this skip is unavailable.
 - **Fighting with a tool out:** if the chosen item is a fishing rod, has pickaxe damage, or is a tool, the mod tries a melee weapon, then a bow, and otherwise unequips that item. If the Reborn combat methods are missing, the log warns that the swap is unavailable.

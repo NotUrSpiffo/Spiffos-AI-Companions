@@ -997,9 +997,12 @@ public class CompanionAI : BaseAI
 				}
 				StopMoving();
 				LookAtPoint(position);
-				LootTombstone(_pendingTombstone);
+				if (!ReviveAt(_pendingTombstone))
+				{
+					LootTombstone(_pendingTombstone);
+					ClearTombstoneId();
+				}
 				_pendingTombstone = null;
-				ClearTombstoneId();
 				RestoreFollowOrPatrol();
 				return false;
 			}
@@ -1010,9 +1013,12 @@ public class CompanionAI : BaseAI
 				{
 					StopMoving();
 					LookAtPoint(position);
-					LootTombstone(_pendingTombstone);
+					if (!ReviveAt(_pendingTombstone))
+					{
+						LootTombstone(_pendingTombstone);
+						ClearTombstoneId();
+					}
 					_pendingTombstone = null;
-					ClearTombstoneId();
 					RestoreFollowOrPatrol();
 					_tombstoneNavStuckTime = 0f;
 					return false;
@@ -1124,6 +1130,39 @@ public class CompanionAI : BaseAI
 	private void ClearTombstoneId()
 	{
 		(m_nview?.GetZDO())?.Set(CompanionSetup.TombstoneIdHash, 0L);
+	}
+
+	// La tumba de otro compañero que espera revivir no se saquea: el compañero que llega lo revive, y sus cosas vuelven a
+	// él como cuando lo revive el jugador.
+	private bool ReviveAt(TombStone tombstone)
+	{
+		CompanionTombstoneResurrect companionTombstoneResurrect = ((tombstone != null) ? tombstone.GetComponent<CompanionTombstoneResurrect>() : null);
+		ZDO zDO = ((tombstone != null) ? tombstone.GetComponent<ZNetView>()?.GetZDO() : null);
+		if (companionTombstoneResurrect == null || zDO == null)
+		{
+			return false;
+		}
+		string text = zDO.GetString(CompanionTombstoneResurrect.RespawnOwnerHash);
+		if (string.IsNullOrEmpty(text) || string.IsNullOrEmpty(zDO.GetString(CompanionTombstoneResurrect.RespawnPrefabHash)))
+		{
+			return false;
+		}
+		if (text != (Player.m_localPlayer?.GetPlayerID().ToString() ?? ""))
+		{
+			return false;
+		}
+		string text2 = zDO.GetString(CompanionSetup.MHR_TombCompanionIdHash);
+		if (!string.IsNullOrEmpty(text2) && _setup != null && text2 == _setup.MHR_EnsureCompanionId())
+		{
+			return false;
+		}
+		string text3 = zDO.GetString(CompanionTombstoneResurrect.RespawnNameHash);
+		if (CompanionsPlugin.LogNormal)
+		{
+			CompanionsPlugin.Log.LogInfo("[Resurrect] " + (m_character?.m_name ?? "?") + " revives \"" + text3 + "\" at its tombstone");
+		}
+		companionTombstoneResurrect.ReviveByCompanion();
+		return true;
 	}
 
 	private void LootTombstone(TombStone tombstone)

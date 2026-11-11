@@ -211,7 +211,7 @@ public static class MHR_GatherRules
 		}
 	}
 
-	private static List<string> DropsOf(GameObject go)
+	internal static List<string> DropsOf(GameObject go)
 	{
 		int instanceID = go.GetInstanceID();
 		if (s_dropsCache.TryGetValue(instanceID, out var value))

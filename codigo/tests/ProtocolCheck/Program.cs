@@ -1061,6 +1061,18 @@ internal static class Program
 
         var pair = new[] { "Roxy", "Darkness" };
         Check("varios: marquen", Recipients.AddressesSeveral("marquen esta casa como casa de la playa", pair).ToString(), "True");
+        Check("nombrado: madera resistente", CompanionActions.NamedGatherItem("darkness ve por 50 de madera resistente") ?? "null", "RoundLog");
+        Check("nombrado: madera noble", CompanionActions.NamedGatherItem("consigue 40 de madera noble") ?? "null", "FineWood");
+        Check("nombrado: madera", CompanionActions.NamedGatherItem("trae 20 de madera") ?? "null", "Wood");
+        Check("compartir: válido", CompanionActions.ParseShare("{\"item\":\"Flechas de madera\",\"amount\":10}", out string shareItem, out int shareAmount) + " " + shareItem + " " + shareAmount, "True Flechas de madera 10");
+        Check("compartir: sin cantidad", CompanionActions.ParseShare("{\"item\":\"Flechas\"}", out _, out _).ToString(), "False");
+        Check("compartir: cantidad cero", CompanionActions.ParseShare("{\"item\":\"Flechas\",\"amount\":0}", out _, out _).ToString(), "False");
+        Check("compartir: roto", CompanionActions.ParseShare("{item", out _, out _).ToString(), "False");
+        Check("compartir: herramienta", (string)CompanionActions.ShareTools("Roxy")[0]["function"]["name"], "share_items");
+        Check("nombrado: core wood", CompanionActions.NamedGatherItem("get 10 core wood") ?? "null", "RoundLog");
+        Check("nombrado: dos cosas", CompanionActions.NamedGatherItem("consigue madera y piedra") ?? "null", "null");
+        Check("nombrado: nada", CompanionActions.NamedGatherItem("ve por lo de siempre") ?? "null", "null");
+        Check("nombrado: setas amarillas", CompanionActions.NamedGatherItem("junta 5 setas amarillas") ?? "null", "MushroomYellow");
         Check("varios: síganme", Recipients.AddressesSeveral("síganme", pair).ToString(), "True");
         Check("varios: quédense", Recipients.AddressesSeveral("Quédense aquí", pair).ToString(), "True");
         Check("varios: dos nombres", Recipients.AddressesSeveral("Roxy y Darkness, vengan", pair).ToString(), "True");

@@ -209,6 +209,48 @@ namespace OfflineCompanionsAI
             return FoodWords.Contains(Stem(wanted));
         }
 
+        /// <summary>
+        /// El objeto que el jugador nombra con todas sus letras, entre los que se dan como nombre y sus etiquetas en los
+        /// tres idiomas. Si un nombre contiene a otro ("madera resistente" y "madera"), gana el más largo. Null si no nombra
+        /// ninguno o nombra varios distintos.
+        /// </summary>
+        public static string NamedIn(string playerText, IEnumerable<KeyValuePair<string, string[]>> items)
+        {
+            string text = " " + Stem(playerText) + " ";
+            string best = null;
+            string bestTerm = "";
+            bool tie = false;
+            var found = new List<KeyValuePair<string, string>>();
+            foreach (KeyValuePair<string, string[]> item in items)
+            {
+                var terms = new List<string>();
+                foreach (string label in item.Value) terms.Add(Stem(label));
+                foreach (string[] group in SynonymGroups)
+                {
+                    bool mine = false;
+                    foreach (string raw in group) if (terms.Contains(Stem(raw))) mine = true;
+                    if (mine) foreach (string raw in group) terms.Add(Stem(raw));
+                }
+                foreach (string term in terms)
+                {
+                    if (term.Length > 0 && text.IndexOf(" " + term + " ", StringComparison.Ordinal) >= 0) found.Add(new KeyValuePair<string, string>(item.Key, term));
+                }
+            }
+            foreach (KeyValuePair<string, string> hit in found)
+            {
+                // Un nombre que solo aparece dentro de otro más largo no cuenta por separado.
+                bool inside = false;
+                foreach (KeyValuePair<string, string> other in found)
+                {
+                    if (other.Key != hit.Key && other.Value.Length > hit.Value.Length && (" " + other.Value + " ").IndexOf(" " + hit.Value + " ", StringComparison.Ordinal) >= 0) inside = true;
+                }
+                if (inside) continue;
+                if (best == null || best == hit.Key) { best = hit.Key; if (hit.Value.Length > bestTerm.Length) bestTerm = hit.Value; }
+                else tie = true;
+            }
+            return tie ? null : best;
+        }
+
         private static string Stem(string text)
         {
             string[] words = OrderIntent.Normalize(text).Split(' ');
@@ -415,7 +457,7 @@ namespace OfflineCompanionsAI
         public const float StuckWithSomeSeconds = 15f;
         public const float TimeoutSeconds = 900f;
 
-        private readonly float _startedAt;
+        private float _startedAt;
         private int _lastPack;
         private float _lastActiveAt;
 
@@ -439,8 +481,29 @@ namespace OfflineCompanionsAI
             _lastActiveAt = now;
         }
 
+        private float _lastCheckAt = -1f;
+
+        /// <summary>Si sigue en pausa desde la última comprobación.</summary>
+        public bool Paused { get; private set; }
+
+        /// <summary>
+        /// El tiempo con el jugador demasiado lejos no cuenta: el juego no mueve a un compañero fuera de la zona que simula.
+        /// </summary>
+        public void Pause(float now)
+        {
+            if (_lastCheckAt >= 0f && now > _lastCheckAt)
+            {
+                _startedAt += now - _lastCheckAt;
+                _lastActiveAt += now - _lastCheckAt;
+            }
+            _lastCheckAt = now;
+            Paused = true;
+        }
+
         public GoalState Update(int packNow, bool working, float now)
         {
+            _lastCheckAt = now;
+            Paused = false;
             if (packNow > _lastPack)
             {
                 Gained += packNow - _lastPack;

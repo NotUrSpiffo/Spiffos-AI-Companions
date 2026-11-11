@@ -25,6 +25,8 @@ public class HuntController : MonoBehaviour
 
 	private CompanionCombatAI _combatAI;
 
+	private float _nextTooStrongLog;
+
 	private CompanionSetup _setup;
 
 	private Character _character;
@@ -393,6 +395,16 @@ public class HuntController : MonoBehaviour
 			Done();
 			return;
 		}
+		if (!MHR_Loaded.Safe(prey.transform.position, 5f) || !MHR_Loaded.Safe(transform.position, 5f))
+		{
+			if (CompanionsPlugin.LogNormal)
+			{
+				Log("Letting " + Loc(_preyName) + " go - it ran to the edge of where the world is loaded around you");
+			}
+			Skip(prey, 45f);
+			Done();
+			return;
+		}
 		_wasChasing = true;
 		float num = ModConfig.HuntSwitchCloserBy?.Value ?? 5f;
 		if (num > 0f && Time.time >= _nextSwapCheck && !_combatAI.HasAttackedTarget)
@@ -736,6 +748,22 @@ public class HuntController : MonoBehaviour
 			string prefab = PrefabName(allCharacter);
 			if (!HuntCatalog.CanHunt(allCharacter, prefab))
 			{
+				continue;
+			}
+			if (!MHR_Loaded.Safe(allCharacter.transform.position, 12f))
+			{
+				continue;
+			}
+			if (_combatAI != null && _combatAI.LeavingAlone(allCharacter))
+			{
+				if (Time.time >= _nextTooStrongLog)
+				{
+					_nextTooStrongLog = Time.time + 30f;
+					if (CompanionsPlugin.LogNormal)
+					{
+						Log("Not going after " + Loc(allCharacter.m_name) + " - it's leaving that one alone (too strong or out of reach)");
+					}
+				}
 				continue;
 			}
 			num4++;

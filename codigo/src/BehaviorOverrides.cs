@@ -711,6 +711,76 @@ namespace OfflineCompanionsAI
                 return;
             }
             harmony.Patch(update, postfix: Hook(nameof(StuckGatherPostfix)));
+            MethodInfo allowTarget = AccessTools.Method(typeof(Companions.MHR_GatherRules), "AllowTarget");
+            if (allowTarget != null) harmony.Patch(allowTarget, postfix: Hook(nameof(GatherFocusPostfix)));
+        }
+
+        /// <summary>
+        /// Datos para averiguar por qué no golpea: a qué distancia está el jugador, si va cargado, qué herramienta de
+        /// talar o picar lleva y si se puede equipar, y si el juego está animando al compañero.
+        /// </summary>
+        private static string StuckDetails(Companions.HarvestController harvest, Humanoid humanoid, Vector3 position)
+        {
+            try
+            {
+                Player player = Player.m_localPlayer;
+                string text = "jugador a " + (player == null ? "?" : Vector3.Distance(player.transform.position, position).ToString("F0") + " m")
+                    + ", cargado " + harvest.IsOverweight();
+                Inventory inventory = humanoid?.GetInventory();
+                if (inventory != null)
+                {
+                    bool chop = harvest._targetType == "TreeLog" || harvest._targetType == "TreeBase";
+                    var tools = new System.Collections.Generic.List<string>();
+                    foreach (ItemDrop.ItemData item in inventory.GetAllItems())
+                    {
+                        if (item?.m_shared == null) continue;
+                        HitData.DamageTypes damage = item.GetDamage();
+                        if (chop ? damage.m_chop <= 0f : damage.m_pickaxe <= 0f) continue;
+                        if (item.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Bow) continue;
+                        tools.Add(item.m_shared.m_name + " (durabilidad " + item.m_durability.ToString("F0")
+                            + ", equipada " + humanoid.IsItemEquiped(item) + ")");
+                    }
+                    text += ", herramientas " + (tools.Count == 0 ? "ninguna" : string.Join("; ", tools))
+                        + ", espacios libres " + inventory.GetEmptySlots();
+                }
+                Animator animator = harvest.GetComponentInChildren<Animator>();
+                if (animator != null) text += ", animación " + animator.cullingMode + (animator.enabled ? "" : " apagada");
+                Renderer renderer = harvest.GetComponentInChildren<SkinnedMeshRenderer>();
+                if (renderer != null) text += ", visible " + renderer.isVisible;
+                return text;
+            }
+            catch (System.Exception ex)
+            {
+                return "sin más datos (" + ex.Message + ")";
+            }
+        }
+
+        private static readonly HashSet<string> _focusLogged = new HashSet<string>();
+
+        /// <summary>
+        /// Con un encargo de un recurso concreto ("madera resistente"), solo vale lo que suelta ese recurso: Reborn talaba
+        /// cualquier árbol y el encargo acababa con madera corriente.
+        /// </summary>
+        private static void GatherFocusPostfix(Companions.HarvestController h, GameObject go, int mode, ref bool __result)
+        {
+            try
+            {
+                if (!__result || h == null || go == null) return;
+                // Lo que queda al borde de la zona que el juego simula no se toca: allí se quedaría congelado.
+                if (!Companions.MHR_Loaded.Safe(go.transform.position, 8f)) { __result = false; return; }
+                string item = Plugin.GatherFocus(h);
+                if (item == null || !CompanionActions.GatherNeedsSource(item, mode)) return;
+                List<string> drops = Companions.MHR_GatherRules.DropsOf(go);
+                if (drops == null || drops.Count == 0 || drops.Contains(item)) return;
+                __result = false;
+                if (_focusLogged.Count > 200) _focusLogged.Clear();
+                if (_focusLogged.Add(item + "|" + go.name))
+                    Plugin.Log.LogInfo("[Recoger] " + CompanionBridge.Name(h) + " deja " + go.name + ": no da " + item + ".");
+            }
+            catch (System.Exception ex)
+            {
+                Plugin.Log.LogError("[Recoger] " + ex);
+            }
         }
 
         private static void StuckGatherPostfix(Companions.HarvestController __instance)
@@ -741,6 +811,7 @@ namespace OfflineCompanionsAI
                 var ai = __instance.GetComponent<Companions.CompanionAI>();
                 bool working = (__instance.IsMoving || __instance.IsAttacking) && target != null;
                 bool waiting = (ai != null && ai.IsInCombat) || Companions.CompanionRest.MHR_ShouldPauseWork(__instance)
+                    || CompanionBridge.FarFromPlayer(__instance) > 0f
                     || (bool)_catchingBreath.GetValue(__instance);
                 int swings = (int)_swingCount.GetValue(__instance);
                 float lastHit = (float)_lastHitAt.GetValue(__instance);
@@ -775,7 +846,7 @@ namespace OfflineCompanionsAI
                     + "): en la mano " + (hand?.m_shared?.m_name ?? "nada") + ", atacando " + (humanoid != null && humanoid.InAttack())
                     + ", en el suelo " + (humanoid != null && humanoid.IsOnGround()) + ", nadando " + (humanoid != null && humanoid.IsSwimming())
                     + ", sentado " + seated + ", a " + aboveGround.ToString("F1") + " m sobre el terreno en " + position.ToString("F1")
-                    + ". Lo deja un rato y busca otro.");
+                    + ". " + StuckDetails(__instance, humanoid, position) + ". Lo deja un rato y busca otro.");
                 if (seated) Companions.MHR_Follow.IdleStand(ai, "stuck at work");
                 __instance._blacklist[target.GetInstanceID()] = now;
                 __instance.ResetToIdle();
