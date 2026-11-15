@@ -1067,6 +1067,8 @@ internal static class Program
         Check("compartir: válido", CompanionActions.ParseShare("{\"item\":\"Flechas de madera\",\"amount\":10}", out string shareItem, out int shareAmount) + " " + shareItem + " " + shareAmount, "True Flechas de madera 10");
         Check("compartir: sin cantidad", CompanionActions.ParseShare("{\"item\":\"Flechas\"}", out _, out _).ToString(), "False");
         Check("compartir: cantidad cero", CompanionActions.ParseShare("{\"item\":\"Flechas\",\"amount\":0}", out _, out _).ToString(), "False");
+        Check("cocina: asada es cocinada", ItemNames.Matches("Carne de ciervo cocinada", "carne de ciervo asada").ToString(), "True");
+        Check("cocina: ciervo no es jabalí", ItemNames.Matches("Carne de jabalí cocinada", "carne de ciervo asada").ToString(), "False");
         Check("compartir: roto", CompanionActions.ParseShare("{item", out _, out _).ToString(), "False");
         Check("compartir: herramienta", (string)CompanionActions.ShareTools("Roxy")[0]["function"]["name"], "share_items");
         Check("nombrado: core wood", CompanionActions.NamedGatherItem("get 10 core wood") ?? "null", "RoundLog");

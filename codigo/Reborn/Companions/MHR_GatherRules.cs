@@ -1082,11 +1082,7 @@ public static class MHR_GatherRules
 
 	private static float Ground(Vector3 pos)
 	{
-		if (!(ZoneSystem.instance != null))
-		{
-			return pos.y;
-		}
-		return ZoneSystem.instance.GetGroundHeight(pos);
+		return MHR_Loaded.Ground(pos, pos.y);
 	}
 
 	private static int Mode(Component c)

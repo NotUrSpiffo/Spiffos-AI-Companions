@@ -534,6 +534,7 @@ public class CookController : MonoBehaviour
 		{
 			if (!Usable(cooker) || CountSlots(cooker, -1) == 0 || !HasHeat(cooker, orFuelInReach: true))
 			{
+				MHR_CookerWhy(cooker, (!Usable(cooker)) ? "can't reach it or it failed recently" : ((CountSlots(cooker, -1) == 0) ? "no free slot" : "no fire under it and no fuel"));
 				continue;
 			}
 			foreach (CookingStation.ItemConversion item2 in cooker.m_conversion)
@@ -549,7 +550,7 @@ public class CookController : MonoBehaviour
 					continue;
 				}
 				float num5 = CookCatalog.Value(text3) + (CookCatalog.IsMade(item) ? 0.5f : 0f);
-				if (num5 <= num)
+				if (num5 < num || (num5 == num && (result == null || result.Kind != TaskKind.Grill || result.Cooker == null || MHR_GrillScore(cooker) <= MHR_GrillScore(result.Cooker))))
 				{
 					continue;
 				}
@@ -2038,6 +2039,24 @@ public class CookController : MonoBehaviour
 			}
 		}
 		return null;
+	}
+
+	// Entre dos estaciones que cocinan lo mismo, la que tiene más huecos libres; si empatan, la de hierro.
+	private static int MHR_GrillScore(CookingStation cooker)
+	{
+		return CountSlots(cooker, -1) * 10 + (Utils.GetPrefabName(cooker.gameObject).ToLowerInvariant().Contains("iron") ? 1 : 0);
+	}
+
+	private readonly Dictionary<int, string> _cookerWhy = new Dictionary<int, string>();
+
+	private void MHR_CookerWhy(CookingStation cooker, string why)
+	{
+		int instanceID = cooker.GetInstanceID();
+		if ((!_cookerWhy.TryGetValue(instanceID, out var value) || value != why) && CompanionsPlugin.LogNormal)
+		{
+			_cookerWhy[instanceID] = why;
+			Log("Not using the " + cooker.m_name + " at " + cooker.transform.position.ToString("F0") + ": " + why);
+		}
 	}
 
 	private bool HasHeat(CookingStation cooker, bool orFuelInReach)

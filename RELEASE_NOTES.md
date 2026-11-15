@@ -1,10 +1,46 @@
-# Spiffo's Valheim AI Companions 0.27.2
+# Spiffo's Valheim AI Companions 0.27.3
 AI-powered companion conversation, natural-language orders and long-term memory
 for Valheim, with English/Spanish/Russian language selection and Offline Companions
 Reborn 1.5.8 integrated.
 
 Requires Valheim, BepInEx and an AI service. Voice input requires the Player2 app.
 See the included README for installation and configuration.
+
+## Fixes in 0.27.3
+- Storing at home: what a companion unloads when it comes home from
+  fishing, hunting or following you now goes to a chest that already holds
+  the same item or the same type (food, ore, wood, stone, gear, trophies).
+  Before, it went to the nearest chest with room, so scrap or arrows could
+  land in a chest of wood. With no matching chest it uses an empty one, or
+  one that already holds a mix. It never uses a chest that holds a single
+  type or a single item of something else: it keeps the items and says no
+  chest fits, so an empty chest near home solves it. Leftovers follow the
+  same rule; gathered items and harvests still fall back to the nearest
+  chest so the job goes on.
+- Cooking: an order for one food no longer starts mead bases or fills the
+  fermenter on the side. The AI is told the exact in-game name of what will
+  be cooked, so it stops inventing names such as "roasted deer meat".
+  Between two cooking stations that can take the same food, the one with
+  more free slots wins, and on a tie the iron cooking station. The log says
+  why a station is skipped ([Cook] Not using the ...).
+- Mining in dungeons: companions ordered to mine a muddy scrap pile aimed
+  at the terrain outside the dungeon and stood there without hitting it.
+  They now aim at the pile, and skip parts stuck inside walls or under the
+  floor.
+- Silver: a vein uncovered by digging counted as buried, because its top is
+  level with the pit or only shows on one side. A part now counts when the
+  ground right beside it is lower than its top.
+- Soft tissue: can now be ordered ("mine 10 soft tissue"), and the rocks
+  that give it count as ore.
+- Strong enemies: a companion's armor was read as 0, so weak enemies such
+  as greydwarfs could be judged too strong for a companion in iron gear.
+  The armor it wears is now used. A companion also fights an enemy judged
+  too strong once that enemy has someone of the group within reach of its
+  attack: before, this only applied within 6 m, so against a drake a
+  companion kept drawing the bow without shooting.
+- Smelting: companions look for smelters, kilns, furnaces and chests up to
+  40 m around them (was 25 m). [Smelting] Range in
+  Maddhattr.OfflineCompanionsReborn.cfg changes it.
 
 ## Changes in 0.27.2
 - Sharing in /freetalk: when companions talk among themselves, the one

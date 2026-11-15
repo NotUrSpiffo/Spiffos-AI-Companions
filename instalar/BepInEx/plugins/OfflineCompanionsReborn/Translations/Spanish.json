@@ -251,6 +251,7 @@
         { "key": "hc_why_no_way", "value": "No encuentro cómo llegar." },
         { "key": "hc_why_cant_reach_up", "value": "No puedo subir ahí." },
         { "key": "hc_why_chests_full", "value": "Los cofres de casa están llenos." },
+        { "key": "hc_why_no_fitting_chest", "value": "Ningún cofre de casa sirve para lo que llevo. Me vendría bien uno vacío." },
         { "key": "hc_why_chest_unreachable", "value": "No puedo llegar a ese cofre." },
         { "key": "hc_why_farm_no_zones", "value": "No hay nada maduro ni dónde plantar." },
         { "key": "hc_why_farm_waiting", "value": "Esperando a que crezcan los cultivos." },

@@ -59,8 +59,8 @@ def main() -> int:
         data.decode("utf-8")
     payloads = {dst: git_bytes(commit, src) for src, dst in COMMIT_FILES.items()}
     dll = payloads["install/BepInEx/plugins/SpiffoAiCompanions.dll"]
-    if b"\x060.27.2" not in dll or b"0.27.1" in dll:
-        print("DLL is not the 0.27.2 assembly", file=sys.stderr)
+    if b"\x060.27.3" not in dll or b"0.27.2" in dll:
+        print("DLL is not the 0.27.3 assembly", file=sys.stderr)
         return 1
     payloads.update(texts)
     dest.parent.mkdir(parents=True, exist_ok=True)

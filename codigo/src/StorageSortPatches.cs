@@ -70,9 +70,9 @@ namespace OfflineCompanionsAI
                     }
                 }
                 var chests = _upkeepChests.Invoke(__instance, null) as List<Container>;
-                Container pick = StorageSort.Pick(chests, carried, __instance.transform.position,
+                // Si no hay cofre adecuado se lo queda (Offline Companions ya sabe esperar) en vez de mezclarlo.
+                __result = StorageSort.Choose(chests, carried, __instance.transform.position,
                     chest => (bool)_upkeepRoomIn.Invoke(null, new object[] { chest, key }));
-                if (pick != null) __result = pick;
             }
             catch (System.Exception ex)
             {
@@ -97,7 +97,8 @@ namespace OfflineCompanionsAI
                 Vector3 position = h.transform.position;
                 bool home = setup != null && setup.HasHomePosition() && MHR_ToolKeeper.NearHome(setup);
                 List<Container> near = home ? MHR_Chests.Near(setup.GetHomePosition(), 50f) : MHR_Chests.Near(position, 30f);
-                Container pick = StorageSort.Pick(near, carried, position, chest =>
+                // Si no hay cofre adecuado sigue el de Offline Companions, para no parar el trabajo.
+                Container pick = StorageSort.Choose(near, carried, position, chest =>
                     chest.GetInventory().HaveEmptySlot() && MHR_Chests.Usable(chest, h) && MHR_Chests.CanReach(position, chest));
                 if (pick != null) __result = pick;
             }
@@ -120,7 +121,7 @@ namespace OfflineCompanionsAI
                 {
                     if (__instance.IsCropItem(item)) carried.Add(item);
                 }
-                Container pick = StorageSort.Pick(chests, carried, __instance.transform.position, chest =>
+                Container pick = StorageSort.Choose(chests, carried, __instance.transform.position, chest =>
                     !(bool)_farmSkipChest.Invoke(__instance, new object[] { chest }) && chest.GetInventory().GetEmptySlots() > 0);
                 if (pick != null) __result = pick;
             }

@@ -1234,53 +1234,38 @@ public static class MHR_ToolKeeper
 			StartTrip(cs, st, ai, 3, container, 0, itemData.m_dropPrefab.name, null, now);
 			return true;
 		}
+		bool flag2 = AnyRoom(vector, position, list);
 		if (CompanionsPlugin.LogNormal)
 		{
-			Log("No chest near home has room for what I'm carrying - keeping " + list.Count + " stack(s)");
+			Log((flag2 ? "No chest near home suits what I'm carrying (the ones with room hold other things)" : "No chest near home has room for what I'm carrying") + " - keeping " + list.Count + " stack(s)");
 		}
-		CompanionStatus.Why(cs, "hc_why_chests_full", true);
+		CompanionStatus.Why(cs, flag2 ? "hc_why_no_fitting_chest" : "hc_why_chests_full", true);
 		st.UnloadPending = false;
 		st.UnloadActive = false;
 		return false;
 	}
 
+	// Primero un cofre con lo mismo o del mismo tipo, luego uno vacío o mixto. Nunca uno dedicado a otra cosa.
 	private static Container ChestFor(Vector3 home, Vector3 me, ItemDrop.ItemData it)
 	{
-		string name = it.m_dropPrefab.name;
-		Container container = null;
-		float num = float.MaxValue;
+		List<Container> list = MHR_Chests.Near(home, 30f);
+		return OfflineCompanionsAI.StorageSort.Choose(list, new ItemDrop.ItemData[1] { it }, me, (Container c) => UsableChest(c) && c.GetInventory().CanAddItem(it, it.m_stack) && MHR_Chests.CanReach(me, c));
+	}
+
+	private static bool AnyRoom(Vector3 home, Vector3 me, List<ItemDrop.ItemData> items)
+	{
 		List<Container> list = MHR_Chests.Near(home, 30f);
 		for (int i = 0; i < list.Count; i++)
 		{
-			Container container2 = list[i];
-			if (UsableChest(container2) && FindByPrefab(container2.GetInventory(), name) != null && container2.GetInventory().CanAddItem(it, it.m_stack))
+			for (int j = 0; j < items.Count; j++)
 			{
-				float num2 = Vector3.Distance(me, container2.transform.position);
-				if (num2 < num && MHR_Chests.CanReach(me, container2))
+				if (UsableChest(list[i]) && list[i].GetInventory().CanAddItem(items[j], items[j].m_stack) && MHR_Chests.CanReach(me, list[i]))
 				{
-					num = num2;
-					container = container2;
+					return true;
 				}
 			}
 		}
-		if (container != null)
-		{
-			return container;
-		}
-		for (int j = 0; j < list.Count; j++)
-		{
-			Container container3 = list[j];
-			if (UsableChest(container3) && container3.GetInventory().CanAddItem(it, it.m_stack))
-			{
-				float num3 = Vector3.Distance(me, container3.transform.position);
-				if (num3 < num && MHR_Chests.CanReach(me, container3))
-				{
-					num = num3;
-					container = container3;
-				}
-			}
-		}
-		return container;
+		return false;
 	}
 
 	private static int Deposit(CompanionSetup cs, State st, Inventory inv, Inventory cinv)

@@ -329,6 +329,7 @@ public static class ModLocalization
 			{ "hc_why_no_way", "I can't find a way there." },
 			{ "hc_why_cant_reach_up", "I can't get up there." },
 			{ "hc_why_chests_full", "The chests near home are full." },
+			{ "hc_why_no_fitting_chest", "No chest near home fits what I'm carrying. An empty chest would do." },
 			{ "hc_why_chest_unreachable", "I can't get to that chest." },
 			{ "hc_why_farm_no_zones", "Nothing ripe, and nowhere to plant." },
 			{ "hc_why_farm_waiting", "Waiting for the crops to grow." },

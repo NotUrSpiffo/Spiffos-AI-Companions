@@ -505,7 +505,7 @@ namespace OfflineCompanionsAI
                 if (_wetReports < MaxWetReports)
                 {
                     _wetReports++;
-                    Plugin.Log.LogInfo("[Picar] Se deja " + go.name + " en " + go.transform.position.ToString("F1") + ": solo se llega nadando.");
+                    Plugin.Log.LogInfo("[Picar] Se deja " + go.name + " en " + go.transform.position.ToString("F1") + (Companions.MHR_Loaded.InDungeon(go.transform.position) ? ": todo está metido en la pared o el suelo." : ": ninguna sección asoma del suelo o solo se llega nadando."));
                 }
             }
             catch (System.Exception ex)
@@ -549,7 +549,7 @@ namespace OfflineCompanionsAI
         /// </summary>
         private static void SectionExposedPostfix(Collider __0, ref bool __result)
         {
-            if (!__result || __0 == null) return;
+            if (__0 == null) return;
             try
             {
                 float now = Time.time;
@@ -558,7 +558,16 @@ namespace OfflineCompanionsAI
                     __result = known.Value;
                     return;
                 }
-                bool visible = SectionShowsAboveGround(__0) && SectionReachableDry(__0);
+                // Offline Companions descarta la que tiene el centro a más de 1 m bajo el suelo de encima. En la pared de un
+                // hoyo (la plata se destapa cavando) eso pasa siempre, aunque la sección asome por el lado.
+                bool visible = __result
+                    ? SectionShowsAboveGround(__0) && SectionReachableDry(__0)
+                    : ZoneSystem.instance != null && !Companions.MHR_Loaded.InDungeon(__0.bounds.center) && SectionShowsFromTheSide(__0.bounds) && SectionReachableDry(__0);
+                if (visible && !__result && _sideReports < MaxBuriedReports)
+                {
+                    _sideReports++;
+                    Plugin.Log.LogInfo("[Picar] Sección bajo el suelo de encima pero a la vista por un lado en " + __0.bounds.center.ToString("F1") + ": cuenta.");
+                }
                 if (_sectionVisible.Count > MaxSectionsRemembered) _sectionVisible.Clear();
                 _sectionVisible[__0] = new KeyValuePair<float, bool>(now, visible);
                 __result = visible;
@@ -575,6 +584,7 @@ namespace OfflineCompanionsAI
         {
             if (ZoneSystem.instance == null) return true;
             Bounds bounds = section.bounds;
+            if (Companions.MHR_Loaded.InDungeon(bounds.center)) return SectionOpenInDungeon(section);
             float top = bounds.max.y + 1f;
             float length = bounds.size.y + 2f;
             Vector3 spread = bounds.extents * SectionSampleSpread;
@@ -588,10 +598,81 @@ namespace OfflineCompanionsAI
                 highest = Mathf.Max(highest, hit.point.y - ZoneSystem.instance.GetGroundHeight(hit.point));
             }
             if (!found || highest >= SectionAboveGround) return true;
+            // Una veta de plata se destapa cavando: queda a ras o por debajo del suelo de encima, pero asoma por un lado del hoyo.
+            if (SectionShowsFromTheSide(bounds)) return true;
             if (_buriedReports < MaxBuriedReports)
             {
                 _buriedReports++;
                 Plugin.Log.LogInfo("[Picar] Sección enterrada descartada en " + bounds.center.ToString("F1") + ": asoma " + highest.ToString("F1") + " m sobre el suelo.");
+            }
+            return false;
+        }
+
+        private static int _sideReports;
+        private const float SideRing = 0.5f;
+        private const float SideShowing = 0.4f;
+
+        // Si justo al lado el suelo queda bien por debajo de su parte alta, se ve (y se pica) desde ahí.
+        private static bool SectionShowsFromTheSide(Bounds bounds)
+        {
+            for (int i = 0; i < 8; i++)
+            {
+                float angle = i * Mathf.PI / 4f;
+                var spot = new Vector3(bounds.center.x + Mathf.Cos(angle) * (bounds.extents.x + SideRing), bounds.center.y, bounds.center.z + Mathf.Sin(angle) * (bounds.extents.z + SideRing));
+                if (ZoneSystem.instance.GetGroundHeight(spot) <= bounds.max.y - SideShowing) return true;
+            }
+            return false;
+        }
+
+        private static readonly Vector3[] OpenDirections =
+        {
+            Vector3.up, Vector3.forward, Vector3.back, Vector3.left, Vector3.right,
+            new Vector3(1f, 0f, 1f).normalized, new Vector3(1f, 0f, -1f).normalized, new Vector3(-1f, 0f, 1f).normalized, new Vector3(-1f, 0f, -1f).normalized
+        };
+
+        /// <summary>
+        /// En una mazmorra el terreno de fuera no sirve. Una sección cuenta si desde su centro hay un lado libre: hacia
+        /// arriba, o de lado con suelo debajo y sin suelo justo encima (si no, está bajo el piso). Los rayos cuentan también
+        /// las caras de dentro, para notar cuando el centro queda metido en una pared o en el suelo.
+        /// </summary>
+        private static bool SectionOpenInDungeon(Collider section)
+        {
+            Transform rock = section.GetComponentInParent<MineRock5>()?.transform ?? section.transform.root;
+            int mask = LayerMask.GetMask("Default", "static_solid", "Default_small", "piece", "terrain");
+            bool backfaces = Physics.queriesHitBackfaces;
+            Physics.queriesHitBackfaces = true;
+            try
+            {
+                Vector3 center = section.bounds.center;
+                foreach (Vector3 dir in OpenDirections)
+                {
+                    if (Blocked(center, dir, DungeonOpenDistance, mask, rock)) continue;
+                    if (dir == Vector3.up) return true;
+                    Vector3 end = center + dir * DungeonOpenDistance;
+                    if (!Blocked(end, Vector3.up, 1f, mask, rock) && Blocked(end, Vector3.down, 3f, mask, rock)) return true;
+                }
+            }
+            finally
+            {
+                Physics.queriesHitBackfaces = backfaces;
+            }
+            if (_buriedReports < MaxBuriedReports)
+            {
+                _buriedReports++;
+                Plugin.Log.LogInfo("[Picar] Sección metida en la pared o el suelo descartada en " + section.bounds.center.ToString("F1") + ".");
+            }
+            return false;
+        }
+
+        private const float DungeonOpenDistance = 1.5f;
+
+        // Si algo que no es la propia roca ni un personaje corta el rayo antes de esa distancia.
+        private static bool Blocked(Vector3 from, Vector3 dir, float distance, int mask, Transform rock)
+        {
+            foreach (RaycastHit hit in Physics.RaycastAll(from, dir, distance, mask, QueryTriggerInteraction.Ignore))
+            {
+                if (hit.collider == null || hit.collider.transform.IsChildOf(rock) || hit.collider.GetComponentInParent<Character>() != null) continue;
+                return true;
             }
             return false;
         }
@@ -840,7 +921,7 @@ namespace OfflineCompanionsAI
                 var humanoid = __instance.GetComponent<Humanoid>();
                 ItemDrop.ItemData hand = humanoid == null ? null : Companions.ReflectionHelper.GetRightItem(humanoid);
                 bool seated = ai != null && Companions.MHR_Follow.IdleSeated(ai);
-                float aboveGround = ZoneSystem.instance == null ? 0f : position.y - ZoneSystem.instance.GetGroundHeight(position);
+                float aboveGround = position.y - Companions.MHR_Loaded.Ground(position, position.y);
                 Plugin.Log.LogInfo("[Recoger] " + CompanionBridge.Name(__instance) + " lleva " + StuckGatherSeconds.ToString("F0")
                     + " s sin golpear ni moverse con " + target.name + " (" + __instance._targetType + ", " + __instance.CurrentStateName
                     + "): en la mano " + (hand?.m_shared?.m_name ?? "nada") + ", atacando " + (humanoid != null && humanoid.InAttack())
@@ -1162,6 +1243,21 @@ namespace OfflineCompanionsAI
             harmony.Patch(target, postfix: Hook(nameof(TargetPostfix)));
             harmony.Patch(focus, postfix: Hook(nameof(FocusPostfix)));
             harmony.Patch(usable, postfix: Hook(nameof(UsablePostfix)));
+            // Focus vacío no bastaba: con focus false repasa todas las bases de hidromiel igualmente.
+            System.Type cookType = AccessTools.TypeByName("Companions.CookController");
+            MethodInfo brew = AccessTools.Method(cookType, "BrewTask");
+            MethodInfo fill = AccessTools.Method(cookType, "FillTask");
+            _meadOf = AccessTools.Method("Companions.CookCatalog:MeadOf");
+            _isMeadBase = AccessTools.Method("Companions.CookCatalog:IsMeadBase");
+            if (brew != null && fill != null && _meadOf != null && _isMeadBase != null)
+            {
+                harmony.Patch(brew, prefix: Hook(nameof(NoMeadForOtherFood)));
+                harmony.Patch(fill, prefix: Hook(nameof(NoMeadForOtherFood)));
+            }
+            else
+            {
+                Plugin.Log.LogWarning("[Cocina] No se pudo impedir la hidromiel durante un encargo de otra comida.");
+            }
             CookAvailable = true;
         }
 
@@ -1465,6 +1561,27 @@ namespace OfflineCompanionsAI
 
             Vector3 gap = target.transform.position - __instance.transform.position;
             Plugin.Log.LogInfo("[Combate] " + CompanionBridge.Name(__instance) + ": deja de esperar a " + target.m_name + " y entra a atacar (a " + gap.magnitude.ToString("F1") + " m, desnivel " + gap.y.ToString("+0.0;-0.0") + " m)");
+        }
+
+        private static MethodInfo _meadOf;
+        private static MethodInfo _isMeadBase;
+
+        // Con un encargo de otra comida, ni prepara bases de hidromiel ni llena el fermentador. Sí si el encargo es una hidromiel o su base.
+        private static bool NoMeadForOtherFood()
+        {
+            if (CookFood == null) return true;
+            try
+            {
+                if ((bool)_isMeadBase.Invoke(null, new object[] { CookFood })) return true;
+                System.Type catalog = _meadOf.DeclaringType;
+                var bases = AccessTools.Property(catalog, "MeadBases")?.GetValue(null, null) as List<string>;
+                if (bases != null && bases.Exists(b => (string)_meadOf.Invoke(null, new object[] { b }) == CookFood)) return true;
+            }
+            catch (System.Exception ex)
+            {
+                Plugin.Log.LogWarning("[Cocina] " + ex.Message);
+            }
+            return false;
         }
 
         // Mientras cocina un encargo no se pone a preparar hidromiel.

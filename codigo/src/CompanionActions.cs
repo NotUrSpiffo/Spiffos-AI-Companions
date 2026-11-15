@@ -278,6 +278,7 @@ namespace OfflineCompanionsAI
             { "CopperScrap", Entry(ModeOre, "chatarra de cobre", "copper scrap", "медный металлолом") },
             { "FlametalOreNew", Entry(ModeOre, "mineral de llametal", "flametal ore", "огнеметаллическая руда") },
             { "Obsidian", Entry(ModeOre, "obsidiana", "obsidian", "обсидиан") },
+            { "Softtissue", Entry(ModeOre, "tejido blando", "soft tissue", "мягкие ткани") },
             { "Raspberry", Entry(ModeForage, "frambuesas", "raspberries", "малина") },
             { "Blueberries", Entry(ModeForage, "arándanos", "blueberries", "черника") },
             { "Cloudberry", Entry(ModeForage, "moras de los pantanos", "cloudberries", "морошка") },

@@ -2297,7 +2297,7 @@ public class HarvestController : MonoBehaviour
 			if (!(drop.m_item == null))
 			{
 				string text = drop.m_item.name;
-				if (text.IndexOf("Ore", StringComparison.OrdinalIgnoreCase) >= 0 || text.IndexOf("Scrap", StringComparison.OrdinalIgnoreCase) >= 0 || text.IndexOf("Obsidian", StringComparison.OrdinalIgnoreCase) >= 0 || text.IndexOf("Chitin", StringComparison.OrdinalIgnoreCase) >= 0 || text.IndexOf("Flametal", StringComparison.OrdinalIgnoreCase) >= 0 || text.IndexOf("BlackMetal", StringComparison.OrdinalIgnoreCase) >= 0)
+				if (text.IndexOf("Ore", StringComparison.OrdinalIgnoreCase) >= 0 || text.IndexOf("Scrap", StringComparison.OrdinalIgnoreCase) >= 0 || text.IndexOf("Obsidian", StringComparison.OrdinalIgnoreCase) >= 0 || text.IndexOf("Chitin", StringComparison.OrdinalIgnoreCase) >= 0 || text.IndexOf("Flametal", StringComparison.OrdinalIgnoreCase) >= 0 || text.IndexOf("BlackMetal", StringComparison.OrdinalIgnoreCase) >= 0 || text.IndexOf("Softtissue", StringComparison.OrdinalIgnoreCase) >= 0)
 				{
 					return true;
 				}
@@ -2666,7 +2666,7 @@ public class HarvestController : MonoBehaviour
 			{
 				_rock5CurrentSegment = collider;
 				Vector3 center = collider.bounds.center;
-				float y = ((ZoneSystem.instance != null) ? ZoneSystem.instance.GetGroundHeight(center) : center.y);
+				float y = MHR_Loaded.Ground(center, base.transform.position.y);
 				return new Vector3(center.x, y, center.z);
 			}
 		}

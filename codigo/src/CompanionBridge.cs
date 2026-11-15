@@ -918,6 +918,24 @@ namespace OfflineCompanionsAI
             return hit;
         }
 
+        private static readonly Dictionary<string, float> EnemyReach = new Dictionary<string, float>();
+
+        // Hasta dónde llega su ataque más largo. También por especie.
+        private static float ReachOf(Character enemy)
+        {
+            string kind = Utils.GetPrefabName(enemy.gameObject);
+            if (EnemyReach.TryGetValue(kind, out float known)) return known;
+            float reach = 0f;
+            Inventory inventory = (enemy as Humanoid)?.GetInventory();
+            if (inventory == null) return reach;
+            foreach (ItemDrop.ItemData item in inventory.GetAllItems())
+            {
+                if (item?.m_shared != null && CombatDamage(item) > 0f) reach = Mathf.Max(reach, item.m_shared.m_aiAttackRange);
+            }
+            if (reach > 0f) EnemyReach[kind] = reach;
+            return reach;
+        }
+
         private static bool IsOnOurSide(Character character)
         {
             return character != null && (character.IsPlayer() || character.GetComponent(_setupType) != null);
@@ -951,7 +969,9 @@ namespace OfflineCompanionsAI
                 kind.Add(c);
             }
 
-            float armor = self.GetBodyArmor();
+            // GetBodyArmor solo lo calcula el jugador: en un compañero da siempre 0. La armadura puesta la suma Offline Companions.
+            Companions.CompanionSetup gear = companion.GetComponent<Companions.CompanionSetup>();
+            float armor = gear != null ? gear.GetTotalArmor() : self.GetBodyArmor();
             float ownHit = BestDamage((self as Humanoid)?.GetInventory(), true);
             float ownHealth = self.GetMaxHealth();
             var strong = new HashSet<string>();
@@ -997,7 +1017,8 @@ namespace OfflineCompanionsAI
         {
             if (_orderedTarget.GetValue(combat) as Character == enemy) return;
             Character prey = enemy.GetBaseAI()?.GetTargetCreature();
-            if (IsOnOurSide(prey) && Vector3.Distance(enemy.transform.position, prey.transform.position) <= CloseFightRange) return;
+            // Si ya los tiene a tiro no sirve de nada pasar de él: un draco dispara desde lejos, y ella solo tensaba el arco sin soltar.
+            if (IsOnOurSide(prey) && Vector3.Distance(enemy.transform.position, prey.transform.position) <= Mathf.Max(CloseFightRange, ReachOf(enemy))) return;
 
             if (_combatTarget.GetValue(combat) as Character == enemy) _letGo.Invoke(combat, new object[] { enemy, IgnoreSeconds });
             else ((IDictionary)_ignoreUntil.GetValue(combat))[enemy] = Time.time + IgnoreSeconds;

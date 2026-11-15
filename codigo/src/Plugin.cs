@@ -22,7 +22,7 @@ namespace OfflineCompanionsAI
         public const string PluginGuid = "OfflineCompanionsAI";
 #endif
         public const string PluginName = "Spiffo's Valheim AI Companions";
-        public const string PluginVersion = "0.27.2";
+        public const string PluginVersion = "0.27.3";
 
         private const float EmoteCooldown = 10f;
 
@@ -2241,10 +2241,11 @@ namespace OfflineCompanionsAI
 
             string label = CompanionBridge.LabelOf(food);
             _cooks[companion] = new GatherGoal(food, label, action.Amount, stock, Time.time, CookStuckSeconds, CookStuckSeconds);
+            // El nombre exacto del juego: así la IA no se inventa otro, como «carne de ciervo asada».
             note = ModLang.Pick(
-                "Necesita conocer la receta y tener cerca la estación y los ingredientes.",
-                "Needs to know the recipe and have the station and ingredients nearby.",
-                "Нужно знать рецепт, а также иметь рядом кулинарную стойку и ингредиенты.");
+                "Cocinará " + action.Amount + " de «" + label + "» (así se llama en el juego). Necesita conocer la receta y tener cerca la estación y los ingredientes.",
+                "Will cook " + action.Amount + " \"" + label + "\" (its in-game name). Needs to know the recipe and have the station and ingredients nearby.",
+                "Приготовит " + action.Amount + " шт. «" + label + "» (так это называется в игре). Нужно знать рецепт, а также иметь рядом кулинарную стойку и ингредиенты.");
             return null;
         }
 

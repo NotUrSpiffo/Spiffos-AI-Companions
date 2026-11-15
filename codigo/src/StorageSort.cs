@@ -154,6 +154,51 @@ namespace OfflineCompanionsAI
             return best;
         }
 
+        /// <summary>
+        /// Como Pick, pero si ningún cofre tiene nada parecido usa uno vacío y, si no hay, uno mixto. Nunca uno
+        /// dedicado a otra cosa (solo madera, solo un mismo objeto...). Null si no queda ninguno así.
+        /// </summary>
+        internal static Container Choose(IEnumerable<Container> chests, IList<ItemDrop.ItemData> carried, Vector3 from, Func<Container, bool> fits)
+        {
+            Container pick = Pick(chests, carried, from, fits);
+            if (pick != null || chests == null) return pick;
+            Container empty = null, mixed = null;
+            float emptyDistance = float.MaxValue, mixedDistance = float.MaxValue;
+            foreach (Container chest in chests)
+            {
+                Inventory inventory = chest != null ? chest.GetInventory() : null;
+                if (inventory == null || !fits(chest)) continue;
+                float distance = Vector3.Distance(from, chest.transform.position);
+                if (inventory.NrOfItems() == 0)
+                {
+                    if (distance < emptyDistance) { empty = chest; emptyDistance = distance; }
+                }
+                else if (!Dedicated(inventory) && distance < mixedDistance)
+                {
+                    mixed = chest;
+                    mixedDistance = distance;
+                }
+            }
+            return empty ?? mixed;
+        }
+
+        /// <summary>Un cofre con un solo tipo de cosas (toda madera, todo mineral) o un solo objeto.</summary>
+        internal static bool Dedicated(Inventory chest)
+        {
+            string kind = null, name = null;
+            bool oneKind = true, oneName = true;
+            foreach (ItemDrop.ItemData stored in chest.GetAllItems())
+            {
+                if (stored?.m_dropPrefab == null) continue;
+                string k = Category(stored), n = stored.m_dropPrefab.name;
+                if (kind == null) { kind = k; name = n; continue; }
+                if (k != kind) oneKind = false;
+                if (n != name) oneName = false;
+            }
+            if (kind == null) return false;
+            return oneName || (oneKind && kind != Other);
+        }
+
         private static int Score(Inventory chest, List<KeyValuePair<string, string>> wanted, out int amount)
         {
             var byName = new Dictionary<string, int>();
