@@ -1,14 +1,14 @@
-Base commit: 2aae2aa
-Plugin: 0.27.3
-DLL SHA256: 861aec90a2c9527162302a02ba916fc352399a3ee655bbd65e11734c87b88598
-DLL bytes: 13521920
-ZIP SHA256: c187c097c94441a59e297bfd303d167db40f94017ff6091dc9db279d460d8125
-ZIP bytes: 11549282
+Base commit: d0637e2
+Plugin: 0.27.4
+DLL SHA256: 065b0d70dabc69e16d5a883c988389f49c718c662b22819bf04b88568cb8a0ed
+DLL bytes: 13530112
+ZIP SHA256: 2e7af5ff067edfa34820cb39e2a85330101fdb82a70fdd27ef5b169851a91ee3
+ZIP bytes: 11552787
 
 Root entries:
 7db26c4198ea0329c8720cbdaad7d927a2b15ffaac14981fff68c91314aa55b8      2078  LEEME.txt
 72e6a163ea3ab50a74a310ae5f3532104ed78763c342ffdc5a596511ef9bb9e7      2064  README.txt
-2d872ff6f4affbd0519b82d14380fdfa832e8a0dae64421bac1be165720730c2     11392  RELEASE_NOTES.txt
+3c497a75dbeb62efe8a1baee3df06671b0f77a9c8067c06ec3657b5795de969d     12796  RELEASE_NOTES.txt
 5cb5abdb47d2f435d7ec28d5dc8db673d358b980d4cfd031fd4d6181d9c924dc    121293  configuration examples/Maddhattr.OfflineCompanionsReborn.cfg
 7b9dd536e89d370b8ab2d34df42ec9ba11dbdab17fb438b89027fa8ccce9a895       488  configuration examples/README.txt
 7ef96006c7706da025d3aaf9fcd7c700dbde836b5d47852e746390abfba5e7db     23503  configuration examples/SpiffoAiCompanions.cfg
@@ -16,6 +16,6 @@ Root entries:
 2902f4a4e38734904b1e13f798bf66621b2985f03147b69d663f125a4d5d1b44     30124  install/BepInEx/plugins/OfflineCompanionsReborn/Translations/Spanish.json
 5e55e6c050f9ef399363260d65a332f083005b658a06f1c8f763236b86b4e727     10081  install/BepInEx/plugins/OfflineCompanionsReborn/Translations/speech/Russian.json
 a1999be9614199573ee86ee4723e6601d9fb127c05f6c39e850de42c1b8646e4      6165  install/BepInEx/plugins/OfflineCompanionsReborn/Translations/speech/Spanish.json
-861aec90a2c9527162302a02ba916fc352399a3ee655bbd65e11734c87b88598  13521920  install/BepInEx/plugins/SpiffoAiCompanions.dll
+065b0d70dabc69e16d5a883c988389f49c718c662b22819bf04b88568cb8a0ed  13530112  install/BepInEx/plugins/SpiffoAiCompanions.dll
 d6596225604d1d86e9205fe61e823b7a38005a572ba485da2b4e8b6e4464660d      1189  licenses/Offline-Companions-Reborn-MIT.txt
-0df10f713217c7b668f224b8b52743c4c1698ad15d901b2637c5e953ae55e7e9      1080  licenses/THIRD_PARTY_NOTICES.txt
+94f7a69e228a0813ad652dbf3d32fdeab0243b3df40ec526badfca7209a2e790      1080  licenses/THIRD_PARTY_NOTICES.txt
