@@ -22,7 +22,7 @@ namespace OfflineCompanionsAI
         public const string PluginGuid = "OfflineCompanionsAI";
 #endif
         public const string PluginName = "Spiffo's Valheim AI Companions";
-        public const string PluginVersion = "0.27.3";
+        public const string PluginVersion = "0.27.4";
 
         private const float EmoteCooldown = 10f;
 
@@ -256,6 +256,12 @@ namespace OfflineCompanionsAI
         private readonly Dictionary<Component, float> _nextGearTripAt = new Dictionary<Component, float>();
         private float _nextInitiativeCheckAt;
         private float _nextGearCheckAt;
+        private float _nextAutoReviveAt;
+        private readonly Dictionary<ZDOID, float> _tombClaims = new Dictionary<ZDOID, float>();
+        private const float AutoReviveInterval = 10f;
+        private const float AutoReviveRange = 60f;
+        private const float TombDangerRange = 25f;
+        private const float TombClaimSeconds = 180f;
         private float _playerActiveAt;
         private Vector3 _lastPlayerPosition;
         private Vector3 _lastPlayerLook;
@@ -822,6 +828,7 @@ namespace OfflineCompanionsAI
         private bool CanActOnOwn(Component companion)
         {
             if (companion == null || HasGoal(companion) || _guards.ContainsKey(companion)) return false;
+            if (CompanionBridge.IsGoingToTomb(companion)) return false;
             if (_chains.TryGetValue(companion, out OrderSequence<QueuedOrder> chain) && chain.Pending > 0) return false;
             return CompanionBridge.WhyNoEmote(companion) == null && CompanionBridge.IsFollowing(companion);
         }
@@ -959,6 +966,53 @@ namespace OfflineCompanionsAI
                         "По собственной инициативе " + CompanionBridge.Name(companion) + " идёт искать еду в сундуках."));
                 }
             }
+        }
+
+        /// <summary>
+        /// En modo autónomo, si un compañero ha muerto cerca y ya no hay peligro donde cayó, el compañero libre más cercano
+        /// va a revivirlo. Sin pasar por la IA, como la munición y la comida: no hay nada que decidir.
+        /// </summary>
+        private void UpdateAutoRevive(Player player)
+        {
+            if (!IsAutonomous || Time.time < _nextAutoReviveAt) return;
+            _nextAutoReviveAt = Time.time + AutoReviveInterval;
+            if (player.IsDead()) return;
+
+            Component best = null;
+            TombStone bestTomb = null;
+            string bestDead = null;
+            float bestDistance = float.MaxValue;
+            foreach (Component companion in CompanionBridge.Nearby(player, null, _settings.TalkRange.Value))
+            {
+                if (!CanActOnOwn(companion) || CompanionBridge.InCombat(companion) || CompanionBridge.DangerFacts(companion, player).MustStayClose) continue;
+                Component reviver = companion;
+                TombStone tomb = CompanionBridge.WaitingTomb(companion, player, null, AutoReviveRange,
+                    t => Claimed(t) || !Companions.MHR_Loaded.Safe(t.transform.position, 8f) || CompanionBridge.EnemyNearPoint(reviver, t.transform.position, TombDangerRange),
+                    out string dead, out _);
+                if (tomb == null) continue;
+                float distance = Vector3.Distance(companion.transform.position, tomb.transform.position);
+                if (distance >= bestDistance) continue;
+                best = companion;
+                bestTomb = tomb;
+                bestDead = dead;
+                bestDistance = distance;
+            }
+            if (best == null) return;
+
+            ZDO zdo = bestTomb.GetComponent<ZNetView>()?.GetZDO();
+            if (zdo != null) _tombClaims[zdo.m_uid] = Time.time + TombClaimSeconds;
+            CompanionBridge.SendToRevive(best, player, bestTomb, bestDead);
+            string name = CompanionBridge.Name(best);
+            AddOrderLine(ModLang.Pick(
+                "Por iniciativa propia, " + name + " va a revivir a " + bestDead + ".",
+                "On their own initiative, " + name + " goes to revive " + bestDead + ".",
+                "По собственной инициативе " + name + " идёт воскресить " + bestDead + "."));
+        }
+
+        private bool Claimed(TombStone tomb)
+        {
+            ZDO zdo = tomb.GetComponent<ZNetView>()?.GetZDO();
+            return zdo != null && _tombClaims.TryGetValue(zdo.m_uid, out float until) && Time.time < until;
         }
 
         private void ToggleAutonomy()
@@ -1511,7 +1565,18 @@ namespace OfflineCompanionsAI
 
             List<Component> nearby = CompanionBridge.Nearby(player, speaker, state.OrderRange);
             List<string> names = nearby.ConvertAll(c => CompanionBridge.Name(c));
-            List<int> chosen = Recipients.Resolve(CompanionActions.IsWorldWide(action.Kind) ? null : action.Who, names, out string unknown);
+            string who = action.Who;
+            if (action.Kind == ActionKind.ReviveCompanion && !string.IsNullOrEmpty(who))
+            {
+                // La IA a veces pone en who al muerto: ese no está cerca para recibir la orden, es a quien hay que revivir.
+                Recipients.Resolve(who, names, out string deadName);
+                if (deadName != null)
+                {
+                    if (string.IsNullOrEmpty(action.Item)) action.Item = deadName;
+                    who = null;
+                }
+            }
+            List<int> chosen = Recipients.Resolve(CompanionActions.IsWorldWide(action.Kind) ? null : who, names, out string unknown);
             if (unknown != null) return ModLang.Pick("Error: No hay ningún compañero llamado " + unknown + " cerca.", "Error: No companion named " + unknown + " is nearby.", "Ошибка: поблизости нет спутника по имени " + unknown + ".");
             if (chosen.Count == 0) return ModLang.Pick("Error: No hay compañeros cerca.", "Error: No companions nearby.", "Ошибка: поблизости нет спутников.");
 
@@ -4204,6 +4269,7 @@ namespace OfflineCompanionsAI
             KeepAnimating();
             UpdateOpenHunts();
             UpdateGearChecks(player);
+            UpdateAutoRevive(player);
             UpdateWaterTraps(player);
             UpdateTravels(player);
             UpdateTends(player);

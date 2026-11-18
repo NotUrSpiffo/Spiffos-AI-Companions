@@ -975,14 +975,11 @@ public class CompanionAI : BaseAI
 			_tombstoneNavTimeout -= dt;
 			if (_tombstoneNavTimeout <= 0f)
 			{
+				CompanionsPlugin.Log.LogInfo("[Recovery] " + (m_character?.m_name ?? "?") + " couldn't reach the tombstone at " + _pendingTombstone.transform.position.ToString("F0") + " in time");
 				_pendingTombstone = null;
 				ClearTombstoneId();
 				RestoreFollowOrPatrol();
 				_tombRecoverSnooze = 60f;
-				if (CompanionsPlugin.LogNormal)
-				{
-					CompanionsPlugin.Log.LogInfo("[Recovery] Couldn't reach its tombstone in time; will try again in a minute");
-				}
 				return false;
 			}
 			Vector3 position = _pendingTombstone.transform.position;
@@ -1147,20 +1144,19 @@ public class CompanionAI : BaseAI
 		{
 			return false;
 		}
-		if (text != (Player.m_localPlayer?.GetPlayerID().ToString() ?? ""))
-		{
-			return false;
-		}
 		string text2 = zDO.GetString(CompanionSetup.MHR_TombCompanionIdHash);
 		if (!string.IsNullOrEmpty(text2) && _setup != null && text2 == _setup.MHR_EnsureCompanionId())
 		{
 			return false;
 		}
-		string text3 = zDO.GetString(CompanionTombstoneResurrect.RespawnNameHash);
-		if (CompanionsPlugin.LogNormal)
+		if (text != (Player.m_localPlayer?.GetPlayerID().ToString() ?? ""))
 		{
-			CompanionsPlugin.Log.LogInfo("[Resurrect] " + (m_character?.m_name ?? "?") + " revives \"" + text3 + "\" at its tombstone");
+			// La tumba de un compañero de otro jugador: ni se revive ni se saquea.
+			CompanionsPlugin.Log.LogInfo("[Resurrect] " + (m_character?.m_name ?? "?") + " leaves \"" + zDO.GetString(CompanionTombstoneResurrect.RespawnNameHash) + "\" alone: it belongs to another player");
+			return true;
 		}
+		string text3 = zDO.GetString(CompanionTombstoneResurrect.RespawnNameHash);
+		CompanionsPlugin.Log.LogInfo("[Resurrect] " + (m_character?.m_name ?? "?") + " revives \"" + text3 + "\" at its tombstone");
 		companionTombstoneResurrect.ReviveByCompanion();
 		return true;
 	}
@@ -1293,7 +1289,8 @@ public class CompanionAI : BaseAI
 	internal void SetDirectedTombstoneRecovery(TombStone tombstone)
 	{
 		_pendingTombstone = tombstone;
-		_tombstoneNavTimeout = TombstoneNavTimeoutMax;
+		// Para revivir a otro puede ir más lejos que a su propia tumba: unos 2 s por metro como mínimo.
+		_tombstoneNavTimeout = Mathf.Max(TombstoneNavTimeoutMax, (tombstone != null) ? (Vector3.Distance(transform.position, tombstone.transform.position) * 2f) : 0f);
 		_tombstoneScanTimer = TombstoneScanInterval;
 		_tombstoneNavStuckTime = 0f;
 		SetFollowTarget(null);

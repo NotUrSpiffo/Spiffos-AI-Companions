@@ -1,10 +1,34 @@
-# Spiffo's Valheim AI Companions 0.27.3
+# Spiffo's Valheim AI Companions 0.27.4
 AI-powered companion conversation, natural-language orders and long-term memory
 for Valheim, with English/Spanish/Russian language selection and Offline Companions
 Reborn 1.5.8 integrated.
 
 Requires Valheim, BepInEx and an AI service. Voice input requires the Player2 app.
 See the included README for installation and configuration.
+
+## Fixes in 0.27.4
+- Reviving by name: you can now ask in chat ("revive Roxy", "Darkness,
+  go get Roxy"). Before, it only worked while looking at the tombstone.
+  The companion given the order walks to the dead companion's tombstone,
+  up to 150 m away, and revives it there with its gear. Without a name it
+  goes to the nearest one.
+- Reviving in autonomous mode: when a companion dies, the nearest free
+  companion goes to revive it on its own once no enemy is left within
+  25 m of the tombstone, and a chat line says so. It looks for tombstones
+  within 60 m every 10 seconds.
+- Tombstones of another player's companions are no longer looted or
+  revived.
+- Farming: a companion could loop between storing the harvest and taking
+  seeds back out of the chest, with turnips for example. Crops that a farm
+  zone is set to plant now count as seed, so the companion keeps them.
+- Hunting: a companion that killed its prey went straight for the next
+  animal instead of picking up the meat. With Follow on it hunts up to
+  40 m from you, plus 15 m of chase, but it gave up the pickup when the
+  body lay more than 30 m from you. Prey it went out to hunt is now picked
+  up as far as it chases, even with Auto Pickup off in the wheel, and
+  having no free slot no longer stops it before the meat drops, since the
+  meat can still stack. The log says why a pickup was left
+  ([Loot] Stopped at what ...).
 
 ## Fixes in 0.27.3
 - Storing at home: what a companion unloads when it comes home from

@@ -2176,6 +2176,22 @@ public class FarmController : MonoBehaviour
 		}
 	}
 
+	internal bool MHR_ZoneAsksFor(string item)
+	{
+		if (_farmZones == null || string.IsNullOrEmpty(item))
+		{
+			return false;
+		}
+		for (int i = 0; i < _farmZones.Count; i++)
+		{
+			if (_farmZones[i].IsValid && _farmZones[i].CropSeed == item)
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
 	internal bool IsCropItem(ItemDrop.ItemData item)
 	{
 		if (item == null || item.m_shared == null)

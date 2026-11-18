@@ -559,9 +559,9 @@ namespace OfflineCompanionsAI
                         "жив, " + where + (loaded ? "" : ", в незагруженной зоне"));
                 case "Dead":
                     return ModLang.Pick(
-                        "muerto, su tumba lo traerá de vuelta",
-                        "dead, their gravestone will bring them back",
-                        "погиб, его надгробие вернёт его");
+                        "muerto; su tumba lo traerá de vuelta, y otro compañero puede revivirlo allí antes",
+                        "dead; their gravestone will bring them back, and another companion can revive them there sooner",
+                        "погиб; надгробие вернёт его, а другой спутник может воскресить его там раньше");
                 case "Lost":
                     return ModLang.Pick(
                         "perdido, no queda rastro de él; se puede recuperar en el Santuario de Odín",
@@ -2259,6 +2259,8 @@ namespace OfflineCompanionsAI
                         return StoreItems(companion, player, out note);
                     case ActionKind.RecoverGear:
                         return RecoverGear(companion, player);
+                    case ActionKind.ReviveCompanion:
+                        return ReviveCompanion(companion, player, action.Item);
                     case ActionKind.RepairGear:
                         CraftingStation station = Nearest<CraftingStation>(companion, SearchRange, null);
                         if (station == null) return ModLang.Pick("No hay ninguna estación de trabajo a menos de " + SearchRange + " m.", "No crafting station within " + SearchRange + " m.", "Нет станций ремесла в пределах " + SearchRange + " м.");
@@ -3082,6 +3084,111 @@ namespace OfflineCompanionsAI
             return null;
         }
 
+        private const float ReviveRange = 150f;
+
+        /// <summary>
+        /// Antes solo se podía mirando la tumba o con la tecla de mando: pedirlo por el nombre no tenía herramienta, y
+        /// recover_gear solo busca la tumba propia.
+        /// </summary>
+        private static string ReviveCompanion(Component companion, Player player, string name)
+        {
+            TombStone best = WaitingTomb(companion, player, name, ReviveRange, null, out string bestName, out bool anyDead);
+            if (best == null)
+            {
+                Plugin.Log.LogInfo("[Revivir] " + Name(companion) + " no encuentra " + (string.IsNullOrEmpty(name) ? "ninguna tumba de otro compañero" : "la tumba de " + name) + " a menos de " + ReviveRange + " m" + (anyDead ? " (hay otras más lejos o de otro nombre)." : "."));
+                return string.IsNullOrEmpty(name)
+                    ? ModLang.Pick("No hay ninguna tumba de otro compañero muerto a menos de " + ReviveRange + " m.", "No other dead companion's tombstone within " + ReviveRange + " m.", "Нет надгробий других погибших спутников в пределах " + ReviveRange + " м.")
+                    : ModLang.Pick("No hay ninguna tumba de " + name + " a menos de " + ReviveRange + " m.", "No tombstone of " + name + " within " + ReviveRange + " m.", "Нет надгробия " + name + " в пределах " + ReviveRange + " м.");
+            }
+            SendToRevive(companion, player, best, bestName);
+            return null;
+        }
+
+        /// <summary>
+        /// La tumba más cercana de otro compañero del jugador que sigue esperando a revivir (con sus datos de reaparición y
+        /// sin que ese compañero ande ya vivo). name filtra por el nombre del muerto; skip descarta tumbas.
+        /// </summary>
+        public static TombStone WaitingTomb(Component companion, Player player, string name, float range, System.Func<TombStone, bool> skip, out string deadName, out bool anyDead)
+        {
+            string me = PermanentId(companion);
+            string owner = player.GetPlayerID().ToString();
+            TombStone best = null;
+            deadName = null;
+            anyDead = false;
+            float bestDistance = float.MaxValue;
+            HashSet<string> alive = null;
+            foreach (TombStone tomb in Object.FindObjectsByType<TombStone>(FindObjectsSortMode.None))
+            {
+                ZDO zdo = tomb.GetComponent<ZNetView>()?.GetZDO();
+                if (zdo == null || tomb.GetComponent<Companions.CompanionTombstoneResurrect>() == null) continue;
+                if (zdo.GetString(Companions.CompanionTombstoneResurrect.RespawnOwnerHash) != owner) continue;
+                if (string.IsNullOrEmpty(zdo.GetString(Companions.CompanionTombstoneResurrect.RespawnPrefabHash))) continue;
+                string tombId = zdo.GetString(_tombCompanionIdHash);
+                if (tombId == me) continue;
+                if (!string.IsNullOrEmpty(tombId))
+                {
+                    if (alive == null) alive = AliveCompanionIds();
+                    if (alive.Contains(tombId)) continue;
+                }
+                string dead = zdo.GetString(Companions.CompanionTombstoneResurrect.RespawnNameHash);
+                anyDead = true;
+                if (!string.IsNullOrEmpty(name) && !SameName(dead, name)) continue;
+                if (skip != null && skip(tomb)) continue;
+                float distance = Vector3.Distance(companion.transform.position, tomb.transform.position);
+                if (distance > range || distance >= bestDistance) continue;
+                best = tomb;
+                deadName = dead;
+                bestDistance = distance;
+            }
+            return best;
+        }
+
+        private static HashSet<string> AliveCompanionIds()
+        {
+            var ids = new HashSet<string>();
+            foreach (Character c in Character.GetAllCharacters())
+            {
+                if (c == null || c.GetHealth() <= 0f || c.GetComponent(_setupType) == null) continue;
+                string id = PermanentId(c);
+                if (!string.IsNullOrEmpty(id)) ids.Add(id);
+            }
+            return ids;
+        }
+
+        public static void SendToRevive(Component companion, Player player, TombStone tomb, string deadName)
+        {
+            Plugin.Log.LogInfo("[Revivir] " + Name(companion) + " va a revivir a " + deadName + " en su tumba, a " + Mathf.RoundToInt(Vector3.Distance(companion.transform.position, tomb.transform.position)) + " m.");
+            Invoke("DirectTombstoneRecovery", companion, player, tomb);
+        }
+
+        /// <summary>Si va camino de una tumba, propia o de otro: entonces no debe tomar otra iniciativa.</summary>
+        public static bool IsGoingToTomb(Component companion)
+        {
+            Companions.CompanionAI ai = companion != null ? companion.GetComponent<Companions.CompanionAI>() : null;
+            return ai != null && ai.IsRecoveringTombstone;
+        }
+
+        /// <summary>Como EnemyNear, pero alrededor de un punto: donde cayó un compañero suele seguir lo que lo mató.</summary>
+        public static bool EnemyNearPoint(Component companion, Vector3 point, float range)
+        {
+            Character self = companion.GetComponent<Character>();
+            if (self == null) return false;
+            foreach (Character c in Character.GetAllCharacters())
+            {
+                if (c == null || c == self || c.IsPlayer() || c.GetHealth() <= 0f || !IsThreat(self, c)) continue;
+                if (Vector3.Distance(point, c.transform.position) <= range) return true;
+            }
+            return false;
+        }
+
+        private static bool SameName(string a, string b)
+        {
+            if (string.IsNullOrEmpty(a) || string.IsNullOrEmpty(b)) return false;
+            a = a.Trim().ToLowerInvariant();
+            b = b.Trim().ToLowerInvariant();
+            return a == b || a.Contains(b) || b.Contains(a);
+        }
+
         /// <summary>Más allá de esto el juego deja de mover y animar bien al compañero aunque siga cargado.</summary>
         private const float SimulatedDistance = 110f;
 
@@ -3243,7 +3350,9 @@ namespace OfflineCompanionsAI
         /// <summary>El ID que Offline Companions conserva aunque el compañero muera y reaparezca.</summary>
         public static string PermanentId(Component companion)
         {
-            return _permanentId.Invoke(companion, null) as string;
+            // Acepta cualquier componente del compañero (Character incluido): el método es del componente de compañero.
+            Component setup = companion != null && !_setupType.IsInstanceOfType(companion) ? companion.GetComponent(_setupType) : companion;
+            return setup != null ? _permanentId.Invoke(setup, null) as string : null;
         }
 
         private static bool IsMine(Component c)

@@ -32,6 +32,9 @@ public static class MHR_Loot
 		public float ArrivedAt = -1f;
 
 		public float LastDrive;
+
+		// Una presa que fue a cazar: la carne es el motivo de la caza, así que se recoge aunque quede algo lejos.
+		public bool Hunted;
 	}
 
 	private class State
@@ -99,15 +102,15 @@ public static class MHR_Loot
 		return false;
 	}
 
-	public static void OnKill(CompanionSetup cs, Character victim)
+	public static void OnKill(CompanionSetup cs, Character victim, bool hunted = false)
 	{
 		if (!(cs == null) && !(victim == null) && !victim.IsPlayer() && !(victim.GetComponent<CompanionSetup>() != null))
 		{
-			OnKillAt(cs, victim.transform.position, victim.m_name, null);
+			OnKillAt(cs, victim.transform.position, victim.m_name, null, hunted);
 		}
 	}
 
-	public static void OnKillAt(CompanionSetup cs, Vector3 pos, string name, HashSet<int> before)
+	public static void OnKillAt(CompanionSetup cs, Vector3 pos, string name, HashSet<int> before, bool hunted = false)
 	{
 		if (cs == null || (ModConfig.LootKills != null && !ModConfig.LootKills.Value))
 		{
@@ -124,14 +127,17 @@ public static class MHR_Loot
 			value = new State();
 			s_state[instanceID] = value;
 		}
+		// El aviso de muerte llega antes que el de la caza: la misma presa ya está en cola, solo se marca como cazada.
 		if (value.Current != null && Vector3.Distance(value.Current.Pos, pos) < 1f)
 		{
+			value.Current.Hunted |= hunted;
 			return;
 		}
 		for (int i = 0; i < value.Queue.Count; i++)
 		{
 			if (Vector3.Distance(value.Queue[i].Pos, pos) < 1f)
 			{
+				value.Queue[i].Hunted |= hunted;
 				return;
 			}
 		}
@@ -139,7 +145,8 @@ public static class MHR_Loot
 		{
 			Pos = pos,
 			Time = Time.time,
-			Name = name
+			Name = name,
+			Hunted = hunted
 		};
 		if (before != null)
 		{
@@ -205,23 +212,24 @@ public static class MHR_Loot
 		ZDO zDO = ((component3 != null) ? component3.GetZDO() : null);
 		string text = null;
 		Vector3 position = ai.transform.position;
+		float lootReach = (current.Hunted ? Mathf.Max(MaxDist(), HuntReach(component)) : MaxDist());
 		if (inventory == null || zDO == null)
 		{
 			text = "no pack";
 		}
-		else if (!zDO.GetBool(CompanionSetup.AutoPickupHash, defaultValue: true))
+		else if (!current.Hunted && !zDO.GetBool(CompanionSetup.AutoPickupHash, defaultValue: true))
 		{
 			text = "auto pickup is off";
 		}
-		else if (Vector3.Distance(position, current.Pos) > MaxDist() + 5f)
+		else if (Vector3.Distance(position, current.Pos) > lootReach + 5f)
 		{
 			text = "too far away";
 		}
-		else if (MHR_Owner.Of(component) != null && component != null && component.GetFollow() && ai.GetFollowTarget() == MHR_Owner.Go(component) && Vector3.Distance(MHR_Owner.Of(component).transform.position, current.Pos) > MaxDist())
+		else if (MHR_Owner.Of(component) != null && component != null && component.GetFollow() && ai.GetFollowTarget() == MHR_Owner.Go(component) && Vector3.Distance(MHR_Owner.Of(component).transform.position, current.Pos) > lootReach)
 		{
 			text = "you've moved on";
 		}
-		else if (inventory.GetTotalWeight() >= CompanionTierData.CarryLimit(ai) || (inventory.GetEmptySlots() == 0 && !RoomForAny(inventory, current)))
+		else if (inventory.GetTotalWeight() >= CompanionTierData.CarryLimit(ai) || (inventory.GetEmptySlots() == 0 && DropsOut(current) && !RoomForAny(inventory, current)))
 		{
 			text = "pack is full";
 		}
@@ -356,9 +364,34 @@ public static class MHR_Loot
 		return true;
 	}
 
+	// Con el cuerpo aún en el suelo el botín no ha salido: sin hueco libre todavía puede caber en los montones que lleva.
+	private static bool DropsOut(Kill k)
+	{
+		if (!k.SawDrop)
+		{
+			if (k.ArrivedAt >= 0f)
+			{
+				return !k.Body;
+			}
+			return false;
+		}
+		return true;
+	}
+
+	// Hasta dónde puede quedar una presa que fue a cazar: lo que el cazador persigue antes de dejarla ir.
+	private static float HuntReach(CompanionSetup cs)
+	{
+		float num = ((cs != null && cs.GetFollow()) ? (ModConfig.HuntFollowRange?.Value ?? 40f) : (ModConfig.HuntRange?.Value ?? 40f));
+		return Mathf.Min(num + (ModConfig.HuntChaseExtra?.Value ?? 15f), 100f);
+	}
+
 	private static void Finish(CompanionAI ai, State st, string what)
 	{
-		if (CompanionsPlugin.LogDetailed)
+		if (st.Current != null && !what.StartsWith("picked up everything"))
+		{
+			Log("Stopped at what " + Loc(st.Current.Name) + " dropped: " + what);
+		}
+		else if (CompanionsPlugin.LogDetailed)
 		{
 			LogDebug(what);
 		}

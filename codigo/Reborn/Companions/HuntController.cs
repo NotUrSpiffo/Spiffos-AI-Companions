@@ -363,7 +363,7 @@ public class HuntController : MonoBehaviour
 			{
 				LogDebug(Loc(_preyName) + " is down");
 			}
-			MHR_Loot.OnKill(_setup, prey);
+			MHR_Loot.OnKill(_setup, prey, hunted: true);
 			Done();
 			return;
 		}
@@ -535,7 +535,7 @@ public class HuntController : MonoBehaviour
 			{
 				LogDebug("Got the " + _birdName);
 			}
-			MHR_Loot.OnKillAt(_setup, _birdPos, _birdName, _birdBefore);
+			MHR_Loot.OnKillAt(_setup, _birdPos, _birdName, _birdBefore, hunted: true);
 			EndBird();
 			_nextCount = 0f;
 			return;

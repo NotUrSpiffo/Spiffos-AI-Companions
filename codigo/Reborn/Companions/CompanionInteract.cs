@@ -1704,12 +1704,14 @@ public class CompanionInteract : MonoBehaviour
 		}
 		if (companionSetup == null)
 		{
+			CompanionsPlugin.Log.LogInfo("[Direct] Tombstone order: no companion of yours within command range");
 			return;
 		}
 		CancelExistingActions(companionSetup);
 		CompanionAI component = companionSetup.GetComponent<CompanionAI>();
 		if (!(component == null))
 		{
+			CompanionsPlugin.Log.LogInfo($"[Direct] {companionSetup.GetComponent<Character>()?.m_name} heads to the tombstone {num:F0} m away");
 			component.SetDirectedTombstoneRecovery(tombstone);
 			SayRandom(companionSetup.GetComponent<CompanionTalk>(), TombstoneLines);
 			if (CompanionsPlugin.LogDetailed)

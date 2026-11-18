@@ -45,6 +45,7 @@ namespace OfflineCompanionsAI
         Rest,
         StoreItems,
         RecoverGear,
+        ReviveCompanion,
         RepairGear,
         ComeHere,
         CancelOrders,
@@ -125,6 +126,7 @@ namespace OfflineCompanionsAI
         private const string RestTool = "rest";
         private const string StoreItemsTool = "store_items";
         private const string RecoverGearTool = "recover_gear";
+        private const string ReviveCompanionTool = "revive_companion";
         private const string RepairGearTool = "repair_gear";
         private const string ComeHereTool = "come_here";
         private const string CancelOrdersTool = "cancel_orders";
@@ -786,6 +788,15 @@ namespace OfflineCompanionsAI
                     "Va a su propia tumba cercana a recuperar sus cosas.",
                     "Goes to their own nearby tombstone to recover their gear.",
                     "Идёт к собственному надгробию поблизости, чтобы забрать свои вещи."), NoParameters()),
+                Tool(ReviveCompanionTool, ModLang.Pick(
+                    "Va a la tumba de otro compañero muerto y lo revive allí, con sus cosas. Úsalo con \"revive a Roxy\" o \"ve por Darkness, que murió\". name es el nombre del compañero muerto; sin él, el más cercano. Lo hace quien recibe la orden, no el muerto.",
+                    "Goes to another dead companion's tombstone and revives them there, with their gear. Use for \"revive Roxy\" or \"go get Darkness, she died\". name is the dead companion's name; without it, the nearest one. The companion given the order goes, not the dead one.",
+                    "Идёт к надгробию другого погибшего спутника и воскрешает его там вместе с вещами. Используй для «воскреси Рокси» или «сходи за Даркнесс, она погибла». name — имя погибшего спутника; без него — ближайший. Идёт тот, кому дан приказ, а не погибший."),
+                new JObject
+                {
+                    ["type"] = "object",
+                    ["properties"] = new JObject { ["name"] = new JObject { ["type"] = "string" } }
+                }),
                 Tool(RepairGearTool, ModLang.Pick(
                     "Repara su equipo en la estación de trabajo más cercana.",
                     "Repairs their gear at the nearest crafting station.",
@@ -1183,6 +1194,18 @@ namespace OfflineCompanionsAI
                     return Simple(ActionKind.StoreItems, ModLang.Pick("guardar sus cosas en los cofres cercanos", "store their items in nearby chests", "сложить вещи в ближайшие сундуки"));
                 case RecoverGearTool:
                     return Simple(ActionKind.RecoverGear, ModLang.Pick("recuperar sus cosas de su tumba", "recover their gear from their tombstone", "забрать вещи из своего надгробия"));
+                case ReviveCompanionTool:
+                    {
+                        string dead = args["name"]?.Type == JTokenType.String ? args["name"].Value<string>().Trim() : "";
+                        return new ActionRequest
+                        {
+                            Kind = ActionKind.ReviveCompanion,
+                            Item = dead,
+                            Description = dead.Length > 0
+                                ? ModLang.Pick("revivir a " + dead + " en su tumba", "revive " + dead + " at their tombstone", "воскресить " + dead + " у надгробия")
+                                : ModLang.Pick("revivir al compañero muerto más cercano", "revive the nearest dead companion", "воскресить ближайшего погибшего спутника")
+                        };
+                    }
                 case RepairGearTool:
                     return Simple(ActionKind.RepairGear, ModLang.Pick("reparar su equipo", "repair their gear", "починить снаряжение"));
                 case ComeHereTool:

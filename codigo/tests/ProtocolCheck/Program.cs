@@ -209,7 +209,7 @@ internal static class Program
         JObject plain = JObject.Parse(LlmProtocol.BuildRequest(messages, null, 0, 0.5f));
         Check("incluye model", (string)withModel["model"], "llama3.2");
         Check("incluye max_tokens", (string)withModel["max_tokens"], "100");
-        Check("incluye tools", ((JArray)withModel["tools"]).Count.ToString(), "39");
+        Check("incluye tools", ((JArray)withModel["tools"]).Count.ToString(), "40");
         Check("sin model", plain["model"]?.ToString(), null);
         Check("sin max_tokens", plain["max_tokens"]?.ToString(), null);
         Check("sin tools", plain["tools"]?.ToString(), null);
@@ -1066,6 +1066,8 @@ internal static class Program
         Check("nombrado: madera", CompanionActions.NamedGatherItem("trae 20 de madera") ?? "null", "Wood");
         Check("compartir: válido", CompanionActions.ParseShare("{\"item\":\"Flechas de madera\",\"amount\":10}", out string shareItem, out int shareAmount) + " " + shareItem + " " + shareAmount, "True Flechas de madera 10");
         Check("compartir: sin cantidad", CompanionActions.ParseShare("{\"item\":\"Flechas\"}", out _, out _).ToString(), "False");
+        Check("revivir: con nombre", CompanionActions.Parse("revive_companion", "{\"name\":\" Roxy \"}", out _).Kind + " " + CompanionActions.Parse("revive_companion", "{\"name\":\" Roxy \"}", out _).Item, "ReviveCompanion Roxy");
+        Check("revivir: sin nombre", CompanionActions.Parse("revive_companion", "{}", out _).Item, "");
         Check("compartir: cantidad cero", CompanionActions.ParseShare("{\"item\":\"Flechas\",\"amount\":0}", out _, out _).ToString(), "False");
         Check("cocina: asada es cocinada", ItemNames.Matches("Carne de ciervo cocinada", "carne de ciervo asada").ToString(), "True");
         Check("cocina: ciervo no es jabalí", ItemNames.Matches("Carne de jabalí cocinada", "carne de ciervo asada").ToString(), "False");

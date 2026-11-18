@@ -135,6 +135,13 @@ public static class MHR_SeedRules
 		{
 			return false;
 		}
+		// Una zona que pide justo eso (nabos para sacar semillas) lo planta aunque ya sobren semillas: si se guardara,
+		// lo sacaría del cofre otra vez y así sin parar.
+		FarmController farmController = farm as FarmController;
+		if (farmController != null && farmController.MHR_ZoneAsksFor(item))
+		{
+			return true;
+		}
 		string text = OutputOf(item);
 		if (text != null)
 		{
